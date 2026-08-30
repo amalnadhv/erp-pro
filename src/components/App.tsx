@@ -22,6 +22,8 @@ import Login from './Login'
 import CreditDashboard from './CreditDashboard'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
+import { downloadPDF } from '../utils/generatePDF'
+import { emailInvoice } from '../utils/emailInvoice'
 import './App.css'
 
 const MENUS = [
@@ -851,8 +853,57 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
   const [showAi, setShowAi] = useState(false)
   const [scanMsg, setScanMsg] = useState('')
   const [ai, setAi] = useState<any>(() => { try { return JSON.parse(localStorage.getItem('aiOcr') || '{}') } catch { return {} } })
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [emailTo, setEmailTo] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailResult, setEmailResult] = useState('')
 
   const saveAi = () => { localStorage.setItem('aiOcr', JSON.stringify(ai)); setShowAi(false) }
+
+  const isAP = inv.title.includes('A/P') || inv.title.toLowerCase().includes('purchase')
+  const docLabel = isAP ? 'AP Invoice' : 'AR Invoice'
+  const subtotal = inv.items.reduce((s: number, it: any) => s + (Number(it.price) || 0) * (Number(it.qty) || 1) * (1 - (Number(it.discount) || 0) / 100), 0)
+  const vatAmt = subtotal * (Number(inv.vat) || 0) / 100
+  const grandTotal = subtotal + vatAmt
+  const amountPaid = Number(inv.payment?.paid) || 0
+
+  const invoiceData = {
+    invoice_no: inv.savedNo,
+    invoice_date: inv.date || '',
+    due_date: inv.dueDate || '',
+    customer_name: inv.customer?.name,
+    customer_vat: inv.customer?.vat,
+    customer_address: inv.customer?.address,
+    subtotal, vat_percent: inv.vat, vat_amount: vatAmt,
+    grand_total: grandTotal, amount_paid: amountPaid,
+    balance: grandTotal - amountPaid,
+    status: amountPaid >= grandTotal ? 'Paid' : amountPaid > 0 ? 'Partial' : 'Outstanding',
+    notes: inv.notes || inv.payment?.notes || '',
+  }
+
+  const invItems = inv.items.map((it: any) => ({ name: it.description || it.name, qty: it.qty, price: it.price, total: (Number(it.price) || 0) * (Number(it.qty) || 1) * (1 - (Number(it.discount) || 0) / 100) }))
+
+  const handleDownloadPDF = async () => {
+    await downloadPDF(invoiceData, companyProfile, invItems, docLabel)
+  }
+
+  const handleSendEmail = async () => {
+    if (!emailTo.trim()) { setEmailResult('⚠️ Enter an email address'); return }
+    setEmailSending(true); setEmailResult('')
+    const r = await emailInvoice({ to: emailTo, inv: invoiceData, companyProfile, items: invItems, docType: docLabel })
+    setEmailSending(false)
+    setEmailResult(r.success ? '✅ Invoice emailed successfully!' : '⚠️ ' + (r.error || 'Failed to send'))
+    if (r.success) { setEmailOpen(false); setEmailTo('') }
+  }
+
+  const handleSendReminder = async () => {
+    if (!emailTo.trim()) { setEmailResult('⚠️ Enter an email address'); return }
+    setEmailSending(true); setEmailResult('')
+    const r = await emailInvoice({ to: emailTo, inv: invoiceData, companyProfile, items: invItems, docType: docLabel, isReminder: true })
+    setEmailSending(false)
+    setEmailResult(r.success ? '✅ Reminder sent!' : '⚠️ ' + (r.error || 'Failed to send'))
+    if (r.success) { setEmailOpen(false); setEmailTo('') }
+  }
 
   const extract = async () => {
     setScanErr(''); setScanBusy(true)
@@ -1026,13 +1077,38 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
           <p className="success-sum">{inv.customer.name} · {fmt(inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100), 'money')}</p>
           <ShareBar title={'Invoice ' + (inv.savedNo || '')} text={'Invoice: ' + (inv.savedNo || '') + '\nCustomer: ' + (inv.customer?.name || '') + '\nDate: ' + (inv.date || '') + '\nTotal: ' + fmt(inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100), 'money') + '\nItems: ' + inv.items.length} />
           <div className="inv-actions center">
-            <button className="btn-print" onClick={() => printWithTemplate('AR Invoice', { ...companyProfile, invoice_no: inv.savedNo, invoice_date: inv.date || '', due_date: inv.dueDate || '', po_ref: inv.poRef || '', customer_name: inv.customer?.name, customer_vat: inv.customer?.vat, subtotal: inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0), vat_percent: inv.vat, vat_amount: inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * inv.vat / 100, grand_total: inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100), amount_paid: (inv.payment?.paid) || 0, balance: inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100) - ((inv.payment?.paid) || 0), notes: inv.notes || '', items: inv.items.map((it) => ({ name: it.name, qty: it.qty, price: it.price, total: it.price * it.qty * (1 - (it.discount || 0) / 100) })), company_name: companyProfile?.name, company_vat: companyProfile?.vat_no, company_logo: companyProfile?.logo_url })}>🖨️ Print</button>
+            <button className="btn-print" onClick={() => printWithTemplate(docLabel, { ...companyProfile, invoice_no: inv.savedNo, invoice_date: inv.date || '', due_date: inv.dueDate || '', po_ref: inv.poRef || '', customer_name: inv.customer?.name, customer_vat: inv.customer?.vat, subtotal: invoiceData.subtotal, vat_percent: inv.vat, vat_amount: vatAmt, grand_total: grandTotal, amount_paid: amountPaid, balance: grandTotal - amountPaid, notes: inv.notes || '', items: invItems, company_name: companyProfile?.name, company_vat: companyProfile?.vat_no, company_logo: companyProfile?.logo_url })}>🖨️ Print</button>
+            <button className="btn-print" onClick={handleDownloadPDF}>⬇️ Download PDF</button>
+            <button className="btn-print" onClick={() => { setEmailTo(inv.customer?.email || ''); setEmailOpen(true); setEmailResult(''); }}>📧 Email Invoice</button>
             <button className="btn-primary" onClick={openNew}>＋ New Invoice</button>
             <button className="btn-cancel" onClick={close}>✕ Close</button>
           </div>
         </div>
       )}
-      <Attachments entityType="ar_invoice" entityId={realInvId} label="Invoice Attachments" />
+      <Attachments entityType={isAP ? 'ap_invoice' : 'ar_invoice'} entityId={realInvId} label="Invoice Attachments" />
+
+      {emailOpen && (
+        <div className="cheque-overlay">
+          <div style={{ background: '#fff', color: '#111', width: 440, maxWidth: '100%', padding: 24, borderRadius: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16 }}>📧 Email Invoice {inv.savedNo}</h3>
+              <button className="doc-btn sm" onClick={() => setEmailOpen(false)}>✕</button>
+            </div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Send To</label>
+            <input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="customer@email.com" style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }} />
+            <div style={{ background: '#f9fafb', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>
+              <b>{inv.customer?.name}</b> · {inv.savedNo}<br/>
+              Total: <b style={{ color: '#6a11cb' }}>SAR {grandTotal.toFixed(2)}</b> · Balance: <b style={{ color: '#dc2626' }}>SAR {(grandTotal - amountPaid).toFixed(2)}</b>
+            </div>
+            {emailResult && <div style={{ padding: 8, borderRadius: 6, marginBottom: 12, fontSize: 12, background: emailResult.startsWith('✅') ? '#dcfce7' : '#fef3c7', color: emailResult.startsWith('✅') ? '#166534' : '#92400e' }}>{emailResult}</div>}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn-cancel" onClick={() => setEmailOpen(false)}>Cancel</button>
+              {invoiceData.balance > 0 && <button className="btn-print" disabled={emailSending} onClick={handleSendReminder}>⏰ Send Reminder</button>}
+              <button className="btn-primary" disabled={emailSending} onClick={handleSendEmail}>{emailSending ? 'Sending…' : '📧 Send Invoice'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {scanOpen && (
         <div className="cheque-overlay">
