@@ -1,0 +1,555 @@
+
+> advanced-erp-supabase@1.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v4.5.14[39m  [2mready in [0m[1m285[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.129:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.27.0.1:[1m5173[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh[22m[2m to show help[22m
+[2m5:27:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:27:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:28:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:28:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:28:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:29:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:30:19 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:31:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:31:43 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m5:44:23 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/index.tsx[22m
+[2m5:56:03 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:56:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m5:58:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m5:59:03 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m6:06:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m6:06:35 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\erp-supabase\src\components\App.tsx: Unterminated JSX contents. (6129:10)
+
+[0m [90m 6127 |[31m         [33m<[31m[33mspan[31m[33m>[31m[33mLicensed[31m to[33m:[31m [33m<[31m[33mb[31m[33m>[31m[33mDEMO[31m [33mCOMPANY[31m[33m<[31m[33m/[31m[33mb[31m[33m>[31m [33m<[31m[33mspan[31m className[33m=[31m[32m"footer-sep"[31m[33m>[31m[33m|[31m[33m<[31m[33m/[31m[33mspan[31m[33m>[31m [33mPlan[31m[33m:[31m [33m<[31m[33mb[31m[33m>[31m[33mEnterprise[31m[33m<[31m[33m/[31m[33mb[31m[33m>[31m [33m<[31m[33mspan[31m className[33m=[31m[32m"footer-sep"[31m[33m>[31m[33m|[31m[33m<[31m[33m/[31m[33mspan[31m[33m>[31m [33mExpires[31m[33m:[31m [33m<[31m[33mb[31m[33m>[31m[33mDec[31m [35m2026[31m[33m<[31m[33m/[31m[33mb[31m[33m>[31m[33m<[31m[33m/[31m[33mspan[31m[33m>[31m
+ [90m 6128 |[31m       [33m<[31m[33m/[31m[33mfooter[31m[33m>[31m
+[31m[1m>[22m[31m[90m 6129 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m      |[31m           [31m[1m^[22m[31m
+ [90m 6130 |[31m   )
+ [90m 6131 |[31m }
+ [90m 6132 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/erp-supabase/src/components/App.tsx[39m:6129:10
+[33m  6127|          <span>Licensed to: <b>DEMO COMPANY</b> <span className="footer-sep">|</span> Plan: <b>Enterprise</b> <span className="footer-sep">|</span> Expires: <b>Dec 2026</b></span>
+  6128|        </footer>
+  6129|      </div>
+     |            ^
+  6130|    )
+  6131|  }[39m
+      at constructor (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:369:19)
+      at TypeScriptParserMixin.raise (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:6620:19)
+      at TypeScriptParserMixin.jsxReadToken (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4464:20)
+      at TypeScriptParserMixin.getTokenFromCode (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4790:12)
+      at TypeScriptParserMixin.getTokenFromCode (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10008:11)
+      at TypeScriptParserMixin.nextToken (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:5803:10)
+      at TypeScriptParserMixin.next (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:5713:10)
+      at TypeScriptParserMixin.eat (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:5717:12)
+      at TypeScriptParserMixin.expect (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:6919:15)
+      at TypeScriptParserMixin.jsxParseClosingElementAt (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4696:10)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4711:37)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4714:32)
+      at TypeScriptParserMixin.jsxParseElement (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4765:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4775:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11102:23)
+      at TypeScriptParserMixin.parseUpdate (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11087:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11067:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9858:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10920:61)
+      at TypeScriptParserMixin.parseExprOps (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10925:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10902:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10852:21)
+      at D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9796:39
+      at TypeScriptParserMixin.tryParse (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:6928:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9796:18)
+      at D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10821:39
+      at TypeScriptParserMixin.allowInAnd (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12455:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10821:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12522:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11701:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11357:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:4780:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11102:23)
+      at TypeScriptParserMixin.parseUpdate (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11087:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:11067:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9858:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10920:61)
+      at TypeScriptParserMixin.parseExprOps (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10925:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10902:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10852:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9807:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10801:39
+      at TypeScriptParserMixin.allowInAnd (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12450:16)
+      at TypeScriptParserMixin.parseExpression (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:10801:17)
+      at TypeScriptParserMixin.parseReturnStatement (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:13171:28)
+      at TypeScriptParserMixin.parseStatementContent (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12827:21)
+      at TypeScriptParserMixin.parseStatementContent (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:9529:18)
+      at TypeScriptParserMixin.parseStatementLike (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12796:17)
+      at TypeScriptParserMixin.parseStatementListItem (D:\erp-supabase\node_modules\@babel\parser\lib\index.js:12776:17)
+[2m6:06:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m6:11:33 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m6:11:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m6:13:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m6:14:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m6:15:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m6:20:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m6:21:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:12:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:12:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:13:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:13:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:20:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:20:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:20:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:20:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:21:29 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:22:24 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m7:27:32 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ScreenDesigner.tsx[22m
+[2m7:29:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:30:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:30:53 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:31:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:31:29 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:31:45 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m7:31:49 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m7:44:52 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m7:45:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:46 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m7:45:54 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:03:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:03:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:03 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:04:32 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:10:23 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:10:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:10:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:03 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:12:24 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:26:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:26:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:34 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:27:47 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:32:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/CorporateTax.tsx[22m
+[2m8:32:52 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:32:53 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:33:06 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:35:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:35:56 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:36:09 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:39:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:39:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:39:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:39:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m8:40:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:40:18 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:42:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:42:23 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:42:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:42:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:42:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:42:34 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:43:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:44:08 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:46:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:46:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:46:54 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:51:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:52:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:52:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:52:13 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m8:54:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:54:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m8:55:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:55:26 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m8:55:41 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:02:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:02:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:02:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:02:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:03:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m9:07:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:07:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:11:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:12:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:12:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m9:12:54 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:15:56 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:15:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:16:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:16:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:16:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m9:16:56 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:20:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ShareBar.tsx[22m
+[2m9:21:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:21:21 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.css?direct, /src/components/App.css[22m
+[2m9:24:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:46 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:24:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:25:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:25:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:25:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:26:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:32 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:37 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:28:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:29:07 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:34:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:34:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:35:45 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:39:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:39:36 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:39:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:39:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:39:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/AuditReport.tsx[22m
+[2m9:40:26 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:36 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:37 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:40:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m9:41:03 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m9:47:34 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:48:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:48:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:48:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:48:46 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:49:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:49:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m9:49:19 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:00:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:00:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:01:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:01:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:01:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:01:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:01:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:03:53 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:03:53 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Duplicate declaration "logActivity"
+[0m [90m 1909 |[31m }
+ [90m 1910 |[31m
+[31m[1m>[22m[31m[90m 1911 |[31m [36mconst[31m logActivity [33m=[31m [36masync[31m (action[33m:[31m string[33m,[31m entity[33m:[31m string[33m,[31m detail[33m:[31m string[33m,[31m entityId [33m=[31m [32m''[31m) [33m=>[31m {
+ [90m      |[31m       [31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m[31m[1m^[22m[31m
+ [90m 1912 |[31m   [36mtry[31m { [36mawait[31m supabase[33m.[31m[36mfrom[31m([32m'activity_log'[31m)[33m.[31minsert({ action[33m,[31m entity[33m,[31m entity_id[33m:[31m entityId[33m,[31m detail[33m:[31m detail [33m||[31m [32m''[31m[33m,[31m user_email[33m:[31m [32m''[31m }) } [36mcatch[31m { [90m/* best-effort */[31m }
+ [90m 1913 |[31m }
+ [90m 1914 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/erp-supabase/src/components/App.tsx[39m
+      at File.buildCodeFrameError (D:\erp-supabase\node_modules\@babel\core\lib\transformation\file\file.js:189:12)
+      at Scope.checkBlockScopedCollisions (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:433:27)
+      at Scope.registerBinding (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:530:16)
+      at Scope.registerDeclaration (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:482:14)
+      at Object.BlockScoped (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:276:12)
+      at Object.newFn (D:\erp-supabase\node_modules\@babel\traverse\lib\visitors.js:203:17)
+      at NodePath._call (D:\erp-supabase\node_modules\@babel\traverse\lib\path\context.js:50:20)
+      at NodePath.call (D:\erp-supabase\node_modules\@babel\traverse\lib\path\context.js:40:18)
+      at NodePath.visit (D:\erp-supabase\node_modules\@babel\traverse\lib\path\context.js:87:31)
+      at TraversalContext.visitQueue (D:\erp-supabase\node_modules\@babel\traverse\lib\context.js:96:16)
+      at TraversalContext.visitMultiple (D:\erp-supabase\node_modules\@babel\traverse\lib\context.js:68:17)
+      at TraversalContext.visit (D:\erp-supabase\node_modules\@babel\traverse\lib\context.js:117:19)
+      at traverseNode (D:\erp-supabase\node_modules\@babel\traverse\lib\traverse-node.js:130:17)
+      at traverse (D:\erp-supabase\node_modules\@babel\traverse\lib\index.js:53:34)
+      at NodePath.traverse (D:\erp-supabase\node_modules\@babel\traverse\lib\path\index.js:120:24)
+      at Scope.crawl (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:695:10)
+      at Scope.init (D:\erp-supabase\node_modules\@babel\traverse\lib\scope\index.js:661:12)
+      at NodePath.setScope (D:\erp-supabase\node_modules\@babel\traverse\lib\path\context.js:139:55)
+      at NodePath.setContext (D:\erp-supabase\node_modules\@babel\traverse\lib\path\context.js:151:12)
+      at new File (D:\erp-supabase\node_modules\@babel\core\lib\transformation\file\file.js:80:8)
+      at normalizeFile (D:\erp-supabase\node_modules\@babel\core\lib\transformation\normalize-file.js:82:10)
+      at normalizeFile.next (<anonymous>)
+      at run (D:\erp-supabase\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (D:\erp-supabase\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (D:\erp-supabase\node_modules\gensync\index.js:261:32)
+      at D:\erp-supabase\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (D:\erp-supabase\node_modules\gensync\index.js:223:11)
+      at D:\erp-supabase\node_modules\gensync\index.js:189:28
+      at D:\erp-supabase\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at D:\erp-supabase\node_modules\gensync\index.js:113:33
+      at step (D:\erp-supabase\node_modules\gensync\index.js:287:14)
+      at D:\erp-supabase\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (D:\erp-supabase\node_modules\gensync\index.js:223:11)
+[2m10:03:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:03:55 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./utils/audit" from "src\components\App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/erp-supabase/src/components/App.tsx[39m:14:28
+[33m  26 |  import FixedAssets from "./FixedAssets";
+  27 |  import ShareBar from "./ShareBar";
+  28 |  import { logActivity } from "./utils/audit";
+     |                               ^
+  29 |  import "./App.css";
+  30 |  const MENUS = [[39m
+      at formatError (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44066:46)
+      at TransformContext.error (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44062:19)
+      at normalizeUrl (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41845:33)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41999:47
+      at async Promise.all (index 13)
+      at async TransformContext.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41915:13)
+      at async Object.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44356:30)
+      at async loadAndTransform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:55088:29)
+      at async viteTransformMiddleware (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:64699:32)
+[2m10:04:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m10:04:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/FixedAssets.tsx[22m
+[2m10:04:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.tsx[22m
+[2m10:04:41 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./utils/audit" from "src\components\App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/erp-supabase/src/components/App.tsx[39m:14:28
+[33m  26 |  import FixedAssets from "./FixedAssets";
+  27 |  import ShareBar from "./ShareBar";
+  28 |  import { logActivity } from "./utils/audit";
+     |                               ^
+  29 |  import "./App.css";
+  30 |  const MENUS = [[39m
+      at formatError (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44066:46)
+      at TransformContext.error (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44062:19)
+      at normalizeUrl (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41845:33)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41999:47
+      at async Promise.all (index 13)
+      at async TransformContext.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41915:13)
+      at async Object.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44356:30)
+      at async loadAndTransform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:55088:29)
+      at async viteTransformMiddleware (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:64699:32)
+Failed to resolve import "./utils/audit" from "src\components\App.tsx". Does the file exist?
+[2m10:04:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.tsx[22m
+Failed to resolve import "./utils/audit" from "src\components\App.tsx". Does the file exist?
+[2m10:04:43 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./utils/audit" from "src\components\App.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/erp-supabase/src/components/App.tsx[39m:14:28
+[33m  29 |  import AuditLog from "./AuditLog";
+  30 |  import ShareBar from "./ShareBar";
+  31 |  import { logActivity } from "./utils/audit";
+     |                               ^
+  32 |  import "./App.css";
+  33 |  const MENUS = [[39m
+      at formatError (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44066:46)
+      at TransformContext.error (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44062:19)
+      at normalizeUrl (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41845:33)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41999:47
+      at async Promise.all (index 16)
+      at async TransformContext.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:41915:13)
+      at async Object.transform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:44356:30)
+      at async loadAndTransform (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:55088:29)
+      at async viteTransformMiddleware (file:///D:/erp-supabase/node_modules/vite/dist/node/chunks/dep-827b23df.js:64699:32)
+[2m10:05:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.tsx[22m
+[2m10:05:01 PM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/index.tsx[22m Could not Fast Refresh ("true" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m10:05:19 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:25:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:26:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:26:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:26:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:26:20 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:28:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:28:56 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:28:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:29:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:29:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:29:37 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:29:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:30:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Statements.tsx[22m
+[2m10:30:29 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:35:33 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:35:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:35:36 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:35:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:35:53 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:43:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:43:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:43:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:43:26 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:43:29 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:44:39 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:44:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:44:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:44:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:45:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:45:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:45:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:45:46 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:46:15 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:51:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:51:46 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:55:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:55:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:55:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:55:19 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:11 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m10:56:25 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m10:59:50 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m10:59:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:01:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:01:29 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:01:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:02:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:06:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:06:34 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:06:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:07:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:07:11 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:12:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:12:56 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:13:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:13:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:13:19 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:13:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:13:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:13:45 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:20:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:20:22 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:22:32 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:22:33 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:23:21 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:23:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:23:23 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/PdcReport.tsx[22m
+[2m11:23:33 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:29:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:29:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:29:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:30:16 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:33:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:33:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:33:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:33:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:33:47 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:38:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:38:57 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:39:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m11:39:19 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:43:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:43:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:43:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:44:04 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:45:53 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:45:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:46:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:46:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:46:32 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:52:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:53:19 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:53:39 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:53:47 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m1:37:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m1:38:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m1:38:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m1:38:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m1:38:36 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m1:44:20 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:14:18 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:22:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:22:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:23:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:23:15 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:23:26 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:25:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:25:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:25:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:25:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:26:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:26:31 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:27:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:28:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:28:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:28:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:28:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:28:50 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:38:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/StockTransfer.tsx[22m
+[2m2:38:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Production.tsx[22m
+[2m2:38:52 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:47:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m2:47:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m2:48:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m2:48:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m2:48:30 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m2:54:28 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/DataImport.tsx[22m
+[2m2:54:42 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m3:05:22 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/DataImport.tsx[22m
+[2m3:05:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/DataImport.tsx[22m
+[2m3:05:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/DataImport.tsx[22m
+[2m3:06:02 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m3:06:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/DataImport.tsx[22m
+[2m3:06:25 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:03:40 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:27:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:27:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:28:10 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:28:39 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:28:53 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:29:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:29:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx, /src/components/ScreenDesigner.tsx, /src/components/Attachments.tsx, /src/components/CorporateTax.tsx, /src/components/AuditReport.tsx, /src/components/FixedAssets.tsx, /src/components/Statements.tsx, /src/components/PdcReport.tsx, /src/components/InventoryValuation.tsx, /src/components/AuditLog.tsx, /src/components/FxRevaluation.tsx, /src/components/ChequeTemplates.tsx, /src/components/StockTransfer.tsx, /src/components/ScanToInvoice.tsx, /src/components/Production.tsx, /src/components/DataImport.tsx[22m
+[2m11:30:11 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:34:13 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:36:39 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Login.tsx[22m
+[2m11:37:00 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:44:15 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:46:11 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:53:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:54:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:55:11 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/App.tsx[22m
+[2m11:55:24 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m11:57:15 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/LicensePage.tsx[22m
+[2m11:57:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Login.tsx[22m
+[2m11:57:52 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Login.tsx[22m
+[2m11:58:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Login.tsx[22m
+[2m11:58:13 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m12:01:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/LicensePage.tsx[22m
+[2m12:01:56 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m12:03:59 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Login.tsx[22m
+[2m12:04:13 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/LicensePage.tsx[22m
+[2m12:04:45 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/LicensePage.tsx[22m
+[2m12:05:09 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/LicensePage.tsx[22m
+[2m12:05:19 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mdist/index.html[22m
+[2m12:14:07 AM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m

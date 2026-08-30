@@ -1,0 +1,200 @@
+/* src/assets/styles.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.6;
+}
+
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.dashboard {
+  background: white;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.dashboard h2 {
+  margin-bottom: 20px;
+  color: #34495e;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stats div {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stats strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 15px;
+  }
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  .dashboard {
+    padding: 20px;
+  }
+}
+
+/* PDC cheque printing */
+.cheque-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  padding: 24px;
+}
+.cheque-leaf {
+  background: #fff;
+  color: #111;
+  width: 760px;
+  max-width: 100%;
+  min-height: 320px;
+  border: 2px solid #1a3b5d;
+  border-radius: 6px;
+  padding: 22px 26px;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.cheque-leaf .ch-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px dashed #999;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.cheque-leaf .ch-bank { font-weight: bold; font-size: 15px; }
+.cheque-leaf .ch-drawer { font-size: 11px; color: #555; max-width: 360px; }
+.cheque-leaf .ch-date { text-align: right; font-size: 13px; }
+.cheque-leaf .ch-pay {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 18px 0 6px;
+  font-size: 15px;
+}
+.cheque-leaf .ch-pay .ch-to { white-space: nowrap; }
+.cheque-leaf .ch-payee { flex: 1; border-bottom: 1px solid #333; font-weight: bold; padding: 0 6px; }
+.cheque-leaf .ch-amt-box { border: 1px solid #333; padding: 2px 8px; font-weight: bold; white-space: nowrap; }
+.cheque-leaf .ch-words {
+  border-bottom: 1px solid #333;
+  margin: 10px 0 24px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.cheque-leaf .ch-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 30px;
+}
+.cheque-leaf .ch-sign { border-top: 1px solid #333; padding-top: 4px; font-size: 11px; }
+.cheque-leaf .ch-no { font-size: 12px; }
+.cheque-leaf .ch-stamp {
+  position: absolute;
+  margin-left: 120px;
+  margin-top: -6px;
+  border: 2px solid #b91c1c;
+  color: #b91c1c;
+  padding: 2px 8px;
+  font-size: 11px;
+  transform: rotate(-12deg);
+  opacity: 0.7;
+}
+@media print {
+  body.printing-cheque * { visibility: hidden !important; }
+  body.printing-cheque .cheque-overlay { position: static; background: #fff; padding: 0; display: block; }
+  body.printing-cheque .cheque-leaf,
+  body.printing-cheque .cheque-leaf * { visibility: visible !important; }
+  body.printing-cheque .cheque-leaf { position: absolute; left: 0; top: 0; box-shadow: none; }
+  body.printing-cheque .noprint { display: none !important; }
+}
+
+/* Stock transfer status badges */
+.st-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.st-Requested { background: #fef3c7; color: #92400e; }
+.st-Dispatched { background: #dbeafe; color: #1e40af; }
+.st-Received { background: #dcfce7; color: #166534; }
+.st-Cancelled { background: #fee2e2; color: #991b1b; }
+
+/* Stock transfer printable slip */
+.transfer-slip {
+  background: #fff;
+  color: #111;
+  width: 700px;
+  max-width: 100%;
+  padding: 24px 28px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-family: inherit;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+@media print {
+  body.printing-transfer * { visibility: hidden !important; }
+  body.printing-transfer .cheque-overlay { position: static; background: #fff; padding: 0; display: block; }
+  body.printing-transfer .transfer-slip,
+  body.printing-transfer .transfer-slip * { visibility: visible !important; }
+  body.printing-transfer .transfer-slip { position: absolute; left: 0; top: 0; box-shadow: none; border: none; }
+  body.printing-transfer .noprint { display: none !important; }
+}
