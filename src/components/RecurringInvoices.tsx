@@ -58,10 +58,12 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [navLock, setNavLock] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (form && formRef.current) {
+      setNavLock(false)
       setTimeout(() => {
         const nameInput = formRef.current?.querySelector('[data-field="template_name"] input') as HTMLElement
         if (nameInput) nameInput.focus()
@@ -102,9 +104,13 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
     setForm({ ...form, items: [...form.items, { name: '', qty: 1, price: 0, discount: 0 }] })
     setTimeout(() => {
       if (!formRef.current) return
-      const newRow = formRef.current.querySelector(`[data-row="${newIdx}"] input`)
-      if (newRow) (newRow as HTMLElement).focus()
-    }, 50)
+      const rows = formRef.current.querySelectorAll('[data-row]')
+      const newRow = rows[newIdx]
+      if (newRow) {
+        const firstInput = newRow.querySelector('input') as HTMLElement
+        if (firstInput) firstInput.focus()
+      }
+    }, 150)
   }
 
   const removeItem = (idx: number) => {
@@ -118,19 +124,21 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
 
   const handleFormKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter') return
+    if (navLock) return
     e.preventDefault()
     const target = e.target as HTMLElement
     const row = target.closest('[data-row]')
     const isItemField = !!row
 
     if (isItemField) {
-      const rowIdx = Number(row?.getAttribute('data-row'))
       const fields = Array.from(row!.querySelectorAll<HTMLElement>('input'))
       const idx = fields.indexOf(target)
       const isLastField = idx === fields.length - 1
 
       if (isLastField) {
+        setNavLock(true)
         addItem()
+        setTimeout(() => setNavLock(false), 200)
       } else {
         fields[idx + 1]?.focus()
       }
