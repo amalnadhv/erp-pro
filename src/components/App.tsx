@@ -4678,6 +4678,7 @@ const SalesDocs = ({ docType, fmtMoney, taxRate = 0 }) => {
         } catch (e) { console.error('Credit deduction failed:', e) }
       }
       setForm(null)
+      logActivity(form.recId ? 'UPDATE' : 'CREATE', cfg.title || TABLE, `${approveAfter ? 'Approved' : 'Saved'} ${cfg.title || TABLE} ${cust?.name || ''} ${fmtMoney(totals.grand_total)}`)
       loadDocs()
     } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
   }
@@ -5056,8 +5057,9 @@ const ModuleWorkspace = ({ module, cfg, fmtMoney }) => {
             const { deductCredit } = await import('../utils/billing')
             const tenantId = authTenant?.id
             if (tenantId) await deductCredit(tenantId, realTable, null, `${module}: new record`)
-          } catch (e) { console.error('Credit deduction failed:', e) }
-        }
+        } catch (e) { console.error('Credit deduction failed:', e) }
+        logActivity('CREATE', 'Outgoing Payment', `Payment to ${form.data.supplier_name || ''} ${fmtMoney(form.data.amount)} ${form.data.payment_method}`)
+      }
       } else {
         const payload = { module, status: form.status, data }
         if (form.recId) {
