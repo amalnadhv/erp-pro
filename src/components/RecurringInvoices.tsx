@@ -60,6 +60,15 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
   const [generating, setGenerating] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (form && formRef.current) {
+      setTimeout(() => {
+        const nameInput = formRef.current?.querySelector('[data-field="template_name"] input') as HTMLElement
+        if (nameInput) nameInput.focus()
+      }, 100)
+    }
+  }, [form])
+
   const load = async () => {
     setLoading(true)
     const [t, c] = await Promise.all([
@@ -105,6 +114,8 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
     setForm({ ...form, items, ...totals })
   }
 
+  const HEADER_FIELDS = ['template_name', 'customer', 'frequency', 'start_date', 'end_date', 'next_run_date']
+
   const handleFormKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter') return
     e.preventDefault()
@@ -131,12 +142,16 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
         fields[idx + 1]?.focus()
       }
     } else {
-      const formEl = formRef.current
-      if (!formEl) return
-      const allFields = Array.from(formEl.querySelectorAll<HTMLElement>('[data-field] input, [data-field] select'))
-      const idx = allFields.indexOf(target)
-      if (idx >= 0 && idx < allFields.length - 1) {
-        allFields[idx + 1]?.focus()
+      const fieldName = target.closest('[data-field]')?.getAttribute('data-field')
+      if (!fieldName) return
+      const currentIdx = HEADER_FIELDS.indexOf(fieldName)
+      if (currentIdx >= 0 && currentIdx < HEADER_FIELDS.length - 1) {
+        const nextField = HEADER_FIELDS[currentIdx + 1]
+        const nextEl = formRef.current?.querySelector(`[data-field="${nextField}"] input, [data-field="${nextField}"] select`) as HTMLElement
+        if (nextEl) nextEl.focus()
+      } else if (currentIdx === HEADER_FIELDS.length - 1) {
+        const firstItemInput = formRef.current?.querySelector('[data-row="0"] input') as HTMLElement
+        if (firstItemInput) firstItemInput.focus()
       }
     }
   }
