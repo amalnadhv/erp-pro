@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../utils/supabaseClient'
 
 const FREQUENCIES = ['Weekly', 'Bi-Weekly', 'Monthly', 'Quarterly', 'Semi-Annual', 'Annual']
-const FREQ_INTERVALS: Record<string, number> = { Weekly: 7, 'Bi-Weekly': 14, Monthly: 30, Quarterly: 90, 'Semi-Annual': 180, Annual: 365 }
 
 const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -37,6 +36,20 @@ const blankTemplate = (): RecurringTemplate => ({
   currency: 'AED', payment_terms: 'Net 30', notes: '', status: 'Active', run_count: 0, last_run_date: '',
 })
 
+const focusNext = (e: React.KeyboardEvent, addLine?: () => void) => {
+  if (e.key !== 'Enter') return
+  e.preventDefault()
+  const form = (e.target as HTMLElement).closest('form, [data-form]')
+  if (!form) return
+  const fields = Array.from(form.querySelectorAll<HTMLElement>('input:not([type="hidden"]), select, textarea, button[data-focus]'))
+  const idx = fields.indexOf(e.target as HTMLElement)
+  if (idx >= 0 && idx < fields.length - 1) {
+    fields[idx + 1].focus()
+  } else if (addLine) {
+    addLine()
+  }
+}
+
 export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) => string }) {
   const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,6 +58,7 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [generating, setGenerating] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
 
   const load = async () => {
     setLoading(true)
@@ -76,6 +90,12 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
   const addItem = () => {
     if (!form) return
     setForm({ ...form, items: [...form.items, { name: '', qty: 1, price: 0, discount: 0 }] })
+    setTimeout(() => {
+      if (!formRef.current) return
+      const inputs = formRef.current.querySelectorAll('input')
+      const lastNew = inputs[inputs.length - 5]
+      if (lastNew) lastNew.focus()
+    }, 50)
   }
 
   const removeItem = (idx: number) => {
@@ -83,6 +103,42 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
     const items = form.items.filter((_, i) => i !== idx)
     const totals = calcTotals(items, form.vat_percent)
     setForm({ ...form, items, ...totals })
+  }
+
+  const handleFormKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    const target = e.target as HTMLElement
+    const row = target.closest('[data-row]')
+    const isItemField = !!row
+
+    if (isItemField) {
+      const rowIdx = Number(row?.getAttribute('data-row'))
+      const fields = Array.from(row!.querySelectorAll<HTMLElement>('input'))
+      const idx = fields.indexOf(target)
+      const isLastField = idx === fields.length - 1
+
+      if (isLastField) {
+        const lastRow = formRef.current?.querySelector(`[data-row="${(form?.items.length || 1) - 1}"]`)
+        const isLastRow = row === lastRow
+        if (isLastRow) {
+          addItem()
+        } else {
+          const nextRow = formRef.current?.querySelector(`[data-row="${rowIdx + 1}"] input`)
+          if (nextRow) (nextRow as HTMLElement).focus()
+        }
+      } else {
+        fields[idx + 1]?.focus()
+      }
+    } else {
+      const formEl = formRef.current
+      if (!formEl) return
+      const allFields = Array.from(formEl.querySelectorAll<HTMLElement>('[data-field] input, [data-field] select'))
+      const idx = allFields.indexOf(target)
+      if (idx >= 0 && idx < allFields.length - 1) {
+        allFields[idx + 1]?.focus()
+      }
+    }
   }
 
   const save = async () => {
@@ -208,15 +264,15 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
       )}
 
       {form && (
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+        <div ref={formRef} data-form onKeyDown={handleFormKeyDown} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
           <h4 style={{ margin: '0 0 14px', fontSize: 15 }}>{form.id ? '✏️ Edit' : '➕ New'} Recurring Template</h4>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-            <div>
+            <div data-field="template_name">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Template Name *</label>
               <input value={form.template_name} onChange={(e) => setForm({ ...form, template_name: e.target.value })} placeholder="e.g. Office Rent" style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }} />
             </div>
-            <div>
+            <div data-field="customer">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Customer *</label>
               <select value={form.customer_id} onChange={(e) => {
                 const c = customers.find((c) => c.id === e.target.value)
@@ -226,13 +282,13 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
                 {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div>
+            <div data-field="frequency">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Frequency</label>
               <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })} style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }}>
                 {FREQUENCIES.map((f) => <option key={f}>{f}</option>)}
               </select>
             </div>
-            <div>
+            <div data-field="start_date">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Start Date</label>
               <input type="date" value={form.start_date} onChange={(e) => {
                 const sd = e.target.value
@@ -240,22 +296,22 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
                 setForm({ ...form, start_date: sd, next_run_date: nr })
               }} style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }} />
             </div>
-            <div>
+            <div data-field="end_date">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>End Date (optional)</label>
               <input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }} />
             </div>
-            <div>
+            <div data-field="next_run_date">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Next Run Date</label>
               <input type="date" value={form.next_run_date} onChange={(e) => setForm({ ...form, next_run_date: e.target.value })} style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }} />
             </div>
           </div>
 
-          <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, color: '#1e293b' }}>📋 Invoice Items</div>
+          <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, color: '#1e293b' }}>📋 Invoice Items <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 11 }}>(Enter to advance, Enter on last field adds new line)</span></div>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 40px', gap: 8, marginBottom: 6, fontSize: 11, fontWeight: 600, color: '#64748b' }}>
             <span>DESCRIPTION</span><span>QTY</span><span>PRICE</span><span>DISCOUNT %</span><span></span>
           </div>
           {form.items.map((item, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 40px', gap: 8, marginBottom: 6 }}>
+            <div key={i} data-row={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 40px', gap: 8, marginBottom: 6 }}>
               <input value={item.name} onChange={(e) => updateItem(i, 'name', e.target.value)} placeholder="Item description" style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 12 }} />
               <input type="number" min="1" value={item.qty} onChange={(e) => updateItem(i, 'qty', Number(e.target.value))} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 12, textAlign: 'center' }} />
               <input type="number" min="0" step="0.01" value={item.price} onChange={(e) => updateItem(i, 'price', Number(e.target.value))} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 12, textAlign: 'right' }} />
@@ -263,10 +319,10 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
               <button onClick={() => removeItem(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
             </div>
           ))}
-          <button onClick={addItem} style={{ padding: '4px 12px', borderRadius: 6, border: '1px dashed #8b5cf6', background: '#f5f3ff', color: '#7c3aed', fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: 14 }}>+ Add Item</button>
+          <button onClick={addItem} data-focus style={{ padding: '4px 12px', borderRadius: 6, border: '1px dashed #8b5cf6', background: '#f5f3ff', color: '#7c3aed', fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: 14 }}>+ Add Item</button>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div>
+            <div data-field="vat">
               <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>VAT %</label>
               <input type="number" min="0" max="100" value={form.vat_percent} onChange={(e) => {
                 const vp = Number(e.target.value)
@@ -286,7 +342,7 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={save} disabled={saving} style={{ padding: '10px 20px', borderRadius: 8, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : '💾 Save Template'}</button>
+            <button onClick={save} disabled={saving} data-focus style={{ padding: '10px 20px', borderRadius: 8, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : '💾 Save Template'}</button>
             <button onClick={() => setForm(null)} style={{ padding: '10px 16px', borderRadius: 8, background: '#fff', color: '#475569', border: '1px solid #d1d5db', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
