@@ -2484,6 +2484,306 @@ const StockReport = ({ fmtMoney }) => {
   )
 }
 
+const CustomerLedger = ({ fmtMoney }) => {
+  const [customers, setCustomers] = useState([])
+  const [invoices, setInvoices] = useState([])
+  const [payments, setPayments] = useState([])
+  const [creditMemos, setCreditMemos] = useState([])
+  const [returns, setReturns] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCustomer, setSelectedCustomer] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      supabase.from('customers').select('*'),
+      supabase.from('invoices').select('*'),
+      supabase.from('incoming_payments').select('*'),
+      supabase.from('ar_credit_memos').select('*').catch(() => ({ data: [] })),
+      supabase.from('sales_returns').select('*').catch(() => ({ data: [] })),
+    ]).then(([c, inv, pay, cm, ret]) => {
+      setCustomers(c.data || [])
+      setInvoices(inv.data || [])
+      setPayments(pay.data || [])
+      setCreditMemos(cm.data || [])
+      setReturns(ret.data || [])
+      setLoading(false)
+    })
+  }, [])
+
+  const selected = customers.find((c) => c.id === selectedCustomer)
+  const custName = selected ? (selected.name || `${selected.first_name || ''} ${selected.last_name || ''}`.trim()) : ''
+
+  const transactions = []
+  if (selectedCustomer && custName) {
+    invoices.filter((inv) => inv.customer_name === custName || inv.customer_email === selected?.email).forEach((inv) => {
+      const d = (inv.doc_date || inv.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Invoice', ref: inv.invoice_no || inv.doc_no || '—', description: `Invoice to ${custName}`, debit: Number(inv.grand_total || inv.total_amount || 0), credit: 0, id: inv.id })
+    })
+    payments.filter((p) => p.customer_name === custName || p.customer_id === selectedCustomer).forEach((p) => {
+      const d = (p.payment_date || p.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Payment Received', ref: p.receipt_no || p.reference_no || '—', description: `Payment from ${custName}`, debit: 0, credit: Number(p.amount || 0), id: p.id })
+    })
+    creditMemos.filter((cm) => cm.customer_name === custName || cm.customer_id === selectedCustomer).forEach((cm) => {
+      const d = (cm.doc_date || cm.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Credit Memo', ref: cm.credit_memo_no || cm.doc_no || '—', description: cm.reason || 'Credit memo', debit: 0, credit: Number(cm.grand_total || cm.amount || 0), id: cm.id })
+    })
+    returns.filter((r) => r.customer_name === custName || r.customer_id === selectedCustomer).forEach((r) => {
+      const d = (r.doc_date || r.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Sales Return', ref: r.return_no || r.doc_no || '—', description: r.reason || 'Sales return', debit: 0, credit: Number(r.grand_total || r.amount || 0), id: r.id })
+    })
+    if (Number(selected?.opening_balance || 0) !== 0) {
+      transactions.push({ date: '', type: 'Opening Balance', ref: '—', description: 'Opening balance', debit: Number(selected.opening_balance || 0), credit: 0, id: 'opening' })
+    }
+  }
+
+  const filtered = transactions.filter((t) => {
+    if (fromDate && t.date < fromDate) return false
+    if (toDate && t.date > toDate) return false
+    return true
+  }).sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0)
+
+  let runningBalance = 0
+  const withBalance = filtered.map((t) => {
+    runningBalance += t.debit - t.credit
+    return { ...t, balance: runningBalance }
+  })
+
+  const totalDebit = filtered.reduce((s, t) => s + t.debit, 0)
+  const totalCredit = filtered.reduce((s, t) => s + t.credit, 0)
+
+  const printReport = () => {
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>Customer Ledger</title><style>body{font-family:Arial,sans-serif;padding:30px}h1{color:#1e1b4b;font-size:20px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:5px 10px;border:1px solid #e2e8f0;font-size:12px}th{text-align:left;background:#f1f5f9}.col-r{text-align:right}.total{font-weight:700;background:#f8fafc}</style></head><body>')
+    w.document.write('<h1>📒 Customer Ledger — ' + custName + '</h1>')
+    w.document.write('<table><tr><th>Date</th><th>Type</th><th>Ref</th><th>Description</th><th class="col-r">Debit</th><th class="col-r">Credit</th><th class="col-r">Balance</th></tr>')
+    withBalance.forEach((t) => { w.document.write('<tr><td>' + t.date + '</td><td>' + t.type + '</td><td>' + t.ref + '</td><td>' + t.description + '</td><td class="col-r">' + (t.debit ? fmtMoney(t.debit) : '') + '</td><td class="col-r">' + (t.credit ? fmtMoney(t.credit) : '') + '</td><td class="col-r"><b>' + fmtMoney(t.balance) + '</b></td></tr>') })
+    w.document.write('<tr class="total"><td colspan="4"><b>TOTAL</b></td><td class="col-r"><b>' + fmtMoney(totalDebit) + '</b></td><td class="col-r"><b>' + fmtMoney(totalCredit) + '</b></td><td class="col-r"><b>' + fmtMoney(runningBalance) + '</b></td></tr></table></body></html>')
+    w.document.close(); w.print()
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="report-head">
+        <h3>📒 Customer Ledger</h3>
+        <div className="report-controls">
+          <label>Customer
+            <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)}>
+              <option value="">Select Customer</option>
+              {customers.map((c) => <option key={c.id} value={c.id}>{c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim()}</option>)}
+            </select>
+          </label>
+          <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
+          <label>To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+          <ShareBar title="Customer Ledger" onPrint={printReport} onPdf={printReport} text={`Customer Ledger — ${custName}`} />
+        </div>
+      </div>
+      {selectedCustomer && (
+        <div className="report-kpi-row">
+          <div className="report-kpi kpi-blue"><div className="kpi-val">{filtered.length}</div><div className="kpi-lbl">Transactions</div></div>
+          <div className="report-kpi kpi-green"><div className="kpi-val">{fmtMoney(totalDebit)}</div><div className="kpi-lbl">Total Invoiced</div></div>
+          <div className="report-kpi kpi-purple"><div className="kpi-val">{fmtMoney(totalCredit)}</div><div className="kpi-lbl">Total Paid / Credited</div></div>
+          <div className="report-kpi kpi-red"><div className="kpi-val">{fmtMoney(runningBalance)}</div><div className="kpi-lbl">Balance Due</div></div>
+        </div>
+      )}
+      {selectedCustomer && (
+        <div className="grid-wrap">
+          <table className="data-grid report-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>TYPE</th>
+                <th>REF</th>
+                <th>DESCRIPTION</th>
+                <th className="col-money">DEBIT</th>
+                <th className="col-money">CREDIT</th>
+                <th className="col-money">BALANCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="7" className="empty">Loading...</td></tr>}
+              {!loading && withBalance.length === 0 && <tr><td colSpan="7" className="empty">No transactions for this customer</td></tr>}
+              {!loading && withBalance.map((t, i) => (
+                <tr key={t.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td>{t.date}</td>
+                  <td><span className={`badge ${t.type === 'Invoice' ? 'b-blue' : t.type === 'Payment Received' ? 'b-green' : t.type === 'Credit Memo' ? 'b-yellow' : 'b-red'}`}>{t.type}</span></td>
+                  <td style={{ fontSize: 11 }}>{t.ref}</td>
+                  <td>{t.description}</td>
+                  <td className="col-money" style={{ color: t.debit > 0 ? '#16a34a' : '#94a3b8' }}>{t.debit > 0 ? fmtMoney(t.debit) : '—'}</td>
+                  <td className="col-money" style={{ color: t.credit > 0 ? '#dc2626' : '#94a3b8' }}>{t.credit > 0 ? fmtMoney(t.credit) : '—'}</td>
+                  <td className="col-money" style={{ fontWeight: 700, color: t.balance > 0 ? '#dc2626' : '#16a34a' }}>{fmtMoney(t.balance)}</td>
+                </tr>
+              ))}
+            </tbody>
+            {withBalance.length > 0 && (
+              <tfoot>
+                <tr className="total-row">
+                  <td colSpan="4"><b>TOTAL</b></td>
+                  <td className="col-money"><b style={{ color: '#16a34a' }}>{fmtMoney(totalDebit)}</b></td>
+                  <td className="col-money"><b style={{ color: '#dc2626' }}>{fmtMoney(totalCredit)}</b></td>
+                  <td className="col-money"><b>{fmtMoney(runningBalance)}</b></td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const SupplierLedger = ({ fmtMoney }) => {
+  const [suppliers, setSuppliers] = useState([])
+  const [purchaseInvoices, setPurchaseInvoices] = useState([])
+  const [payments, setPayments] = useState([])
+  const [creditMemos, setCreditMemos] = useState([])
+  const [returns, setReturns] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedSupplier, setSelectedSupplier] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      supabase.from('suppliers').select('*'),
+      supabase.from('purchase_invoices').select('*'),
+      supabase.from('outgoing_payments').select('*'),
+      supabase.from('ap_credit_memos').select('*').catch(() => ({ data: [] })),
+      supabase.from('purchase_returns').select('*').catch(() => ({ data: [] })),
+    ]).then(([s, pi, pay, cm, ret]) => {
+      setSuppliers(s.data || [])
+      setPurchaseInvoices(pi.data || [])
+      setPayments(pay.data || [])
+      setCreditMemos(cm.data || [])
+      setReturns(ret.data || [])
+      setLoading(false)
+    })
+  }, [])
+
+  const selected = suppliers.find((s) => s.id === selectedSupplier)
+  const suppName = selected ? (selected.name || '') : ''
+
+  const transactions = []
+  if (selectedSupplier && suppName) {
+    purchaseInvoices.filter((pi) => pi.party_name === suppName || pi.supplier_name === suppName || pi.supplier_id === selectedSupplier).forEach((pi) => {
+      const d = (pi.doc_date || pi.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Purchase Invoice', ref: pi.invoice_no || pi.doc_no || '—', description: `Invoice from ${suppName}`, debit: 0, credit: Number(pi.grand_total || pi.total_amount || 0), id: pi.id })
+    })
+    payments.filter((p) => p.supplier_name === suppName || p.supplier_id === selectedSupplier || p.party_name === suppName).forEach((p) => {
+      const d = (p.payment_date || p.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Payment Made', ref: p.payment_no || p.reference_no || '—', description: `Payment to ${suppName}`, debit: Number(p.amount || 0), credit: 0, id: p.id })
+    })
+    creditMemos.filter((cm) => cm.supplier_name === suppName || cm.supplier_id === selectedSupplier).forEach((cm) => {
+      const d = (cm.doc_date || cm.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Credit Memo', ref: cm.credit_memo_no || cm.doc_no || '—', description: cm.reason || 'Credit memo', debit: Number(cm.grand_total || cm.amount || 0), credit: 0, id: cm.id })
+    })
+    returns.filter((r) => r.supplier_name === suppName || r.supplier_id === selectedSupplier).forEach((r) => {
+      const d = (r.doc_date || r.created_at || '').split('T')[0]
+      transactions.push({ date: d, type: 'Purchase Return', ref: r.return_no || r.doc_no || '—', description: r.reason || 'Purchase return', debit: Number(r.grand_total || r.amount || 0), credit: 0, id: r.id })
+    })
+    if (Number(selected?.opening_balance || 0) !== 0) {
+      transactions.push({ date: '', type: 'Opening Balance', ref: '—', description: 'Opening balance', debit: 0, credit: Number(selected.opening_balance || 0), id: 'opening' })
+    }
+  }
+
+  const filtered = transactions.filter((t) => {
+    if (fromDate && t.date < fromDate) return false
+    if (toDate && t.date > toDate) return false
+    return true
+  }).sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0)
+
+  let runningBalance = 0
+  const withBalance = filtered.map((t) => {
+    runningBalance += t.credit - t.debit
+    return { ...t, balance: runningBalance }
+  })
+
+  const totalDebit = filtered.reduce((s, t) => s + t.debit, 0)
+  const totalCredit = filtered.reduce((s, t) => s + t.credit, 0)
+
+  const printReport = () => {
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>Supplier Ledger</title><style>body{font-family:Arial,sans-serif;padding:30px}h1{color:#1e1b4b;font-size:20px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:5px 10px;border:1px solid #e2e8f0;font-size:12px}th{text-align:left;background:#f1f5f9}.col-r{text-align:right}.total{font-weight:700;background:#f8fafc}</style></head><body>')
+    w.document.write('<h1>📒 Supplier Ledger — ' + suppName + '</h1>')
+    w.document.write('<table><tr><th>Date</th><th>Type</th><th>Ref</th><th>Description</th><th class="col-r">Debit (Paid)</th><th class="col-r">Credit (Owed)</th><th class="col-r">Balance</th></tr>')
+    withBalance.forEach((t) => { w.document.write('<tr><td>' + t.date + '</td><td>' + t.type + '</td><td>' + t.ref + '</td><td>' + t.description + '</td><td class="col-r">' + (t.debit ? fmtMoney(t.debit) : '') + '</td><td class="col-r">' + (t.credit ? fmtMoney(t.credit) : '') + '</td><td class="col-r"><b>' + fmtMoney(t.balance) + '</b></td></tr>') })
+    w.document.write('<tr class="total"><td colspan="4"><b>TOTAL</b></td><td class="col-r"><b>' + fmtMoney(totalDebit) + '</b></td><td class="col-r"><b>' + fmtMoney(totalCredit) + '</b></td><td class="col-r"><b>' + fmtMoney(runningBalance) + '</b></td></tr></table></body></html>')
+    w.document.close(); w.print()
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="report-head">
+        <h3>📒 Supplier Ledger</h3>
+        <div className="report-controls">
+          <label>Supplier
+            <select value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}>
+              <option value="">Select Supplier</option>
+              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+          <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
+          <label>To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+          <ShareBar title="Supplier Ledger" onPrint={printReport} onPdf={printReport} text={`Supplier Ledger — ${suppName}`} />
+        </div>
+      </div>
+      {selectedSupplier && (
+        <div className="report-kpi-row">
+          <div className="report-kpi kpi-blue"><div className="kpi-val">{filtered.length}</div><div className="kpi-lbl">Transactions</div></div>
+          <div className="report-kpi kpi-green"><div className="kpi-val">{fmtMoney(totalDebit)}</div><div className="kpi-lbl">Total Paid</div></div>
+          <div className="report-kpi kpi-purple"><div className="kpi-val">{fmtMoney(totalCredit)}</div><div className="kpi-lbl">Total Invoiced</div></div>
+          <div className="report-kpi kpi-red"><div className="kpi-val">{fmtMoney(runningBalance)}</div><div className="kpi-lbl">Balance Owed</div></div>
+        </div>
+      )}
+      {selectedSupplier && (
+        <div className="grid-wrap">
+          <table className="data-grid report-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>TYPE</th>
+                <th>REF</th>
+                <th>DESCRIPTION</th>
+                <th className="col-money">DEBIT (PAID)</th>
+                <th className="col-money">CREDIT (OWED)</th>
+                <th className="col-money">BALANCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="7" className="empty">Loading...</td></tr>}
+              {!loading && withBalance.length === 0 && <tr><td colSpan="7" className="empty">No transactions for this supplier</td></tr>}
+              {!loading && withBalance.map((t, i) => (
+                <tr key={t.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td>{t.date}</td>
+                  <td><span className={`badge ${t.type === 'Purchase Invoice' ? 'b-blue' : t.type === 'Payment Made' ? 'b-green' : t.type === 'Credit Memo' ? 'b-yellow' : 'b-red'}`}>{t.type}</span></td>
+                  <td style={{ fontSize: 11 }}>{t.ref}</td>
+                  <td>{t.description}</td>
+                  <td className="col-money" style={{ color: t.debit > 0 ? '#16a34a' : '#94a3b8' }}>{t.debit > 0 ? fmtMoney(t.debit) : '—'}</td>
+                  <td className="col-money" style={{ color: t.credit > 0 ? '#dc2626' : '#94a3b8' }}>{t.credit > 0 ? fmtMoney(t.credit) : '—'}</td>
+                  <td className="col-money" style={{ fontWeight: 700, color: t.balance > 0 ? '#dc2626' : '#16a34a' }}>{fmtMoney(t.balance)}</td>
+                </tr>
+              ))}
+            </tbody>
+            {withBalance.length > 0 && (
+              <tfoot>
+                <tr className="total-row">
+                  <td colSpan="4"><b>TOTAL</b></td>
+                  <td className="col-money"><b style={{ color: '#16a34a' }}>{fmtMoney(totalDebit)}</b></td>
+                  <td className="col-money"><b style={{ color: '#dc2626' }}>{fmtMoney(totalCredit)}</b></td>
+                  <td className="col-money"><b>{fmtMoney(runningBalance)}</b></td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const CustomerBalanceReport = ({ fmtMoney }) => {
   const [customers, setCustomers] = useState([])
   const [invoices, setInvoices] = useState([])
@@ -2640,6 +2940,7 @@ const TaxReport = ({ fmtMoney }) => {
   const [profile, setProfile] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [accounts, setAccounts] = useState([])
+  const [purchaseInvoices, setPurchaseInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState(() => {
     const now = new Date()
@@ -2657,42 +2958,64 @@ const TaxReport = ({ fmtMoney }) => {
       supabase.from('company_profile').select('*').limit(1),
       supabase.from('invoices').select('*'),
       supabase.from('accounts').select('*'),
-    ]).then(([p, inv, acc]) => {
+      supabase.from('purchase_invoices').select('*').catch(() => ({ data: [] })),
+    ]).then(([p, inv, acc, pi]) => {
       if (p.data?.length) {
         setProfile(p.data[0])
         setRegime(p.data[0].country === 'Saudi Arabia' ? 'zatca' : 'uae')
       }
       setInvoices(inv.data || [])
       setAccounts(acc.data || [])
+      setPurchaseInvoices(pi.data || [])
       setLoading(false)
     })
   }, [])
 
   const filteredInvoices = invoices.filter((inv) => {
-    const d = inv.created_at?.split('T')[0]
-    return (!fromDate || d >= fromDate) && (!toDate || d <= toDate) && inv.status !== 'cancelled'
+    const d = (inv.doc_date || inv.created_at || '').split('T')[0]
+    return (!fromDate || d >= fromDate) && (!toDate || d <= toDate) && inv.status !== 'cancelled' && inv.status !== 'Draft'
+  })
+
+  const filteredPurchases = purchaseInvoices.filter((pi) => {
+    const d = (pi.doc_date || pi.created_at || '').split('T')[0]
+    return (!fromDate || d >= fromDate) && (!toDate || d <= toDate) && pi.status !== 'cancelled' && pi.status !== 'Draft'
   })
 
   const vatRate = Number(profile?.vat_rate || (regime === 'zatca' ? 15 : 5))
 
   const outputTaxItems = filteredInvoices.map((inv) => ({
-    invoice_no: inv.invoice_no,
-    customer: inv.customer_name,
-    date: inv.created_at?.split('T')[0],
-    subtotal: Number(inv.subtotal || 0),
+    invoice_no: inv.invoice_no || inv.doc_no || '—',
+    customer: inv.customer_name || '—',
+    date: (inv.doc_date || inv.created_at || '').split('T')[0],
+    subtotal: Number(inv.subtotal || inv.total_amount || 0),
     vat_amount: Number(inv.vat_amount || 0),
-    grand_total: Number(inv.grand_total || 0),
+    grand_total: Number(inv.grand_total || inv.total_amount || 0),
     vat_rate: Number(inv.vat_percent || vatRate),
+  }))
+
+  const inputTaxItems = filteredPurchases.map((pi) => ({
+    invoice_no: pi.invoice_no || pi.doc_no || '—',
+    supplier: pi.party_name || pi.supplier_name || '—',
+    date: (pi.doc_date || pi.created_at || '').split('T')[0],
+    subtotal: Number(pi.subtotal || pi.total_amount || 0),
+    vat_amount: Number(pi.vat_amount || 0),
+    grand_total: Number(pi.grand_total || pi.total_amount || 0),
+    vat_rate: Number(pi.vat_percent || vatRate),
   }))
 
   const totalSalesExVAT = outputTaxItems.reduce((s, i) => s + i.subtotal, 0)
   const totalOutputTax = outputTaxItems.reduce((s, i) => s + i.vat_amount, 0)
   const totalSalesIncVAT = outputTaxItems.reduce((s, i) => s + i.grand_total, 0)
 
+  const totalPurchasesExVAT = inputTaxItems.reduce((s, i) => s + i.subtotal, 0)
+  const totalInputTax = inputTaxItems.reduce((s, i) => s + i.vat_amount, 0)
+  const totalPurchasesIncVAT = inputTaxItems.reduce((s, i) => s + i.grand_total, 0)
+
   const expenseAccounts = accounts.filter((a) => a.type === 'Expense')
   const totalExpenses = expenseAccounts.reduce((s, a) => s + Number(Math.abs(a.current_balance || 0)), 0)
-  const estimatedInputTax = totalExpenses * (vatRate / (100 + vatRate))
-  const netVATPayable = totalOutputTax - estimatedInputTax
+  const fallbackInputTax = totalExpenses * (vatRate / (100 + vatRate))
+  const effectiveInputTax = totalInputTax > 0 ? totalInputTax : fallbackInputTax
+  const netVATPayable = totalOutputTax - effectiveInputTax
 
   const zeroRatedSales = 0
   const exemptSales = 0
@@ -2709,11 +3032,17 @@ const TaxReport = ({ fmtMoney }) => {
     w.document.write('<h3>Box 2: Zero-Rated & Exempt Supplies</h3>')
     w.document.write('<table><tr><td>Zero-rated supplies</td><td class="col-r">' + fmtMoney(zeroRatedSales) + '</td></tr><tr><td>Exempt supplies</td><td class="col-r">' + fmtMoney(exemptSales) + '</td></tr></table>')
     w.document.write('<h3>Box 3: Deductions — Input Tax (VAT Paid on Purchases)</h3>')
-    w.document.write('<table><tr><td>Estimated Input Tax (from expenses)</td><td class="col-r">' + fmtMoney(estimatedInputTax) + '</td></tr></table>')
+    if (inputTaxItems.length > 0) {
+      w.document.write('<table><tr><th>Invoice #</th><th>Supplier</th><th>Date</th><th class="col-r">Net Amount</th><th class="col-r">VAT Rate</th><th class="col-r">VAT Amount</th><th class="col-r">Total</th></tr>')
+      inputTaxItems.forEach((pi) => { w.document.write('<tr><td>' + pi.invoice_no + '</td><td>' + pi.supplier + '</td><td>' + pi.date + '</td><td class="col-r">' + fmtMoney(pi.subtotal) + '</td><td class="col-r">' + pi.vat_rate + '%</td><td class="col-r">' + fmtMoney(pi.vat_amount) + '</td><td class="col-r">' + fmtMoney(pi.grand_total) + '</td></tr>') })
+      w.document.write('<tr class="total"><td colspan="3"><b>Total Purchases</b></td><td class="col-r"><b>' + fmtMoney(totalPurchasesExVAT) + '</b></td><td></td><td class="col-r neg"><b>' + fmtMoney(totalInputTax) + '</b></td><td class="col-r"><b>' + fmtMoney(totalPurchasesIncVAT) + '</b></td></tr></table>')
+    } else {
+      w.document.write('<table><tr><td>Estimated Input Tax (from expense accounts)</td><td class="col-r">' + fmtMoney(fallbackInputTax) + '</td></tr></table>')
+    }
     w.document.write('<h3>Box 4: VAT Settlement</h3>')
     w.document.write('<table>')
     w.document.write('<tr><td><b>Total Output Tax (VAT collected)</b></td><td class="col-r pos"><b>' + fmtMoney(totalOutputTax) + '</b></td></tr>')
-    w.document.write('<tr><td><b>Total Input Tax (VAT paid)</b></td><td class="col-r neg"><b>' + fmtMoney(estimatedInputTax) + '</b></td></tr>')
+    w.document.write('<tr><td><b>Total Input Tax (VAT paid)</b></td><td class="col-r neg"><b>' + fmtMoney(effectiveInputTax) + '</b></td></tr>')
     w.document.write('<tr class="total"><td><b>Net VAT Payable to Authority</b></td><td class="col-r ' + (netVATPayable >= 0 ? 'neg' : 'pos') + '"><b>' + fmtMoney(Math.abs(netVATPayable)) + '</b></td></tr>')
     w.document.write('</table>')
     if (isZatca) {
@@ -2751,7 +3080,7 @@ const TaxReport = ({ fmtMoney }) => {
       </div>
       <div className={`report-balance-bar ${netVATPayable >= 0 ? 'unbalanced' : 'balanced'}`}>
         <span>Output Tax: <b>{fmtMoney(totalOutputTax)}</b></span>
-        <span>Input Tax: <b>{fmtMoney(estimatedInputTax)}</b></span>
+        <span>Input Tax: <b>{fmtMoney(effectiveInputTax)}</b></span>
         <span>Net VAT {netVATPayable >= 0 ? 'Payable' : 'Refundable'}: <b>{fmtMoney(Math.abs(netVATPayable))}</b></span>
       </div>
       <div className="report-sections">
@@ -2793,17 +3122,41 @@ const TaxReport = ({ fmtMoney }) => {
         </div>
         <div className="report-section">
           <h4 style={{ color: '#dc2626' }}>📉 Box 3: Input Tax — Purchases</h4>
-          <div className="report-kpi-row">
-            <div className="report-kpi kpi-red"><div className="kpi-val">{fmtMoney(estimatedInputTax)}</div><div className="kpi-lbl">Est. Input VAT</div></div>
+          <div className="report-kpi-row" style={{ marginBottom: 12 }}>
+            <div className="report-kpi kpi-red"><div className="kpi-val">{filteredPurchases.length}</div><div className="kpi-lbl">Purchase Invoices</div></div>
+            <div className="report-kpi kpi-blue"><div className="kpi-val">{fmtMoney(totalPurchasesExVAT)}</div><div className="kpi-lbl">Net Purchases</div></div>
+            <div className="report-kpi kpi-purple"><div className="kpi-val">{fmtMoney(effectiveInputTax)}</div><div className="kpi-lbl">Input VAT ({vatRate}%)</div></div>
           </div>
-          <p className="empty" style={{ marginTop: 8 }}>Input VAT estimated from expense accounts. Connect purchase invoices for exact calculation.</p>
+          {inputTaxItems.length > 0 ? (
+            <div className="grid-wrap">
+              <table className="data-grid report-table">
+                <thead><tr><th>INVOICE #</th><th>SUPPLIER</th><th>DATE</th><th className="col-money">NET</th><th className="col-money">VAT RATE</th><th className="col-money">VAT AMOUNT</th><th className="col-money">TOTAL</th></tr></thead>
+                <tbody>
+                  {inputTaxItems.map((pi, i) => (
+                    <tr key={i} className={i % 2 ? 'alt' : ''}>
+                      <td className="code-cell">{pi.invoice_no}</td>
+                      <td>{pi.supplier || '—'}</td>
+                      <td>{pi.date}</td>
+                      <td className="col-money">{fmtMoney(pi.subtotal)}</td>
+                      <td className="col-money">{pi.vat_rate}%</td>
+                      <td className="col-money dr">{fmtMoney(pi.vat_amount)}</td>
+                      <td className="col-money">{fmtMoney(pi.grand_total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot><tr className="total-row"><td colSpan="3"><b>TOTAL</b></td><td className="col-money"><b>{fmtMoney(totalPurchasesExVAT)}</b></td><td></td><td className="col-money dr"><b>{fmtMoney(totalInputTax)}</b></td><td className="col-money"><b>{fmtMoney(totalPurchasesIncVAT)}</b></td></tr></tfoot>
+              </table>
+            </div>
+          ) : (
+            <p className="empty" style={{ marginTop: 8 }}>No purchase invoices found. Input VAT estimated from expense accounts: <b>{fmtMoney(fallbackInputTax)}</b></p>
+          )}
         </div>
         <div className="report-section">
           <h4>💰 Box 4: VAT Settlement</h4>
           <table className="data-grid report-table">
             <tbody>
               <tr><td>Total Output Tax (VAT collected)</td><td className="col-money cr"><b>{fmtMoney(totalOutputTax)}</b></td></tr>
-              <tr><td>Total Input Tax (VAT paid on purchases)</td><td className="col-money dr"><b>{fmtMoney(estimatedInputTax)}</b></td></tr>
+              <tr><td>Total Input Tax (VAT paid on purchases)</td><td className="col-money dr"><b>{fmtMoney(effectiveInputTax)}</b></td></tr>
             </tbody>
             <tfoot><tr className="total-row"><td><b>Net VAT {netVATPayable >= 0 ? 'Payable to Authority' : 'Refundable from Authority'}</b></td><td className={`col-money ${netVATPayable >= 0 ? 'dr' : 'cr'}`}><b>{fmtMoney(Math.abs(netVATPayable))}</b></td></tr></tfoot>
           </table>
@@ -3540,14 +3893,32 @@ const BankRecon = ({ accounts, fmtMoney }) => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [existingRecon, setExistingRecon] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
+  const [history, setHistory] = useState([])
 
   const bankAccounts = accounts.filter((a) => a.type === 'Asset' && (a.name?.toLowerCase().includes('bank') || a.name?.toLowerCase().includes('cash') || a.name?.toLowerCase().includes('safe')))
   const bookBalance = selectedAccount ? Number(bankAccounts.find((a) => a.id === selectedAccount)?.current_balance || 0) : 0
   const difference = Number(statementBalance || 0) - bookBalance
 
+  const matchedCount = reconItems.filter((i) => i.matched).length
+  const unmatchedCount = reconItems.filter((i) => !i.matched).length
+  const clearedBook = reconItems.filter((i) => i.book_ind).reduce((s, i) => s + Number(i.amount || 0), 0)
+  const clearedStatement = reconItems.filter((i) => i.statement_ind).reduce((s, i) => s + Number(i.amount || 0), 0)
+
+  const loadHistory = async () => {
+    if (!selectedAccount) { setHistory([]); return }
+    const { data } = await supabase.from('bank_reconciliation')
+      .select('*').eq('account_id', selectedAccount)
+      .order('created_at', { ascending: false }).limit(10)
+    setHistory(data || [])
+  }
+
   const loadReconciliation = async () => {
     if (!selectedAccount) return
     setLoading(true)
+    await loadHistory()
     const { data: recon } = await supabase.from('bank_reconciliation')
       .select('*').eq('account_id', selectedAccount)
       .order('created_at', { ascending: false }).limit(1)
@@ -3568,34 +3939,101 @@ const BankRecon = ({ accounts, fmtMoney }) => {
   const loadTransactions = async () => {
     if (!selectedAccount) return
     setLoading(true)
+    const allItems = []
+
     const { data: jeLines } = await supabase
       .from('journal_lines')
       .select('*, journal_entries!inner(*)')
       .eq('account_id', selectedAccount)
       .eq('journal_entries.status', 'Posted')
-      .order('created_at', { ascending: false })
-    const items = (jeLines || []).map((line) => ({
-      id: line.id,
-      type: 'Journal Entry',
-      date: line.created_at?.split('T')[0],
-      description: line.description || (line.journal_entries && `${line.journal_entries[0]?.description || ''}`),
-      debit: Number(line.debit || 0),
-      credit: Number(line.credit || 0),
-      amount: Number(line.debit || 0) - Number(line.credit || 0),
-      statement_ind: false,
-      book_ind: true,
-      matched: false,
-    }))
-    setReconItems(items)
+    for (const line of (jeLines || [])) {
+      const je = Array.isArray(line.journal_entries) ? line.journal_entries[0] : line.journal_entries
+      allItems.push({
+        id: line.id, type: 'Journal Entry', date: (je?.entry_date || line.created_at || '').split('T')[0],
+        description: line.description || je?.narration || je?.description || '—',
+        ref: je?.reference || '', debit: Number(line.debit || 0), credit: Number(line.credit || 0),
+        amount: Number(line.debit || 0) - Number(line.credit || 0),
+        statement_ind: false, book_ind: true, matched: false,
+      })
+    }
+
+    try {
+      const { data: incPay } = await supabase.from('incoming_payments')
+        .select('*').eq('bank_account', selectedAccount).neq('status', 'Cancelled')
+      for (const p of (incPay || [])) {
+        allItems.push({
+          id: p.id, type: 'Incoming Payment', date: (p.payment_date || p.created_at || '').split('T')[0],
+          description: `Receipt from ${p.customer_name || p.party_name || '—'}`, ref: p.reference_no || '',
+          debit: Number(p.amount || 0), credit: 0, amount: Number(p.amount || 0),
+          statement_ind: false, book_ind: true, matched: false,
+        })
+      }
+    } catch (_) { /* table may not exist */ }
+
+    try {
+      const { data: outPay } = await supabase.from('outgoing_payments')
+        .select('*').eq('bank_account', selectedAccount).neq('status', 'Cancelled')
+      for (const p of (outPay || [])) {
+        allItems.push({
+          id: p.id, type: 'Outgoing Payment', date: (p.payment_date || p.created_at || '').split('T')[0],
+          description: `Payment to ${p.supplier_name || p.party_name || '—'}`, ref: p.reference_no || '',
+          debit: 0, credit: Number(p.amount || 0), amount: -Number(p.amount || 0),
+          statement_ind: false, book_ind: true, matched: false,
+        })
+      }
+    } catch (_) { /* table may not exist */ }
+
+    try {
+      const { data: deposits } = await supabase.from('bank_deposits')
+        .select('*').eq('bank_account', selectedAccount).neq('status', 'Cancelled')
+      for (const d of (deposits || [])) {
+        allItems.push({
+          id: d.id, type: 'Deposit', date: (d.deposit_date || d.created_at || '').split('T')[0],
+          description: d.description || `Deposit #${d.deposit_no || ''}`, ref: d.deposit_no || '',
+          debit: Number(d.amount || 0), credit: 0, amount: Number(d.amount || 0),
+          statement_ind: false, book_ind: true, matched: false,
+        })
+      }
+    } catch (_) { /* table may not exist */ }
+
+    allItems.sort((a, b) => a.date > b.date ? -1 : 1)
+    setReconItems(allItems)
     setLoading(false)
   }
 
   useEffect(() => {
-    if (selectedAccount) loadTransactions()
+    if (selectedAccount) { loadTransactions(); loadHistory() }
   }, [selectedAccount])
 
   const toggleStatement = (idx) => {
     setReconItems((prev) => prev.map((item, i) => i === idx ? { ...item, statement_ind: !item.statement_ind, matched: !item.statement_ind ? item.book_ind : false } : item))
+  }
+
+  const autoMatch = () => {
+    setReconItems((prev) => {
+      const updated = [...prev]
+      const unmatched = updated.filter((i) => !i.matched)
+      for (let i = 0; i < unmatched.length; i++) {
+        for (let j = i + 1; j < unmatched.length; j++) {
+          if (!unmatched[j].matched && Math.abs(unmatched[i].amount) === Math.abs(unmatched[j].amount) && unmatched[i].date === unmatched[j].date) {
+            const idx1 = updated.indexOf(unmatched[i])
+            const idx2 = updated.indexOf(unmatched[j])
+            updated[idx1] = { ...updated[idx1], book_ind: true, statement_ind: true, matched: true }
+            updated[idx2] = { ...updated[idx2], book_ind: true, statement_ind: true, matched: true }
+            unmatched[j] = { ...updated[idx2] }
+          }
+        }
+      }
+      return updated
+    })
+  }
+
+  const matchAll = () => {
+    setReconItems((prev) => prev.map((i) => ({ ...i, book_ind: true, statement_ind: true, matched: true })))
+  }
+
+  const unmatchAll = () => {
+    setReconItems((prev) => prev.map((i) => ({ ...i, book_ind: true, statement_ind: false, matched: false })))
   }
 
   const saveReconciliation = async () => {
@@ -3615,20 +4053,15 @@ const BankRecon = ({ accounts, fmtMoney }) => {
       }
       await supabase.from('bank_recon_lines').delete().eq('recon_id', reconId)
       const linesToInsert = reconItems.filter((item) => item.statement_ind || item.book_ind).map((item) => ({
-        recon_id: reconId,
-        transaction_type: item.type || 'Journal Entry',
-        transaction_id: item.id,
-        transaction_date: item.date,
-        description: item.description,
-        amount: item.amount,
-        statement_ind: item.statement_ind,
-        book_ind: item.book_ind,
-        matched: item.matched || false,
+        recon_id: reconId, transaction_type: item.type || 'Journal Entry', transaction_id: item.id,
+        transaction_date: item.date, description: item.description, amount: item.amount,
+        statement_ind: item.statement_ind, book_ind: item.book_ind, matched: item.matched || false,
       }))
       if (linesToInsert.length > 0) {
         const { error: lineError } = await supabase.from('bank_recon_lines').insert(linesToInsert)
         if (lineError) throw lineError
       }
+      await loadHistory()
       setSaving(false)
       alert('Reconciliation saved successfully!')
     } catch (err) {
@@ -3636,6 +4069,16 @@ const BankRecon = ({ accounts, fmtMoney }) => {
       alert('Error saving: ' + (err.message || 'Unknown error'))
     }
   }
+
+  const filtered = reconItems.filter((i) => {
+    if (filter === 'matched' && !i.matched) return false
+    if (filter === 'unmatched' && i.matched) return false
+    if (filter === 'book' && !i.book_ind) return false
+    if (filter === 'statement' && !i.statement_ind) return false
+    if (fromDate && i.date < fromDate) return false
+    if (toDate && i.date > toDate) return false
+    return true
+  })
 
   return (
     <div className="bank-recon-wrap">
@@ -3648,6 +4091,12 @@ const BankRecon = ({ accounts, fmtMoney }) => {
               {bankAccounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name} ({acc.code})</option>)}
             </select>
           </label>
+          <label>From
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          </label>
+          <label>To
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          </label>
           <label>Statement Date
             <input type="date" value={statementDate} onChange={(e) => setStatementDate(e.target.value)} />
           </label>
@@ -3657,59 +4106,118 @@ const BankRecon = ({ accounts, fmtMoney }) => {
           {selectedAccount && <button className="btn-print" onClick={saveReconciliation} disabled={saving}>{saving ? 'Saving…' : '💾 Save'}</button>}
         </div>
       </div>
+
       {selectedAccount && (
-        <div className="bank-recon-summary">
-          <div className="recon-card"><span className="recon-label">Book Balance</span><span className="recon-val">{fmtMoney(bookBalance)}</span></div>
-          <div className="recon-card"><span className="recon-label">Statement Balance</span><span className="recon-val">{fmtMoney(statementBalance)}</span></div>
-          <div className={`recon-card ${Math.abs(difference) < 0.01 ? 'balanced' : 'unbalanced'}`}>
-            <span className="recon-label">Difference</span>
-            <span className="recon-val">{fmtMoney(difference)}</span>
-            <span className="recon-status">{Math.abs(difference) < 0.01 ? '✓ Reconciled' : '✗ Not reconciled'}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, margin: '12px 0' }}>
+          <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '12px 16px', border: '1px solid #bbf7d0' }}>
+            <div style={{ fontSize: 11, color: '#166534', fontWeight: 600 }}>BOOK BALANCE</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#15803d', marginTop: 2 }}>{fmtMoney(bookBalance)}</div>
+          </div>
+          <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 16px', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 600 }}>STATEMENT BALANCE</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#1d4ed8', marginTop: 2 }}>{fmtMoney(statementBalance)}</div>
+          </div>
+          <div style={{ background: Math.abs(difference) < 0.01 ? '#f0fdf4' : '#fef2f2', borderRadius: 10, padding: '12px 16px', border: `1px solid ${Math.abs(difference) < 0.01 ? '#bbf7d0' : '#fecaca'}` }}>
+            <div style={{ fontSize: 11, color: Math.abs(difference) < 0.01 ? '#166534' : '#991b1b', fontWeight: 600 }}>DIFFERENCE</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: Math.abs(difference) < 0.01 ? '#15803d' : '#dc2626', marginTop: 2 }}>{fmtMoney(difference)}</div>
+            <div style={{ fontSize: 10, color: Math.abs(difference) < 0.01 ? '#16a34a' : '#ef4444', fontWeight: 600 }}>{Math.abs(difference) < 0.01 ? '✓ RECONCILED' : '✗ NOT RECONCILED'}</div>
+          </div>
+          <div style={{ background: '#fefce8', borderRadius: 10, padding: '12px 16px', border: '1px solid #fde68a' }}>
+            <div style={{ fontSize: 11, color: '#854d0e', fontWeight: 600 }}>CLEARED ITEMS</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#a16207', marginTop: 4 }}>Book: {fmtMoney(clearedBook)}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#a16207' }}>Stmt: {fmtMoney(clearedStatement)}</div>
           </div>
         </div>
       )}
+
+      {selectedAccount && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {['all', 'unmatched', 'matched', 'book', 'statement'].map((f) => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '4px 12px', borderRadius: 6, border: `1px solid ${filter === f ? '#8b5cf6' : '#e2e8f0'}`, background: filter === f ? '#8b5cf6' : '#fff', color: filter === f ? '#fff' : '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+              {f} {f === 'unmatched' && `(${unmatchedCount})`} {f === 'matched' && `(${matchedCount})`}
+            </button>
+          ))}
+          <div style={{ flex: 1 }} />
+          <button onClick={autoMatch} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #10b981', background: '#10b981', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>🔗 Auto Match</button>
+          <button onClick={matchAll} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #6366f1', background: '#6366f1', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>✓ Match All</button>
+          <button onClick={unmatchAll} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #ef4444', background: '#fff', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>✗ Unmatch All</button>
+        </div>
+      )}
+
       {selectedAccount && (
         <div className="grid-wrap">
           <table className="data-grid report-table">
             <thead>
               <tr>
-                <th className="th-checkbox"></th>
-                <th className="th-checkbox"></th>
+                <th className="th-checkbox" title="In Book">📖</th>
+                <th className="th-checkbox" title="In Statement">📄</th>
                 <th>DATE</th>
                 <th>DESCRIPTION</th>
+                <th>REF</th>
                 <th>TYPE</th>
                 <th className="col-money">DEBIT</th>
                 <th className="col-money">CREDIT</th>
                 <th className="col-money">AMOUNT</th>
-                <th className="th-checkbox">MATCHED</th>
+                <th className="th-checkbox">✓</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan="9" className="empty">Loading transactions...</td></tr>}
-              {!loading && reconItems.length === 0 && <tr><td colSpan="9" className="empty">No transactions found</td></tr>}
-              {!loading && reconItems.map((item, i) => (
-                <tr key={item.id || i} className={i % 2 ? 'alt' : ''}>
-                  <td className="td-checkbox"><input type="checkbox" checked={item.book_ind} onChange={() => setReconItems((prev) => prev.map((it, j) => j === i ? { ...it, book_ind: !it.book_ind, matched: !it.book_ind ? it.statement_ind : false } : it))} title="In Book" /></td>
-                  <td className="td-checkbox"><input type="checkbox" checked={item.statement_ind} onChange={() => toggleStatement(i)} title="In Statement" /></td>
+              {loading && <tr><td colSpan="10" className="empty">Loading transactions...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="10" className="empty">No transactions found</td></tr>}
+              {!loading && filtered.map((item, i) => (
+                <tr key={item.id || i} className={item.matched ? '' : i % 2 ? 'alt' : ''} style={item.matched ? { background: '#f0fdf4' } : {}}>
+                  <td className="td-checkbox"><input type="checkbox" checked={item.book_ind} onChange={() => setReconItems((prev) => prev.map((it, j) => reconItems.indexOf(it) === reconItems.indexOf(item) ? { ...it, book_ind: !it.book_ind, matched: !it.book_ind ? it.statement_ind : false } : it))} title="In Book" /></td>
+                  <td className="td-checkbox"><input type="checkbox" checked={item.statement_ind} onChange={() => { const idx = reconItems.indexOf(item); toggleStatement(idx) }} title="In Statement" /></td>
                   <td>{item.date}</td>
-                  <td>{item.description || '—'}</td>
-                  <td><span className="badge b-blue">{item.type || 'JE'}</span></td>
-                  <td className="col-money cr">{fmtMoney(item.debit)}</td>
-                  <td className="col-money dr">{fmtMoney(item.credit)}</td>
-                  <td className="col-money">{fmtMoney(item.amount)}</td>
-                  <td className="td-checkbox">{item.matched && <span style={{ color: '#10b981' }}>✓</span>}</td>
+                  <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || '—'}</td>
+                  <td style={{ fontSize: 11, color: '#64748b' }}>{item.ref || '—'}</td>
+                  <td><span className={`badge ${item.type.includes('Payment') ? 'b-green' : item.type === 'Deposit' ? 'b-blue' : 'b-purple'}`}>{item.type}</span></td>
+                  <td className="col-money" style={{ color: item.debit > 0 ? '#16a34a' : '#94a3b8' }}>{item.debit > 0 ? fmtMoney(item.debit) : '—'}</td>
+                  <td className="col-money" style={{ color: item.credit > 0 ? '#dc2626' : '#94a3b8' }}>{item.credit > 0 ? fmtMoney(item.credit) : '—'}</td>
+                  <td className="col-money" style={{ fontWeight: 700, color: item.amount >= 0 ? '#16a34a' : '#dc2626' }}>{fmtMoney(item.amount)}</td>
+                  <td className="td-checkbox">{item.matched && <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>}</td>
                 </tr>
               ))}
             </tbody>
-            {reconItems.length > 0 && (
+            {filtered.length > 0 && (
               <tfoot>
                 <tr className="total-row">
-                  <td colSpan="6"><b>Total Transactions</b></td>
-                  <td className="col-money"><b>{fmtMoney(reconItems.reduce((s, i) => s + Number(i.amount), 0))}</b></td>
+                  <td colSpan="6"><b>Totals ({filtered.length} items)</b></td>
+                  <td className="col-money"><b style={{ color: '#16a34a' }}>{fmtMoney(filtered.reduce((s, i) => s + Number(i.debit || 0), 0))}</b></td>
+                  <td className="col-money"><b style={{ color: '#dc2626' }}>{fmtMoney(filtered.reduce((s, i) => s + Number(i.credit || 0), 0))}</b></td>
+                  <td className="col-money"><b>{fmtMoney(filtered.reduce((s, i) => s + Number(i.amount || 0), 0))}</b></td>
                   <td></td>
                 </tr>
               </tfoot>
             )}
+          </table>
+        </div>
+      )}
+
+      {selectedAccount && history.length > 0 && (
+        <div style={{ marginTop: 16, background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: 16 }}>
+          <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700 }}>📋 Reconciliation History</h4>
+          <table className="data-grid report-table" style={{ fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th className="col-money">STATEMENT BALANCE</th>
+                <th className="col-money">BOOK BALANCE</th>
+                <th className="col-money">DIFFERENCE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h, i) => (
+                <tr key={h.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td>{(h.statement_date || '').slice(0, 10)}</td>
+                  <td className="col-money">{fmtMoney(Number(h.statement_balance || 0))}</td>
+                  <td className="col-money">{fmtMoney(Number(h.book_balance || 0))}</td>
+                  <td className="col-money" style={{ color: Math.abs(Number(h.difference || 0)) < 0.01 ? '#16a34a' : '#dc2626', fontWeight: 700 }}>{fmtMoney(Number(h.difference || 0))}</td>
+                  <td><span className={`badge ${h.status === 'Approved' ? 'b-green' : h.status === 'Pending' ? 'b-yellow' : 'b-gray'}`}>{h.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}
@@ -8287,11 +8795,11 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Customer Ledger' && (
-          <CustomerBalanceReport fmtMoney={fmtMoney} />
+          <CustomerLedger fmtMoney={fmtMoney} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Supplier Ledger' && (
-          <SupplierBalanceReport fmtMoney={fmtMoney} />
+          <SupplierLedger fmtMoney={fmtMoney} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Stock Aging' && (
