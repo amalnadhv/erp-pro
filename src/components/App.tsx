@@ -7649,6 +7649,7 @@ const App = () => {
   const [authTenant, setAuthTenant] = useState(() => { try { const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.tenant || null } catch { return null } })
   const [menuOpen, setMenuOpen] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState('')
   const [activePage, setActivePage] = useState(null)
   const [history, setHistory] = useState([null])
   const [hIndex, setHIndex] = useState(0)
@@ -8757,16 +8758,25 @@ const App = () => {
       )}
 
       <div className={`erp-body ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        {sidebarOpen && <div className="mobile-overlay" onClick={() => setSidebarOpen(false)} />}
         {menuOpen && (
           <nav className={`mega-menu-wrap ${sidebarOpen ? 'mobile-show' : ''}`}>
-          <div className="mega-menu">
-            {MENUS.map((menu) => (
+            <div className="mobile-menu-header">
+              <span style={{ fontWeight: 700, fontSize: 14 }}>☰ Navigation</span>
+              <button className="mobile-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
+            </div>
+            <input className="mobile-menu-search" type="text" placeholder="Search menu..." value={mobileSearch} onChange={(e) => setMobileSearch(e.target.value.toLowerCase())} />
+            <div className="mega-menu">
+            {MENUS.map((menu) => {
+              const filtered = menu.items.filter((item) => !mobileSearch || item.label.toLowerCase().includes(mobileSearch))
+              if (filtered.length === 0) return null
+              return (
               <div key={menu.key} className="menu-panel" style={{ '--c1': menu.color, '--c2': menu.color2 }}>
                 <div className="menu-panel-head"><span>{menu.icon}</span> <span className="mpl">{menu.label}</span></div>
                 <ul>
-                  {menu.items.map((item) => (
+                  {filtered.map((item) => (
                     <li key={item.label}>
-                      <button className={activePage === item.label ? 'active' : ''} onClick={() => navigate(item.label)}>
+                      <button className={activePage === item.label ? 'active' : ''} onClick={() => { navigate(item.label); setSidebarOpen(false); setMobileSearch(''); }}>
                         <span className="dd-ico">{item.icon}</span>
                         <span className="mpl">{item.label}</span>
                         <span className={`pin ${favorites.includes(item.label) ? 'pinned' : ''}`} title={favorites.includes(item.label) ? 'Unpin' : 'Pin'} onClick={(e) => { e.stopPropagation(); toggleFav(item.label) }}>★</span>
@@ -8775,7 +8785,8 @@ const App = () => {
                   ))}
                 </ul>
               </div>
-            ))}
+              )
+            })}
           </div>
         </nav>
       )}
