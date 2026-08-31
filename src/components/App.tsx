@@ -22,6 +22,7 @@ import Login from './Login'
 import CreditDashboard from './CreditDashboard'
 import Dashboard from './Dashboard'
 import StockAlerts from './StockAlerts'
+import RecurringInvoices from './RecurringInvoices'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -70,6 +71,7 @@ const MENUS = [
     { label: 'Sales Person', icon: '🧑‍💼' },
     { label: 'Leads & Opportunities', icon: '🎯' },
     { label: 'Sales Target', icon: '🏆' },
+    { label: 'Recurring Invoices', icon: '🔁' },
   ]},
   { key: 'p', label: 'PURCHASING — A/P', icon: '🛒', color: '#f59e0b', color2: '#d97706', items: [
     { label: 'Purchase Requisition', icon: '📝' },
@@ -1212,10 +1214,32 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
               <input type="number" step="0.01" value={form.data.opening_balance} onChange={(e) => setForm({ ...form, data: { ...form.data, opening_balance: e.target.value } })} />
             </label>
             <label>Currency
-              <select value={form.data.currency} onChange={(e) => setForm({ ...form, data: { ...form.data, currency: e.target.value } })}>
-                <option>AED</option><option>SAR</option><option>USD</option><option>EUR</option><option>GBP</option>
+              <select value={form.data.currency} onChange={async (e) => {
+                const cur = e.target.value
+                let rate = 1
+                if (cur !== companyProfile?.base_currency && cur !== 'AED') {
+                  try {
+                    const { data } = await supabase.from('exchange_rates')
+                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || 'AED')
+                      .eq('is_active', true).order('rate_date', { ascending: false }).limit(1)
+                    if (data?.length) rate = Number(data[0].rate)
+                  } catch (_) {}
+                }
+                setForm({ ...form, data: { ...form.data, currency: cur, exchange_rate: rate } })
+              }}>
+                <option>AED</option><option>USD</option><option>SAR</option><option>EUR</option><option>GBP</option><option>INR</option><option>PKR</option>
               </select>
             </label>
+            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && (
+              <label>Exchange Rate
+                <input type="number" step="0.0001" min="0" value={form.data.exchange_rate} onChange={(e) => setForm({ ...form, data: { ...form.data, exchange_rate: Number(e.target.value) } })} />
+              </label>
+            )}
+            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && form.data.exchange_rate > 0 && (
+              <div style={{ gridColumn: '1 / -1', background: '#eff6ff', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#1e40af' }}>
+                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || 'AED'}</b> at rate {form.data.exchange_rate}
+              </div>
+            )}
             <label>Status
               <select value={form.data.status} onChange={(e) => setForm({ ...form, data: { ...form.data, status: e.target.value } })}>
                 <option>Inactive</option><option>Active</option>
@@ -1893,10 +1917,32 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
               <input type="number" min="0" step="0.01" value={form.data.amount} onChange={(e) => setForm({ ...form, data: { ...form.data, amount: e.target.value } })} placeholder="0.00" className="money-input" />
             </label>
             <label>Currency
-              <select value={form.data.currency} onChange={(e) => setForm({ ...form, data: { ...form.data, currency: e.target.value } })}>
+              <select value={form.data.currency} onChange={async (e) => {
+                const cur = e.target.value
+                let rate = 1
+                if (cur !== companyProfile?.base_currency && cur !== 'AED') {
+                  try {
+                    const { data } = await supabase.from('exchange_rates')
+                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || 'AED')
+                      .eq('is_active', true).order('rate_date', { ascending: false }).limit(1)
+                    if (data?.length) rate = Number(data[0].rate)
+                  } catch (_) {}
+                }
+                setForm({ ...form, data: { ...form.data, currency: cur, exchange_rate: rate } })
+              }}>
                 <option>AED</option><option>USD</option><option>SAR</option><option>EUR</option><option>GBP</option><option>INR</option><option>PKR</option>
               </select>
             </label>
+            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && (
+              <label>Exchange Rate
+                <input type="number" step="0.0001" min="0" value={form.data.exchange_rate} onChange={(e) => setForm({ ...form, data: { ...form.data, exchange_rate: Number(e.target.value) } })} />
+              </label>
+            )}
+            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && form.data.exchange_rate > 0 && (
+              <div style={{ gridColumn: '1 / -1', background: '#eff6ff', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#1e40af' }}>
+                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || 'AED'}</b> at rate {form.data.exchange_rate}
+              </div>
+            )}
             <label>Reference
               <input value={form.data.reference} onChange={(e) => setForm({ ...form, data: { ...form.data, reference: e.target.value } })} placeholder="Cheque no, transfer ref..." />
             </label>
@@ -8784,6 +8830,10 @@ const App = () => {
         <StockAlerts />
       )}
 
+      {!activeCust && !activeInv && !activeStock && activePage === 'Recurring Invoices' && (
+        <RecurringInvoices fmtMoney={fmtMoney} />
+      )}
+
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Audit Log' && (
           <AuditLog />
         )}
@@ -8879,7 +8929,7 @@ const App = () => {
           <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
+        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
 !DOC_MENUS[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">
