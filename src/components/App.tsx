@@ -27,6 +27,11 @@ import BarcodeScanner from './BarcodeScanner'
 import InventoryMovementReport from './InventoryMovementReport'
 import AgedReceivables from './AgedReceivables'
 import PaymentLinks from './PaymentLinks'
+import BankCsvImport from './BankCsvImport'
+import BarcodeLabelPrint from './BarcodeLabelPrint'
+import PaymentSchedule from './PaymentSchedule'
+import DunningLetters from './DunningLetters'
+import TransactionReversal from './TransactionReversal'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -105,6 +110,7 @@ const MENUS = [
     { label: 'Stock Alerts', icon: '⚠️' },
     { label: 'Stock Aging', icon: '⏳' },
     { label: 'Inventory Valuation', icon: '⚖️' },
+    { label: 'Print Barcode Labels', icon: '🏷️' },
   ]},
   { key: 'b', label: 'BANKING', icon: '🏦', color: '#06b6d4', color2: '#0891b2', items: [
     { label: 'Incoming Payments', icon: '💵' },
@@ -115,6 +121,9 @@ const MENUS = [
     { label: 'PDC Report', icon: '🏦' },
     { label: 'Cheque Templates', icon: '🖨' },
     { label: 'Reconciliation', icon: '🔗' },
+    { label: 'Bank CSV Import', icon: '📁' },
+    { label: 'Payment Schedules', icon: '📅' },
+    { label: 'Dunning Letters', icon: '📧' },
   ]},
   { key: 'r', label: 'REPORTS', icon: '📊', color: '#f97316', color2: '#ea580c', items: [
     { label: 'Sales Report', icon: '📈' },
@@ -130,6 +139,7 @@ const MENUS = [
     { label: 'Statements & Aging', icon: '📑' },
     { label: 'Inventory Movement Report', icon: '📦' },
     { label: 'Aged Receivables', icon: '📊' },
+    { label: 'Transaction Reversal', icon: '🔄' },
     { label: 'Dashboard', icon: '🖥️' },
   ]},
 ]
@@ -5570,8 +5580,23 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     if (!isInv && !party) { setForm({ ...form, error: `Please select a ${PARTY_LABEL.toLowerCase()}.` }); return }
     if (isInv && !form[PARTY_KEY]) { setForm({ ...form, error: 'Please select a customer.' }); return }
     if (!form.items.length) { setForm({ ...form, error: 'Add at least one item.' }); return }
-    setForm({ ...form, saving: true, error: '' })
     const totals = calcTotals(form.items, form.otherCosts)
+    // Credit limit check for invoices
+    if (isInv && approveAfter && form._party_id) {
+      try {
+        const { data: cust } = await supabase.from('customers').select('credit_limit, name').eq('id', form._party_id).single()
+        if (cust && Number(cust.credit_limit) > 0) {
+          const { data: outstanding } = await supabase.from(TABLE).select('grand_total, amount_paid').eq(PARTY_ID_KEY, form._party_id).in('status', ['Approved', 'Draft'])
+          const totalOutstanding = (outstanding || []).reduce((s, d) => s + (Number(d.grand_total) || 0) - (Number(d.amount_paid) || 0), 0)
+          if (totalOutstanding + totals.grand_total > Number(cust.credit_limit)) {
+            if (!confirm(`⚠️ Credit Limit Warning\n\nCustomer: ${cust.name}\nCredit Limit: ${fmtMoney(Number(cust.credit_limit), taxConfig.currency)}\nCurrent Outstanding: ${fmtMoney(totalOutstanding, taxConfig.currency)}\nThis Invoice: ${fmtMoney(totals.grand_total, taxConfig.currency)}\nTotal After: ${fmtMoney(totalOutstanding + totals.grand_total, taxConfig.currency)}\n\nProceed anyway?`)) {
+              setForm({ ...form, saving: false, error: '' }); return
+            }
+          }
+        }
+      } catch (e) { console.error('Credit limit check failed:', e) }
+    }
+    setForm({ ...form, saving: true, error: '' })
     const items = form.items.map((it) => ({ ...it, qty: Number(it.qty) || 0, price: Number(it.price) || 0 }))
     const payload = {
       [PARTY_KEY]: (isInv && !party) ? form[PARTY_KEY] : (party ? party.name : ''),
@@ -5916,6 +5941,50 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
         <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Approve</button>
       </div>
       {payLinkDoc && <PaymentLinks invoice={payLinkDoc} fmtMoney={fmtMoney} onClose={() => setPayLinkDoc(null)} />}
+    </div>
+  )
+}
+
+const PaymentSchedulesList = ({ fmtMoney }) => {
+  const [schedules, setSchedules] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('All')
+
+  useEffect(() => {
+    supabase.from('payment_schedules').select('*').order('due_date').then(({ data }) => { setSchedules(data || []); setLoading(false) })
+  }, [])
+
+  const filtered = schedules.filter((s) => filter === 'All' || s.status === filter)
+  const counts = { All: schedules.length, Pending: 0, Paid: 0, Overdue: 0 }
+  schedules.forEach((s) => { const st = s.status || 'Pending'; counts[st] = (counts[st] || 0) + 1 })
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>📅 Payment Schedules</h2>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {Object.entries(counts).map(([k, v]) => (
+          <button key={k} onClick={() => setFilter(k)} style={{ padding: '6px 14px', borderRadius: 8, border: filter === k ? '2px solid #8b5cf6' : '1px solid #e2e8f0', background: filter === k ? '#f5f3ff' : '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            {k} ({v})
+          </button>
+        ))}
+      </div>
+      {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div> : (
+        <table className="data-grid report-table">
+          <thead><tr><th>INVOICE</th><th>CUSTOMER</th><th>DUE DATE</th><th className="col-money">AMOUNT</th><th>STATUS</th></tr></thead>
+          <tbody>
+            {filtered.length === 0 && <tr><td colSpan="5" className="empty">No payment schedules</td></tr>}
+            {filtered.map((s) => (
+              <tr key={s.id}>
+                <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{s.invoice_no || '—'}</td>
+                <td>{s.customer_name || '—'}</td>
+                <td>{s.due_date}</td>
+                <td className="col-money">{fmtMoney(Number(s.amount || 0))}</td>
+                <td><span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, background: s.status === 'Paid' ? '#dcfce7' : s.status === 'Overdue' ? '#fef2f2' : '#fffbeb', color: s.status === 'Paid' ? '#16a34a' : s.status === 'Overdue' ? '#dc2626' : '#f59e0b' }}>{s.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }
@@ -8886,6 +8955,26 @@ const App = () => {
         <AgedReceivables fmtMoney={fmtMoney} />
       )}
 
+      {!activeCust && !activeInv && !activeStock && activePage === 'Print Barcode Labels' && (
+        <BarcodeLabelPrint fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Bank CSV Import' && (
+        <BankCsvImport fmtMoney={fmtMoney} onClose={() => setActivePage(null)} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Payment Schedules' && (
+        <PaymentSchedulesList fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Dunning Letters' && (
+        <DunningLetters fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Transaction Reversal' && (
+        <TransactionReversal fmtMoney={fmtMoney} />
+      )}
+
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Audit Log' && (
           <AuditLog />
         )}
@@ -8981,7 +9070,7 @@ const App = () => {
           <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
+        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Print Barcode Labels' && activePage !== 'Bank CSV Import' && activePage !== 'Payment Schedules' && activePage !== 'Dunning Letters' && activePage !== 'Transaction Reversal' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
 !getDocMenus(taxConfig.standard_rate)[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">
