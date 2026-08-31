@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 
-const CT_RATES: Record<string, number> = { 'Saudi Arabia': 20, 'UAE': 9, 'Oman': 15 }
-
 export default function CorporateTax({ country: initialCountry }: { country?: string }) {
   const [accounts, setAccounts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [country, setCountry] = useState(initialCountry || 'UAE')
-  const [rate, setRate] = useState(CT_RATES[initialCountry || 'UAE'] ?? 20)
+  const [rate, setRate] = useState(20)
   const [excluded, setExcluded] = useState<string[]>([])
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [countryList, setCountryList] = useState<any[]>([])
 
   useEffect(() => {
-    supabase.from('accounts').select('id, code, name, type, current_balance').order('code')
-      .then(({ data }) => { setAccounts(data || []); setLoading(false) })
+    Promise.all([
+      supabase.from('accounts').select('id, code, name, type, current_balance').order('code'),
+      supabase.from('tax_config').select('country, tax_name, standard_rate').eq('is_active', true).order('country'),
+    ]).then(([accRes, tcRes]) => {
+      setAccounts(accRes.data || [])
+      setCountryList(tcRes.data || [])
+      setLoading(false)
+    })
   }, [])
 
-  const onCountry = (c: string) => { setCountry(c); setRate(CT_RATES[c] ?? 20) }
+  const onCountry = (c: string) => {
+    setCountry(c)
+    const tc = countryList.find((x) => x.country === c)
+    if (tc) setRate(Number(tc.standard_rate) || 20)
+  }
 
   const pl = accounts.filter((a) => a.type === 'Income' || a.type === 'Expense')
   const isExc = (id: string) => excluded.includes(id)
@@ -45,10 +54,13 @@ export default function CorporateTax({ country: initialCountry }: { country?: st
       <div className="tax-controls">
         <label>Country / Regime
           <select value={country} onChange={(e) => onCountry(e.target.value)}>
-            <option value="Saudi Arabia">Saudi Arabia (ZATCA, CIT 20%)</option>
-            <option value="UAE">UAE (Corporate Tax 9%)</option>
-            <option value="Oman">Oman (CIT 15%)</option>
-            <option value="Other">Other</option>
+            {countryList.map((tc) => <option key={tc.country} value={tc.country}>{tc.country} ({tc.tax_name}, CIT {tc.standard_rate}%)</option>)}
+            {countryList.length === 0 && <>
+              <option value="Saudi Arabia">Saudi Arabia (ZATCA, CIT 20%)</option>
+              <option value="UAE">UAE (Corporate Tax 9%)</option>
+              <option value="Oman">Oman (CIT 15%)</option>
+              <option value="Other">Other</option>
+            </>}
           </select>
         </label>
         <label>Period From<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>

@@ -31,6 +31,7 @@ import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
 import { emailInvoice } from '../utils/emailInvoice'
+import { fetchTaxConfig, TaxConfig } from '../utils/taxConfig'
 import './App.css'
 
 const MENUS = [
@@ -138,7 +139,7 @@ const DEFAULT_COLUMNS = [
   { key: 'name', label: 'NAME' },
 ]
 
-const fmtMoney = (v, currency) => `${currency || 'AED'} ${Number(v || 0).toLocaleString('en', { minimumFractionDigits: 2 })}`
+const fmtMoney = (v, currency) => `${currency || 'USD'} ${Number(v || 0).toLocaleString('en', { minimumFractionDigits: 2 })}`
 
 const LISTINGS = {
   'Stock Master': {
@@ -341,19 +342,20 @@ const MODULES = {
   ]},
 }
 
-const DOC_MENUS = {
-  'A/R Invoice': { table: 'invoices', noField: 'invoice_no', title: '🧾 A/R Invoice', party: 'customer', vat: 15, partyNameKey: 'customer_name', inv: true },
+const getDocMenus = (vatRate: number = 0) => ({
+  'A/R Invoice': { table: 'invoices', noField: 'invoice_no', title: '🧾 A/R Invoice', party: 'customer', vat: vatRate, partyNameKey: 'customer_name', inv: true },
   'Delivery Note': { table: 'delivery_notes', noField: 'delivery_no', title: '🚚 Delivery Note', party: 'customer', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'A/R Credit Memo': { table: 'ar_credit_memos', noField: 'memo_no', title: '📄 A/R Credit Memo', party: 'customer', vat: 15, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'Sales Return': { table: 'sales_returns', noField: 'return_no', title: '🔄 Sales Return', party: 'customer', vat: 15, partyNameKey: 'party_name', partyIdKey: 'party_id' },
+  'A/R Credit Memo': { table: 'ar_credit_memos', noField: 'memo_no', title: '📄 A/R Credit Memo', party: 'customer', vat: vatRate, partyNameKey: 'party_name', partyIdKey: 'party_id' },
+  'Sales Return': { table: 'sales_returns', noField: 'return_no', title: '🔄 Sales Return', party: 'customer', vat: vatRate, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'Purchase Requisition': { table: 'purchase_requisitions', noField: 'req_no', title: '📝 Purchase Requisition', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'Purchase Order', convertLabel: '📑 Convert to PO' },
   'Purchase Order': { table: 'purchase_orders', noField: 'po_no', title: '📑 Purchase Order', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'Goods Receipt PO', convertLabel: '📥 Convert to GRN', sourceField: 'source_doc_no' },
   'Goods Receipt PO': { table: 'goods_receipts', noField: 'grn_no', title: '📥 Goods Receipt PO', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'A/P Invoice', convertLabel: '🧾 Convert to AP Invoice', sourceField: 'source_doc_no', stockImpact: true },
-  'A/P Invoice': { table: 'purchase_invoices', noField: 'pin_no', title: '🧾 A/P Invoice', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id', sourceField: 'source_doc_no' },
-  'A/P Credit Memo': { table: 'ap_credit_memos', noField: 'memo_no', title: '📄 A/P Credit Memo', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'Purchase Return': { table: 'purchase_returns', noField: 'return_no', title: '🔄 Purchase Return', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id' },
+  'A/P Invoice': { table: 'purchase_invoices', noField: 'pin_no', title: '🧾 A/P Invoice', party: 'supplier', vat: vatRate, partyNameKey: 'party_name', partyIdKey: 'party_id', sourceField: 'source_doc_no' },
+  'A/P Credit Memo': { table: 'ap_credit_memos', noField: 'memo_no', title: '📄 A/P Credit Memo', party: 'supplier', vat: vatRate, partyNameKey: 'party_name', partyIdKey: 'party_id' },
+  'Purchase Return': { table: 'purchase_returns', noField: 'return_no', title: '🔄 Purchase Return', party: 'supplier', vat: vatRate, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'Landed Cost': { table: 'landed_costs', noField: 'lc_no', title: '🚢 Landed Cost', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-}
+})
+const DOC_MENUS = getDocMenus(0)
 
 const BarChart = ({ labels, values }) => {
   const canvasRef = useRef(null)
@@ -1984,10 +1986,15 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
   )
 }
 
-const CompanyProfile = ({ profile, setProfile, onSave }) => {
+const CompanyProfile = ({ profile, setProfile, onSave, taxConfig: taxCfg }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
+  const [countryList, setCountryList] = useState<any[]>([])
   useEffect(() => { if (firstRef.current) firstRef.current.focus() }, [])
+  useEffect(() => {
+    supabase.from('tax_config').select('country, tax_name, standard_rate, currency').eq('is_active', true).order('country')
+      .then(({ data }) => setCountryList(data || []))
+  }, [])
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       const tag = e.target.tagName
@@ -2002,6 +2009,16 @@ const CompanyProfile = ({ profile, setProfile, onSave }) => {
   if (!profile) return null
   const d = profile.data
   const set = (k, v) => setProfile({ ...profile, data: { ...d, [k]: v } })
+  const handleCountryChange = (country: string) => {
+    const tc = countryList.find((c) => c.country === country)
+    if (tc) {
+      set('country', country)
+      set('base_currency', tc.currency)
+      set('vat_rate', tc.standard_rate)
+    } else {
+      set('country', country)
+    }
+  }
   const exportAll = async () => {
     const tables = ['company_profile', 'chart_of_accounts', 'journal_entries', 'journal_lines', 'customers', 'suppliers', 'products', 'sales_invoices', 'purchase_invoices', 'fixed_assets', 'attachments', 'tax_transactions', 'corporate_tax', 'users']
     const dump: any = {}
@@ -2036,8 +2053,9 @@ const CompanyProfile = ({ profile, setProfile, onSave }) => {
             <label>City<input value={d.city} onChange={(e) => set('city', e.target.value)} /></label>
             <label>State / Emirate<input value={d.state} onChange={(e) => set('state', e.target.value)} /></label>
             <label>Country
-              <select value={d.country} onChange={(e) => set('country', e.target.value)}>
-                {['UAE','Saudi Arabia','Kuwait','Bahrain','Oman','Qatar','Egypt','Jordan','Lebanon','Iraq','Turkey','India','Pakistan','Global'].map((c) => <option key={c}>{c}</option>)}
+              <select value={d.country} onChange={(e) => handleCountryChange(e.target.value)}>
+                <option value="">Select Country</option>
+                {countryList.map((c) => <option key={c.country} value={c.country}>{c.country} ({c.tax_name} {c.standard_rate}%)</option>)}
               </select>
             </label>
             <label>Postal Code<input value={d.postal_code} onChange={(e) => set('postal_code', e.target.value)} /></label>
@@ -2051,10 +2069,10 @@ const CompanyProfile = ({ profile, setProfile, onSave }) => {
             <label>VAT Number<input value={d.vat_number} onChange={(e) => set('vat_number', e.target.value)} /></label>
             <label>Base Currency
               <select value={d.base_currency} onChange={(e) => set('base_currency', e.target.value)}>
-                {['AED','SAR','USD','EUR','GBP','INR','PKR','KWD','BHD','OMR','QAR'].map((c) => <option key={c}>{c}</option>)}
+                {[...new Set(countryList.map((c) => c.currency))].sort().map((c) => <option key={c}>{c}</option>)}
               </select>
             </label>
-            <label>VAT Rate (%)<input type="number" min="0" max="100" step="0.5" value={d.vat_rate} onChange={(e) => set('vat_rate', Number(e.target.value))} /></label>
+            <label>{countryList.find((c) => c.country === d.country)?.tax_name || 'Tax'} Rate (%)<input type="number" min="0" max="100" step="0.5" value={d.vat_rate} onChange={(e) => set('vat_rate', Number(e.target.value))} /></label>
             <label>Fiscal Year Start (Month)
               <select value={d.fiscal_year_start} onChange={(e) => set('fiscal_year_start', e.target.value)}>
                 {['01','02','03','04','05','06','07','08','09','10','11','12'].map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3004,7 +3022,7 @@ const SupplierBalanceReport = ({ fmtMoney }) => {
   )
 }
 
-const TaxReport = ({ fmtMoney }) => {
+const TaxReport = ({ fmtMoney, taxConfig: taxCfg }) => {
   const [profile, setProfile] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [accounts, setAccounts] = useState([])
@@ -3018,7 +3036,8 @@ const TaxReport = ({ fmtMoney }) => {
   const [fromDate, setFromDate] = useState(() => { const d = new Date(); d.setDate(1); return d.toISOString().split('T')[0] })
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
   const [filingType, setFilingType] = useState('monthly')
-  const [regime, setRegime] = useState('uae')
+  const [taxConfigList, setTaxConfigList] = useState<any[]>([])
+  const [selectedCountry, setSelectedCountry] = useState(taxCfg?.country || 'UAE')
 
   useEffect(() => {
     setLoading(true)
@@ -3027,14 +3046,16 @@ const TaxReport = ({ fmtMoney }) => {
       supabase.from('invoices').select('*'),
       supabase.from('accounts').select('*'),
       supabase.from('purchase_invoices').select('*').catch(() => ({ data: [] })),
-    ]).then(([p, inv, acc, pi]) => {
+      supabase.from('tax_config').select('*').eq('is_active', true).order('country'),
+    ]).then(([p, inv, acc, pi, tc]) => {
       if (p.data?.length) {
         setProfile(p.data[0])
-        setRegime(p.data[0].country === 'Saudi Arabia' ? 'zatca' : 'uae')
+        setSelectedCountry(p.data[0].country || 'UAE')
       }
       setInvoices(inv.data || [])
       setAccounts(acc.data || [])
       setPurchaseInvoices(pi.data || [])
+      setTaxConfigList(tc.data || [])
       setLoading(false)
     })
   }, [])
@@ -3049,7 +3070,11 @@ const TaxReport = ({ fmtMoney }) => {
     return (!fromDate || d >= fromDate) && (!toDate || d <= toDate) && pi.status !== 'cancelled' && pi.status !== 'Draft'
   })
 
-  const vatRate = Number(profile?.vat_rate || (regime === 'zatca' ? 15 : 5))
+  const activeTaxConfig = taxConfigList.find((tc) => tc.country === selectedCountry) || taxConfigList[0] || { tax_name: 'Tax', standard_rate: 0, tax_authority: 'N/A', compliance_mode: 'None', tax_id_label: 'Tax ID', invoice_label: 'Invoice' }
+  const vatRate = Number(profile?.vat_rate || activeTaxConfig.standard_rate || 0)
+  const taxName = activeTaxConfig.tax_name || 'Tax'
+  const taxAuthority = activeTaxConfig.tax_authority || 'N/A'
+  const complianceMode = activeTaxConfig.compliance_mode || 'None'
 
   const outputTaxItems = filteredInvoices.map((inv) => ({
     invoice_no: inv.invoice_no || inv.doc_no || '—',
@@ -3092,7 +3117,7 @@ const TaxReport = ({ fmtMoney }) => {
     const w = window.open('', '_blank')
     const isZatca = regime === 'zatca'
     w.document.write('<html><head><title>Tax Report</title><style>body{font-family:Arial,sans-serif;padding:30px}h1{color:#1e1b4b;font-size:20px}h3{color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:20px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:6px 12px;border:1px solid #e2e8f0;font-size:12px}th{text-align:left;background:#f1f5f9}.col-r{text-align:right}.total{font-weight:700;background:#f8fafc}.pos{color:#059669}.neg{color:#dc2626}.hdr{text-align:center;margin-bottom:20px}.sub{color:#64748b;font-size:12px}.badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700}.badge-green{background:#ecfdf5;color:#059669}.badge-red{background:#fef2f2;color:#dc2626}.badge-blue{background:#eff6ff;color:#1d4ed8}</style></head><body>')
-    w.document.write('<div class="hdr"><h1>' + (isZatca ? '🧾 ZATCA VAT Return' : '🧾 UAE FTA VAT Return') + '</h1><div class="sub">' + (profile?.company_name || 'Company') + ' | VAT: ' + (profile?.vat_number || 'N/A') + '<br>' + fromDate + ' to ' + toDate + ' | Regime: ' + (isZatca ? 'Saudi Arabia (15%)' : 'UAE (5%)') + '</div></div>')
+    w.document.write('<div class="hdr"><h1>' + taxName + ' Tax Return</h1><div class="sub">' + (profile?.company_name || 'Company') + ' | ' + activeTaxConfig.tax_id_label + ': ' + (profile?.vat_number || 'N/A') + '<br>' + fromDate + ' to ' + toDate + ' | Country: ' + selectedCountry + ' (' + taxName + ' ' + vatRate + '%)</div></div>')
     w.document.write('<h3>Box 1: Supplies — Output Tax (VAT Collected on Sales)</h3>')
     w.document.write('<table><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th class="col-r">Net Amount</th><th class="col-r">VAT Rate</th><th class="col-r">VAT Amount</th><th class="col-r">Total</th></tr>')
     outputTaxItems.forEach((inv) => { w.document.write('<tr><td>' + inv.invoice_no + '</td><td>' + inv.customer + '</td><td>' + inv.date + '</td><td class="col-r">' + fmtMoney(inv.subtotal) + '</td><td class="col-r">' + inv.vat_rate + '%</td><td class="col-r">' + fmtMoney(inv.vat_amount) + '</td><td class="col-r">' + fmtMoney(inv.grand_total) + '</td></tr>') })
@@ -3113,13 +3138,8 @@ const TaxReport = ({ fmtMoney }) => {
     w.document.write('<tr><td><b>Total Input Tax (VAT paid)</b></td><td class="col-r neg"><b>' + fmtMoney(effectiveInputTax) + '</b></td></tr>')
     w.document.write('<tr class="total"><td><b>Net VAT Payable to Authority</b></td><td class="col-r ' + (netVATPayable >= 0 ? 'neg' : 'pos') + '"><b>' + fmtMoney(Math.abs(netVATPayable)) + '</b></td></tr>')
     w.document.write('</table>')
-    if (isZatca) {
-      w.document.write('<h3>ZATCA Compliance</h3>')
-      w.document.write('<table><tr><td>ZATCA Portal</td><td>https://zatca.gov.sa</td></tr><tr><td>CSID Status</td><td>' + (profile?.zatca_csid ? '<span class="badge badge-green">Configured</span>' : '<span class="badge badge-red">Not Configured</span>') + '</td></tr><tr><td>e-Invoice Integration</td><td>' + (profile?.zatca_enabled ? '<span class="badge badge-green">Enabled</span>' : '<span class="badge badge-blue">Disabled</span>') + '</td></tr></table>')
-    } else {
-      w.document.write('<h3>UAE FTA Compliance</h3>')
-      w.document.write('<table><tr><td>FTA Portal</td><td>https://tax.gov.ae</td></tr><tr><td>VAT Registration</td><td>' + (profile?.vat_number ? '<span class="badge badge-green">Registered</span>' : '<span class="badge badge-red">Not Registered</span>') + '</td></tr><tr><td>Filing Period</td><td>' + filingType.charAt(0).toUpperCase() + filingType.slice(1) + '</td></tr></table>')
-    }
+    w.document.write('<h3>' + taxName + ' Compliance — ' + taxAuthority + '</h3>')
+    w.document.write('<table><tr><td>Tax Authority</td><td>' + taxAuthority + '</td></tr><tr><td>' + activeTaxConfig.tax_id_label + '</td><td>' + (profile?.vat_number ? '<span class="badge badge-green">Registered</span>' : '<span class="badge badge-red">Not Registered</span>') + '</td></tr><tr><td>Filing Period</td><td>' + filingType.charAt(0).toUpperCase() + filingType.slice(1) + '</td></tr></table>')
     w.document.write('</body></html>')
     w.document.close(); w.print()
   }
@@ -3127,12 +3147,11 @@ const TaxReport = ({ fmtMoney }) => {
   return (
     <div className="report-wrap">
       <div className="report-head">
-         <h3>{regime === 'zatca' ? '🧾 ZATCA VAT Return' : '🧾 UAE FTA VAT Return'}</h3>
+         <h3>{taxName} Tax Return — {selectedCountry}</h3>
          <div className="report-controls">
-           <label>Regime
-             <select value={regime} onChange={(e) => setRegime(e.target.value)}>
-               <option value="uae">UAE FTA (5%)</option>
-               <option value="zatca">ZATCA (15%)</option>
+           <label>Country
+             <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
+               {taxConfigList.map((tc) => <option key={tc.country} value={tc.country}>{tc.country} ({tc.tax_name} {tc.standard_rate}%)</option>)}
              </select>
            </label>
            <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
@@ -4540,7 +4559,7 @@ const PaymentWizard = ({ accounts, fmtMoney, custList, supList }) => {
   )
 }
 
-const SalesDocs = ({ docType, fmtMoney }) => {
+const SalesDocs = ({ docType, fmtMoney, taxRate = 0 }) => {
   const isQuote = docType === 'quotation'
   const TABLE = isQuote ? 'sales_quotations' : 'sales_orders'
   const NO_FIELD = isQuote ? 'quote_no' : 'order_no'
@@ -4589,7 +4608,7 @@ const SalesDocs = ({ docType, fmtMoney }) => {
 
   const calcTotals = (items) => {
     const subtotal = items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.price || 0), 0)
-    const vat_amount = subtotal * 0.05
+    const vat_amount = subtotal * (taxRate / 100)
     return { subtotal, vat_amount, grand_total: subtotal + vat_amount }
   }
 
@@ -4826,7 +4845,7 @@ const SalesDocs = ({ docType, fmtMoney }) => {
       <div className="report-section" style={{ marginTop: 14 }}>
         <div className="je-totals">
           <span>Subtotal: <b>{fmtMoney(totals.subtotal)}</b></span>
-          <span>VAT (5%): <b>{fmtMoney(totals.vat_amount)}</b></span>
+          <span>{taxRate > 0 ? `Tax (${taxRate}%)` : 'Tax'}: <b>{fmtMoney(totals.vat_amount)}</b></span>
           <span className="grand">Grand Total: <b>{fmtMoney(totals.grand_total)}</b></span>
         </div>
         <label style={{ display: 'block', marginTop: 10 }}>Notes<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Internal or customer-facing notes..." /></label>
@@ -5464,7 +5483,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     const f = { id: `new-${Date.now()}`, recId: null, _party_id: '', [PARTY_KEY]: '', items: [], notes: '', status: 'Draft', saving: false, error: '', source_doc_no: '', otherCosts: 0, otherCostDesc: '' }
     if (isLandedCost) { f._grn_id = ''; f._grn_no = ''; f._grn_total = 0; f.cost_type = 'Freight' }
     if (isInv) { f.payment_method = 'Cash' }
-    else { f[PARTY_ID_KEY] = ''; f.doc_date = new Date().toISOString().split('T')[0]; f.currency = 'AED'; f.payment_terms = 'Net 30' }
+    else { f[PARTY_ID_KEY] = ''; f.doc_date = new Date().toISOString().split('T')[0]; f.currency = taxConfig.currency; f.payment_terms = 'Net 30' }
     return f
   }
 
@@ -5638,7 +5657,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
 
   const convertDoc = async (doc) => {
     if (!cfg.convertTo) return
-    const targetCfg = DOC_MENUS[cfg.convertTo]
+    const targetCfg = getDocMenus(taxConfig.standard_rate)[cfg.convertTo]
     if (!targetCfg) return
     if (!window.confirm(`Convert ${doc[NO_FIELD]} to ${cfg.convertLabel || cfg.convertTo}?`)) return
     const payload = {
@@ -5698,7 +5717,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
           {Object.entries(counts).map(([st, n]) => (
             <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
           ))}
-          <span className="total-records">Total Value: <b>{fmtMoney(filtered.reduce((s, d) => s + Number(d.grand_total || 0), 0), 'AED')}</b></span>
+          <span className="total-records">Total Value: <b>{fmtMoney(filtered.reduce((s, d) => s + Number(d.grand_total || 0), 0), taxConfig.currency)}</b></span>
         </div>
         <ShareBar title={cfg.title} columns={[{ key: 'no', label: 'Doc No' }, { key: 'date', label: 'Date' }, { key: 'party', label: PARTY_LABEL }, { key: 'status', label: 'Status' }, { key: 'total', label: 'Total', numeric: true }]} rows={filtered.map((d) => ({ no: d[NO_FIELD] || '', date: docDate(d), party: d[PARTY_KEY] || '', status: d.status || '', total: fmtMoney(d.grand_total || 0) }))} />
         <div className="grid-wrap">
@@ -5734,8 +5753,8 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
                   </td>
                   <td>{docDate(d)}</td>
                   <td><b>{d[PARTY_KEY]}</b></td>
-                  {isInv && <td className="col-money">{fmtMoney(d.balance, 'AED')}</td>}
-                  <td className="col-money">{fmtMoney(d.grand_total, 'AED')}</td>
+                {isInv && <td className="col-money">{fmtMoney(d.balance, taxConfig.currency)}</td>}
+                <td className="col-money">{fmtMoney(d.grand_total, taxConfig.currency)}</td>
                   <td><span className={`badge ${STATUS_CLASS(d.status)}`}>{d.status}</span></td>
                 </tr>
               ))}
@@ -6087,7 +6106,7 @@ const BankBook = ({ fmtMoney }) => {
   )
 }
 
-const DebitCreditNotes = ({ type, fmtMoney }) => {
+const DebitCreditNotes = ({ type, fmtMoney, taxRate = 0 }) => {
   const isDebit = type === 'debit'
   const TABLE = isDebit ? 'debit_notes' : 'credit_notes'
   const TITLE = isDebit ? '📄 Debit Note' : '📄 Credit Note'
@@ -6135,7 +6154,7 @@ const DebitCreditNotes = ({ type, fmtMoney }) => {
     setForm({ ...form, saving: true, error: '' })
     const payload = {
       party_name: form.party_name, doc_date: form.doc_date,
-      amount: Number(form.amount), vat_amount: Number(form.amount) * 0.15,
+      amount: Number(form.amount), vat_amount: Number(form.amount) * (taxRate / 100),
       reason: form.reason, status: approveAfter ? 'Approved' : 'Draft',
     }
     try {
@@ -6202,7 +6221,7 @@ const DebitCreditNotes = ({ type, fmtMoney }) => {
     w.document.write('<html><head><title>' + (doc.note_no || '') + '</title><style>body{font-family:Arial,sans-serif;padding:30px;max-width:800px}h1{color:#1e1b4b;font-size:22px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:8px;border:1px solid #e2e8f0;font-size:13px}.total{font-weight:700;background:#f8fafc}</style></head><body>')
     w.document.write('<h1>' + TITLE + '</h1>')
     w.document.write('<p><b>No:</b> ' + (doc.note_no || '—') + '<br><b>Date:</b> ' + doc.doc_date + '<br><b>Party:</b> ' + doc.party_name + '<br><b>Status:</b> ' + doc.status + '</p>')
-    w.document.write('<table><tr><td>Amount</td><td class="total">' + fmtMoney(doc.amount) + '</td></tr><tr><td>VAT (15%)</td><td>' + fmtMoney(doc.vat_amount) + '</td></tr><tr><td><b>Total</b></td><td class="total"><b>' + fmtMoney(Number(doc.amount) + Number(doc.vat_amount || 0)) + '</b></td></tr></table>')
+    w.document.write('<table><tr><td>Amount</td><td class="total">' + fmtMoney(doc.amount) + '</td></tr><tr><td>' + (taxRate > 0 ? 'Tax (' + taxRate + '%)' : 'Tax') + '</td><td>' + fmtMoney(doc.vat_amount) + '</td></tr><tr><td><b>Total</b></td><td class="total"><b>' + fmtMoney(Number(doc.amount) + Number(doc.vat_amount || 0)) + '</b></td></tr></table>')
     if (doc.reason) w.document.write('<p><b>Reason:</b> ' + doc.reason + '</p>')
     w.document.write('</body></html>')
     w.document.close(); w.print()
@@ -6288,8 +6307,8 @@ const DebitCreditNotes = ({ type, fmtMoney }) => {
         <div className="report-section" style={{ marginTop: 14 }}>
           <div className="je-totals">
             <span>Amount: <b>{fmtMoney(Number(form.amount))}</b></span>
-            <span>VAT (15%): <b>{fmtMoney(Number(form.amount) * 0.15)}</b></span>
-            <span className="grand">Total: <b>{fmtMoney(Number(form.amount) * 1.15)}</b></span>
+            <span>{taxRate > 0 ? `Tax (${taxRate}%)` : 'Tax'}: <b>{fmtMoney(Number(form.amount) * (taxRate / 100))}</b></span>
+            <span className="grand">Total: <b>{fmtMoney(Number(form.amount) * (1 + taxRate / 100))}</b></span>
           </div>
         </div>
       )}
@@ -7589,6 +7608,7 @@ const App = () => {
   const [custList, setCustList] = useState([])
   const [supList, setSupList] = useState([])
   const [companyProfile, setCompanyProfile] = useState(null)
+  const [taxConfig, setTaxConfig] = useState<TaxConfig>({ country: 'Global', tax_name: 'Tax', standard_rate: 0, reduced_rate: 0, currency: 'USD', tax_authority: 'N/A', compliance_mode: 'None', tax_id_label: 'Tax ID', invoice_label: 'Invoice' })
   const [erpUsers, setErpUsers] = useState([])
   const [userForm, setUserForm] = useState(null)
   const [userSearch, setUserSearch] = useState('')
@@ -7837,7 +7857,7 @@ const App = () => {
     }
   }
 
-  const emptyInvoice = () => ({ id: `inv-${Date.now()}`, title: 'New Invoice', step: 1, customer: { name: '', email: '', phone: '', address: '', city: '', country: '', vat: '' }, items: [], vat: 15, payment: { method: 'Cash', paid: 0, notes: '' }, saving: false, savedNo: null, error: '' })
+  const emptyInvoice = () => ({ id: `inv-${Date.now()}`, title: 'New Invoice', step: 1, customer: { name: '', email: '', phone: '', address: '', city: '', country: '', vat: '' }, items: [], vat: taxConfig.standard_rate, payment: { method: 'Cash', paid: 0, notes: '' }, saving: false, savedNo: null, error: '' })
 
   const openInvoice = () => { const inv = emptyInvoice(); setInvoices((prev) => [...prev, inv]); setActiveInv(inv.id); setActiveCust(null); setActiveStock(null) }
 
@@ -7871,7 +7891,7 @@ const App = () => {
         status: 'Posted',
         total_debit: grandTotal,
         total_credit: subtotal + (vatAmount || 0),
-        currency: 'AED',
+        currency: taxConfig.currency,
       }).select()
       if (jeErr || !je || !je.length) return
       const jeId = je[0].id
@@ -7914,9 +7934,9 @@ const App = () => {
       const { data: cust } = await supabase.from('customers').insert({ code: 'CUST-0001', name: 'Sample Customer LLC', cust_type: 'Company', city: 'Dubai', country: 'UAE', currency: 'AED', payment_terms: 'Net 30', credit_limit: 10000, opening_balance: 0, vat_no: '100000000000003', status: 'Active', account_code: 'AR-CUST-0001' }).select()
       const { data: prod } = await supabase.from('products').insert({ code: 'ITM-0001', name: 'Sample Widget', sku: 'WID-001', category: 'Goods', unit: 'Pcs', price: 120, cost_price: 80, stock_quantity: 50, reorder_level: 10, location: 'Main', status: 'Active' }).select()
       const subtotal = 120 * 5
-      const vat = subtotal * 0.15
+      const vat = subtotal * (taxConfig.standard_rate / 100)
       const grand = subtotal + vat
-      const { data: inv } = await supabase.from('invoices').insert({ customer_name: 'Sample Customer LLC', items: [{ product_id: prod?.[0]?.id, name: 'Sample Widget', qty: 5, price: 120 }], subtotal, vat_percent: 15, vat_amount: vat, grand_total: grand, payment_method: 'Cash', amount_paid: 0, balance: grand, status: 'pending' }).select()
+      const { data: inv } = await supabase.from('invoices').insert({ customer_name: 'Sample Customer LLC', items: [{ product_id: prod?.[0]?.id, name: 'Sample Widget', qty: 5, price: 120 }], subtotal, vat_percent: taxConfig.standard_rate, vat_amount: vat, grand_total: grand, payment_method: 'Cash', amount_paid: 0, balance: grand, status: 'pending' }).select()
       await postArInvoiceToLedger({ customer: { name: 'Sample Customer LLC' } }, subtotal, vat, grand, inv?.[0]?.invoice_no).catch((e) => console.error('Sample post failed:', e))
       loadCoa()
       window.alert('Sample data loaded. Open Chart of Accounts / Trial Balance to see it.')
@@ -8474,7 +8494,11 @@ const App = () => {
   const loadProfile = async () => {
     try {
       const { data } = await supabase.from('company_profile').select('*').limit(1)
-      if (data && data.length) setCompanyProfile({ id: data[0].id, data: data[0], saving: false, error: '' })
+      if (data && data.length) {
+        setCompanyProfile({ id: data[0].id, data: data[0], saving: false, error: '' })
+        const tc = await fetchTaxConfig(data[0].country)
+        setTaxConfig(tc)
+      }
     } catch (err) { console.error('Profile load error:', err) }
   }
 
@@ -8487,6 +8511,9 @@ const App = () => {
       if (error) throw error
       logActivity('UPDATE', 'Company Profile', 'Saved profile')
       setFormFn({ ...form, saving: false })
+      // Reload tax config after profile save
+      const tc = await fetchTaxConfig(form.data.country)
+      setTaxConfig(tc)
     } catch (err) { setFormFn({ ...form, saving: false, error: err.message }) }
   }
 
@@ -8745,7 +8772,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Company Profile' && (
-          <CompanyProfile profile={companyProfile} setProfile={setCompanyProfile} onSave={saveProfile} />
+          <CompanyProfile profile={companyProfile} setProfile={setCompanyProfile} onSave={saveProfile} taxConfig={taxConfig} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Users & Roles' && (
@@ -8769,11 +8796,11 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Sales Quotation' && (
-          <SalesDocs docType="quotation" fmtMoney={fmtMoney} />
+          <SalesDocs docType="quotation" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Sales Order' && (
-          <SalesDocs docType="order" fmtMoney={fmtMoney} />
+          <SalesDocs docType="order" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Trial Balance Report' || activePage === 'Trial Balance') && (
@@ -8821,7 +8848,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Tax Report' && (
-          <TaxReport fmtMoney={fmtMoney} />
+          <TaxReport fmtMoney={fmtMoney} taxConfig={taxConfig} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Audit Report' && (
@@ -8907,11 +8934,11 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Debit Note' && (
-          <DebitCreditNotes type="debit" fmtMoney={fmtMoney} />
+          <DebitCreditNotes type="debit" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Credit Note' && (
-          <DebitCreditNotes type="credit" fmtMoney={fmtMoney} />
+          <DebitCreditNotes type="credit" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Cost Center' || activePage === 'Budget') && (
@@ -8946,8 +8973,8 @@ const App = () => {
           <LandedCostWorkspace fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && DOC_MENUS[activePage] && activePage !== 'Landed Cost' && (
-          <DocWorkspace key={activePage} cfg={DOC_MENUS[activePage]} fmtMoney={fmtMoney} />
+        {!activeCust && !activeInv && !activeStock && activePage && getDocMenus(taxConfig.standard_rate)[activePage] && activePage !== 'Landed Cost' && (
+          <DocWorkspace key={activePage} cfg={getDocMenus(taxConfig.standard_rate)[activePage]} fmtMoney={fmtMoney} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && MODULES[activePage] && (
@@ -8955,7 +8982,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
-!DOC_MENUS[activePage] && !MODULES[activePage] && (
+!getDocMenus(taxConfig.standard_rate)[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">
               <span className="page-name">📍 {activePage}</span>

@@ -106,7 +106,7 @@ export const generateInvoicePDF = async (inv: any, companyProfile: any, items: a
   <div class="totals">
     <div class="totals-box">
       <div class="totals-row"><span>Subtotal</span><span>${fmt(inv.subtotal || subtotal)}</span></div>
-      <div class="totals-row"><span>VAT (${inv.vat_percent || 15}%)</span><span>${fmt(inv.vat_amount || vatAmount)}</span></div>
+      <div class="totals-row"><span>Tax (${inv.vat_percent || 0}%)</span><span>${fmt(inv.vat_amount || vatAmount)}</span></div>
       <div class="totals-row total"><span>Total</span><span>${fmt(inv.grand_total || grandTotal)}</span></div>
       ${inv.amount_paid ? `<div class="totals-row"><span>Paid</span><span style="color:#16a34a">-${fmt(inv.amount_paid)}</span></div>` : ''}
       ${(inv.balance || inv.amount_paid) ? `<div class="totals-row total"><span>Balance Due</span><span>${fmt(inv.balance || (grandTotal - Number(inv.amount_paid || 0)))}</span></div>` : ''}

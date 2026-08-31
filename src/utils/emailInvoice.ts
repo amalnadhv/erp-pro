@@ -109,7 +109,7 @@ export const emailInvoice = async ({ to, inv, companyProfile, items, docType = '
         <td style="padding:4px 0;font-size:12px;color:#1f2937;text-align:right">${fmt(inv.subtotal || subtotal)}</td>
       </tr>
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#6b7280;text-align:left">VAT (${inv.vat_percent || 15}%)</td>
+        <td style="padding:4px 0;font-size:12px;color:#6b7280;text-align:left">Tax (${inv.vat_percent || 0}%)</td>
         <td style="padding:4px 0;font-size:12px;color:#1f2937;text-align:right">${fmt(inv.vat_amount || vatAmount)}</td>
       </tr>
       <tr>
