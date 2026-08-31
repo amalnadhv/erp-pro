@@ -126,9 +126,21 @@ export default function DunningLetters({ fmtMoney }: Props) {
                   <td><span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: bg, color }}>{inv.daysOver} days</span></td>
                   <td><span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: bg, color }}>{label}</span></td>
                   <td>
-                    <button onClick={() => generateLetter(inv)} style={{ padding: '5px 12px', borderRadius: 6, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                      📄 Generate Letter
-                    </button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => generateLetter(inv)} style={{ padding: '5px 12px', borderRadius: 6, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                        📄 Print
+                      </button>
+                      <button onClick={async () => {
+                        const { label, level } = getLevel(inv.daysOver)
+                        const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px"><h2 style="color:#1e293b">${companyName} — Payment Reminder</h2><p>Dear <b>${inv.customer_name}</b>,</p><p><span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;background:${level >= 3 ? '#fef2f2' : '#fffbeb'};color:${level >= 3 ? '#dc2626' : '#f59e0b'}">${label}</span> — ${inv.daysOver} days overdue</p><table style="width:100%;border-collapse:collapse;margin:16px 0;border:1px solid #e2e8f0"><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;border:1px solid #e2e8f0">Invoice</th><th style="padding:8px;text-align:left;border:1px solid #e2e8f0">Due Date</th><th style="padding:8px;text-align:right;border:1px solid #e2e8f0">Amount Due</th></tr><tr><td style="padding:8px;border:1px solid #e2e8f0">${inv.invoice_no}</td><td style="padding:8px;border:1px solid #e2e8f0">${(inv.due_date || '').slice(0, 10)}</td><td style="padding:8px;text-align:right;font-weight:700;color:#dc2626;border:1px solid #e2e8f0">${fmtMoney(inv.balance)}</td></tr></table><p>Please arrange payment immediately.</p><p style="font-size:11px;color:#94a3b8;margin-top:20px">This is an automated dunning notice.</p></div>`
+                        try {
+                          await supabase.functions.invoke('send-email', { body: { to: '', subject: `${label} — Invoice ${inv.invoice_no}`, html } })
+                          setSent([...sent, inv.id])
+                        } catch { alert('Email send failed. Configure the send-email Edge Function.') }
+                      }} style={{ padding: '5px 12px', borderRadius: 6, background: '#10b981', color: '#fff', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                        📧 Email
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )

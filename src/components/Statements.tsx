@@ -148,12 +148,18 @@ export default function Statements() {
     else setSupp((l) => l.map((x) => x.id === p.id ? { ...x, stmt_schedule: val } : x))
   }
 
-  const emailOne = (p: any) => {
+  const emailOne = async (p: any) => {
     const c = computeParty(p.name, p.id)
     const body = `Dear ${p.name},\n\nPlease find your statement of account as of ${to}.\n\nOutstanding: ${money(c.totalOut)}\nCurrent: ${money(c.aging.b0)}\n31-60: ${money(c.aging.b30)}\n61-90: ${money(c.aging.b60)}\n90+: ${money(c.aging.b90)}\n\nThank you.`
     const subject = `Statement of Account - ${p.name} - ${to}`
-    window.open(`mailto:${p.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-    logActivity('EMAIL', tab === 'customer' ? 'Customer' : 'Supplier', `Statement emailed to ${p.name}`, p.id)
+    try {
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px"><h2 style="color:#1e293b">Statement of Account</h2><p>Dear <b>${p.name}</b>,</p><p>Please find your statement of account as of <b>${to}</b>.</p><table style="width:100%;border-collapse:collapse;margin:16px 0"><tr style="background:#f1f5f9"><td style="padding:10px;font-weight:600">Outstanding</td><td style="padding:10px;text-align:right;font-weight:700;color:#dc2626">${money(c.totalOut)}</td></tr><tr><td style="padding:10px">Current</td><td style="padding:10px;text-align:right">${money(c.aging.b0)}</td></tr><tr><td style="padding:10px">31-60 days</td><td style="padding:10px;text-align:right">${money(c.aging.b30)}</td></tr><tr><td style="padding:10px">61-90 days</td><td style="padding:10px;text-align:right">${money(c.aging.b60)}</td></tr><tr><td style="padding:10px">90+ days</td><td style="padding:10px;text-align:right">${money(c.aging.b90)}</td></tr></table><p>Thank you for your business.</p></div>`
+      await supabase.functions.invoke('send-email', { body: { to: p.email, subject, html, text: body } })
+      logActivity('EMAIL', tab === 'customer' ? 'Customer' : 'Supplier', `Statement emailed to ${p.name}`, p.id)
+    } catch {
+      window.open(`mailto:${p.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+      logActivity('EMAIL', tab === 'customer' ? 'Customer' : 'Supplier', `Statement emailed to ${p.name} (mailto fallback)`, p.id)
+    }
   }
   const sendAllConsented = () => {
     const consented = groupRows.filter((p) => p.stmt_consent && p.email)
