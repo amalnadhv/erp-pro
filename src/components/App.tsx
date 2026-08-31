@@ -7648,6 +7648,7 @@ const App = () => {
   const [authUser, setAuthUser] = useState(() => { try { const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.user || null } catch { return null } })
   const [authTenant, setAuthTenant] = useState(() => { try { const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.tenant || null } catch { return null } })
   const [menuOpen, setMenuOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activePage, setActivePage] = useState(null)
   const [history, setHistory] = useState([null])
   const [hIndex, setHIndex] = useState(0)
@@ -8690,6 +8691,7 @@ const App = () => {
       )}
       <header className="erp-header">
         <div className="header-left">
+          <button className="mobile-menu-btn" onClick={() => setSidebarOpen((v) => !v)} style={{ display: 'none', background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', padding: '2px 6px' }} title="Toggle menu">☰</button>
           <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }}>ERP</div>
           <div className="brand-text">
             <h1>Advanced ERP Pro</h1>
@@ -8754,9 +8756,9 @@ const App = () => {
         </div>
       )}
 
-      <div className="erp-body">
+      <div className={`erp-body ${sidebarOpen ? 'sidebar-open' : ''}`}>
         {menuOpen && (
-          <nav className="mega-menu-wrap">
+          <nav className={`mega-menu-wrap ${sidebarOpen ? 'mobile-show' : ''}`}>
           <div className="mega-menu">
             {MENUS.map((menu) => (
               <div key={menu.key} className="menu-panel" style={{ '--c1': menu.color, '--c2': menu.color2 }}>
