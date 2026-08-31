@@ -5011,7 +5011,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
         } catch (e) { console.error('Credit deduction failed:', e) }
       }
       if (approveAfter) {
-        await postToLedger({ ...payload, id: docId, [NO_FIELD]: docNo }, totals).catch((e) => console.error('Ledger post failed:', e))
+        try { await postToLedger({ ...payload, id: docId, [NO_FIELD]: docNo }, totals) } catch (e) { console.error('Ledger post failed:', e); alert('⚠️ Ledger post failed: ' + (e.message || e) + '\nDocument saved but accounting entry was NOT posted. Please post manually.') }
         if (cfg.stockImpact) {
           for (const it of items) {
             if (it.product_id) {
@@ -7047,7 +7047,14 @@ const App = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    setAuthUser(null); setAuthTenant(null); localStorage.removeItem('erp-auth')
+    setAuthUser(null); setAuthTenant(null)
+    const keysToKeep: string[] = []
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && !keysToKeep.includes(key)) keysToRemove.push(key)
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k))
   }
 
   const toggleFav = (label) => {
@@ -7292,7 +7299,7 @@ const App = () => {
         const newBal = Number(acct.current_balance || 0) + Number(l.debit || 0) - Number(l.credit || 0)
         await supabase.from('accounts').update({ current_balance: newBal }).eq('id', acct.id)
       }
-    } catch (e) { console.error('Invoice ledger post failed:', e) }
+    } catch (e) { console.error('Invoice ledger post failed:', e); alert('⚠️ Ledger post failed: ' + (e.message || e) + '\nAccounting entry was NOT posted.') }
   }
 
   const loadSampleData = async () => {
