@@ -98,12 +98,12 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
 
   const addItem = () => {
     if (!form) return
+    const newIdx = form.items.length
     setForm({ ...form, items: [...form.items, { name: '', qty: 1, price: 0, discount: 0 }] })
     setTimeout(() => {
       if (!formRef.current) return
-      const inputs = formRef.current.querySelectorAll('input')
-      const lastNew = inputs[inputs.length - 5]
-      if (lastNew) lastNew.focus()
+      const newRow = formRef.current.querySelector(`[data-row="${newIdx}"] input`)
+      if (newRow) (newRow as HTMLElement).focus()
     }, 50)
   }
 
@@ -130,14 +130,7 @@ export default function RecurringInvoices({ fmtMoney }: { fmtMoney: (n: number) 
       const isLastField = idx === fields.length - 1
 
       if (isLastField) {
-        const lastRow = formRef.current?.querySelector(`[data-row="${(form?.items.length || 1) - 1}"]`)
-        const isLastRow = row === lastRow
-        if (isLastRow) {
-          addItem()
-        } else {
-          const nextRow = formRef.current?.querySelector(`[data-row="${rowIdx + 1}"] input`)
-          if (nextRow) (nextRow as HTMLElement).focus()
-        }
+        addItem()
       } else {
         fields[idx + 1]?.focus()
       }
