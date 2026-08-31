@@ -884,7 +884,7 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
             <button className="btn-print" onClick={() => printWithTemplate(docLabel, { ...companyProfile, invoice_no: inv.savedNo, invoice_date: inv.date || '', due_date: inv.dueDate || '', po_ref: inv.poRef || '', customer_name: inv.customer?.name, customer_vat: inv.customer?.vat, subtotal: invoiceData.subtotal, vat_percent: inv.vat, vat_amount: vatAmt, grand_total: grandTotal, amount_paid: amountPaid, balance: grandTotal - amountPaid, notes: inv.notes || '', items: invItems, company_name: companyProfile?.name, company_vat: companyProfile?.vat_no, company_logo: companyProfile?.logo_url })}>🖨️ Print</button>
             <button className="btn-print" onClick={handleDownloadPDF}>⬇️ Download PDF</button>
             <button className="btn-print" onClick={() => { setEmailTo(inv.customer?.email || ''); setEmailOpen(true); setEmailResult(''); }}>📧 Email Invoice</button>
-            <button className="btn-primary" onClick={openNew}>＋ New Invoice</button>
+            <PermGate module="A/R Invoice" action="can_create"><button className="btn-primary" onClick={openNew}>＋ New Invoice</button></PermGate>
             <button className="btn-cancel" onClick={close}>✕ Close</button>
           </div>
         </div>
@@ -1464,11 +1464,11 @@ const JournalEntry = ({ entries, accounts, form, setForm, onSave, onPost, onDele
         <h3>📝 Journal Entries</h3>
         <div className="coa-head-right">
           <input className="coa-search" placeholder="🔍 Search entry no, reference..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          <button className="btn-add" onClick={() => setForm({
+          <PermGate module="Journal Entry" action="can_create"><button className="btn-add" onClick={() => setForm({
             id: `je-${Date.now()}`, recId: null,
             data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: '', narration: '', currency: 'AED', status: 'Draft', lines: [{ account_id: '', description: '', debit: 0, credit: 0 }, { account_id: '', description: '', debit: 0, credit: 0 }] },
             saving: false, error: ''
-          })}>＋ New Entry</button>
+          })}>＋ New Entry</button></PermGate>
         </div>
       </div>
       <div className="je-status-tabs">
@@ -1698,11 +1698,11 @@ const IncomingPayments = ({ payments, accounts, custList, form, setForm, onSave,
             <h3>💵 Incoming Payments (Received from Customers)</h3>
             <div className="coa-head-right">
               <input className="coa-search" placeholder="🔍 Search payment no, customer..." value={search} onChange={(e) => setSearch(e.target.value)} />
-              <button className="btn-add" onClick={() => setForm({
+              <PermGate module="Incoming Payments" action="can_create"><button className="btn-add" onClick={() => setForm({
                 id: `ip-${Date.now()}`, recId: null,
                 data: { payment_date: new Date().toISOString().slice(0, 10), customer_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: 'AED', exchange_rate: 1, notes: '', applied_to: 'AR Invoice' },
                 saving: false, error: ''
-              })}>＋ New Payment</button>
+              })}>＋ New Payment</button></PermGate>
             </div>
           </div>
           <div className="je-status-tabs">
@@ -1856,11 +1856,11 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
             <h3>💸 Outgoing Payments (Paid to Suppliers)</h3>
             <div className="coa-head-right">
               <input className="coa-search" placeholder="🔍 Search payment no, supplier..." value={search} onChange={(e) => setSearch(e.target.value)} />
-              <button className="btn-add" onClick={() => setForm({
+              <PermGate module="Outgoing Payments" action="can_create"><button className="btn-add" onClick={() => setForm({
                 id: `op-${Date.now()}`, recId: null,
                 data: { payment_date: new Date().toISOString().slice(0, 10), supplier_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: 'AED', exchange_rate: 1, notes: '', applied_to: 'AP Invoice' },
                 saving: false, error: ''
-              })}>＋ New Payment</button>
+              })}>＋ New Payment</button></PermGate>
             </div>
           </div>
           <div className="je-status-tabs">
@@ -4880,6 +4880,12 @@ const SalesDocs = ({ docType, fmtMoney, taxRate = 0 }) => {
   )
 }
 
+const PermGate = ({ module, action, children, fallback = null }: { module: string; action: string; children: React.ReactNode; fallback?: React.ReactNode }) => {
+  const hasPerm = (window as any).__hasPerm
+  if (hasPerm && !hasPerm(module, action)) return <>{fallback}</>
+  return <>{children}</>
+}
+
 const Authorization = ({ permissions, modules, roles, onSave, onToggle }) => {
   const [activeRole, setActiveRole] = useState('Admin')
   const ACTIONS = ['can_view', 'can_create', 'can_edit', 'can_delete', 'can_approve', 'can_print']
@@ -7696,6 +7702,7 @@ const App = () => {
   const [docNumbers, setDocNumbers] = useState([])
   const [docSearch, setDocSearch] = useState('')
   const [rolePerms, setRolePerms] = useState([])
+  const [currentUserRole, setCurrentUserRole] = useState('Admin')
   const [pageTabs, setPageTabs] = useState([])
   const [activePageTab, setActivePageTab] = useState(null)
   const [searchQ, setSearchQ] = useState('')
@@ -7715,6 +7722,7 @@ const App = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setAuthUser(session.user)
+        supabase.from('erp_users').select('role').eq('email', session.user.email).single().then(({ data }) => { if (data?.role) setCurrentUserRole(data.role) })
         supabase.from('tenant_users').select('*, tenant:tenants(*)').eq('user_id', session.user.id).eq('status', 'Active').single().then(({ data: tu }) => {
           if (tu?.tenant) { setAuthTenant(tu.tenant); localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: tu.tenant })) }
         })
@@ -7729,6 +7737,7 @@ const App = () => {
   const handleLogin = (user: any, tenant: any) => {
     setAuthUser(user); setAuthTenant(tenant)
     localStorage.setItem('erp-auth', JSON.stringify({ user, tenant }))
+    supabase.from('erp_users').select('role').eq('email', user.email).single().then(({ data }) => { if (data?.role) setCurrentUserRole(data.role) })
   }
 
   const handleLogout = async () => {
@@ -8667,6 +8676,13 @@ const App = () => {
     } catch (err) { console.error('Permissions load error:', err) }
   }
 
+  const hasPerm = (module: string, action: string) => {
+    if (currentUserRole === 'Admin') return true
+    const perm = rolePerms.find((p) => p.role === currentUserRole && (p.module === module || p.module === 'All Modules'))
+    return perm ? !!perm[action] : currentUserRole === 'Admin'
+  }
+  ;(window as any).__hasPerm = hasPerm
+
   const togglePerm = async (role, module, action, value) => {
     if (role === 'Admin') return
     const existing = rolePerms.find((p) => p.role === role && p.module === module)
@@ -8768,7 +8784,7 @@ const App = () => {
             <input className="mobile-menu-search" type="text" placeholder="Search menu..." value={mobileSearch} onChange={(e) => setMobileSearch(e.target.value.toLowerCase())} />
             <div className="mega-menu">
             {MENUS.map((menu) => {
-              const filtered = menu.items.filter((item) => !mobileSearch || item.label.toLowerCase().includes(mobileSearch))
+              const filtered = menu.items.filter((item) => (!mobileSearch || item.label.toLowerCase().includes(mobileSearch)) && hasPerm(item.label, 'can_view'))
               if (filtered.length === 0) return null
               return (
               <div key={menu.key} className="menu-panel" style={{ '--c1': menu.color, '--c2': menu.color2 }}>
@@ -8867,15 +8883,15 @@ const App = () => {
           <CompanyProfile profile={companyProfile} setProfile={setCompanyProfile} onSave={saveProfile} taxConfig={taxConfig} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Users & Roles' && (
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Users & Roles' && currentUserRole === 'Admin' && (
           <UsersRoles users={erpUsers} form={userForm} setForm={setUserForm} onSave={saveUser} onDelete={deleteUser} onToggleStatus={toggleUserStatus} search={userSearch} setSearch={setUserSearch} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Document Numbering' && (
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Document Numbering' && currentUserRole === 'Admin' && (
           <DocNumbering docs={docNumbers} setDocs={setDocNumbers} onSave={saveDocNumber} search={docSearch} setSearch={setDocSearch} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Authorization' && (
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Authorization' && currentUserRole === 'Admin' && (
           <Authorization permissions={rolePerms} modules={AUTH_MODULES} roles={AUTH_ROLES} onSave={togglePerm} onToggle={togglePerm} />
         )}
 
