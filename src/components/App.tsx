@@ -32,6 +32,11 @@ import BarcodeLabelPrint from './BarcodeLabelPrint'
 import PaymentSchedule from './PaymentSchedule'
 import DunningLetters from './DunningLetters'
 import TransactionReversal from './TransactionReversal'
+import BatchSerialTracking from './BatchSerialTracking'
+import ApprovalWorkflow from './ApprovalWorkflow'
+import CustomFields from './CustomFields'
+import StockRotation from './StockRotation'
+import MultiCompany from './MultiCompany'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -68,6 +73,9 @@ const MENUS = [
     { label: 'Audit Report', icon: '📋' },
     { label: 'Fixed Assets', icon: '🏭' },
     { label: 'Petty Cash', icon: '💵' },
+    { label: 'Approval Workflow', icon: '✅' },
+    { label: 'Custom Fields', icon: '🔧' },
+    { label: 'Multi-Company', icon: '🏢' },
   ]},
   { key: 's', label: 'SALES — A/R', icon: '💰', color: '#10b981', color2: '#059669', items: [
     { label: 'Sales Quotation', icon: '💼' },
@@ -111,6 +119,8 @@ const MENUS = [
     { label: 'Stock Aging', icon: '⏳' },
     { label: 'Inventory Valuation', icon: '⚖️' },
     { label: 'Print Barcode Labels', icon: '🏷️' },
+    { label: 'Batch / Serial Tracking', icon: '🔢' },
+    { label: 'Stock Rotation', icon: '📊' },
   ]},
   { key: 'b', label: 'BANKING', icon: '🏦', color: '#06b6d4', color2: '#0891b2', items: [
     { label: 'Incoming Payments', icon: '💵' },
@@ -8975,6 +8985,26 @@ const App = () => {
         <TransactionReversal fmtMoney={fmtMoney} />
       )}
 
+      {!activeCust && !activeInv && !activeStock && activePage === 'Batch / Serial Tracking' && (
+        <BatchSerialTracking fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Stock Rotation' && (
+        <StockRotation fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Approval Workflow' && (
+        <ApprovalWorkflow fmtMoney={fmtMoney} />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Custom Fields' && (
+        <CustomFields />
+      )}
+
+      {!activeCust && !activeInv && !activeStock && activePage === 'Multi-Company' && (
+        <MultiCompany fmtMoney={fmtMoney} currentCompany={companyProfile?.data} onSwitch={(c) => { setCompanyProfile({ id: c.id, data: c, saving: false, error: '' }); loadProfile() }} />
+      )}
+
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Audit Log' && (
           <AuditLog />
         )}
@@ -9070,7 +9100,7 @@ const App = () => {
           <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Print Barcode Labels' && activePage !== 'Bank CSV Import' && activePage !== 'Payment Schedules' && activePage !== 'Dunning Letters' && activePage !== 'Transaction Reversal' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
+        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Print Barcode Labels' && activePage !== 'Bank CSV Import' && activePage !== 'Payment Schedules' && activePage !== 'Dunning Letters' && activePage !== 'Transaction Reversal' && activePage !== 'Batch / Serial Tracking' && activePage !== 'Stock Rotation' && activePage !== 'Approval Workflow' && activePage !== 'Custom Fields' && activePage !== 'Multi-Company' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
 !getDocMenus(taxConfig.standard_rate)[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">
