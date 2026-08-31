@@ -4160,6 +4160,15 @@ body:has(.dark) {
 
 /* ================= MOBILE RESPONSIVE ================= */
 
+/* Offline indicator */
+.offline-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+.offline-badge.online { background: #dcfce7; color: #166534; }
+.offline-badge.offline { background: #fef3c7; color: #92400e; }
+.offline-dot { width: 6px; height: 6px; border-radius: 50%; }
+.offline-dot.online { background: #16a34a; }
+.offline-dot.offline { background: #f59e0b; animation: blink 1.5s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
 /* Mobile menu toggle button */
 .mobile-menu-btn { display: none; }
 

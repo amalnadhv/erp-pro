@@ -38,6 +38,7 @@ import CustomFields from './CustomFields'
 import StockRotation from './StockRotation'
 import MultiCompany from './MultiCompany'
 import Integrations from './Integrations'
+import { useOffline } from '../utils/useOffline'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -7711,6 +7712,7 @@ const App = () => {
   const [activePageTab, setActivePageTab] = useState(null)
   const [searchQ, setSearchQ] = useState('')
   const [showResults, setShowResults] = useState(false)
+  const { isOnline, queueCount, syncing, cacheAllCritical, queueAction } = useOffline()
   const [listSearch, setListSearch] = useState('')
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
@@ -7742,6 +7744,7 @@ const App = () => {
     setAuthUser(user); setAuthTenant(tenant)
     localStorage.setItem('erp-auth', JSON.stringify({ user, tenant }))
     supabase.from('erp_users').select('role').eq('email', user.email).single().then(({ data }) => { if (data?.role) setCurrentUserRole(data.role) })
+    cacheAllCritical()
   }
 
   const handleLogout = async () => {
@@ -8756,6 +8759,12 @@ const App = () => {
           </div>
         </div>
         <div className="header-right">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: isOnline ? '#dcfce7' : '#fef3c7', fontSize: 11, fontWeight: 600, color: isOnline ? '#166534' : '#92400e' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? '#16a34a' : '#f59e0b' }}></span>
+            {isOnline ? 'Online' : 'Offline'}
+            {syncing && <span style={{ color: '#3b82f6' }}>🔄 Syncing...</span>}
+            {queueCount > 0 && <span title="Queued actions">({queueCount} queued)</span>}
+          </div>
           <div className="admin-badge">
             <span className="admin-avatar">👤</span>
             <div className="admin-info"><strong>ADMIN</strong><span>{dateStr} {timeStr}</span></div>
