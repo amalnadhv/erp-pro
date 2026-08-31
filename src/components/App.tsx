@@ -20,6 +20,7 @@ import Production from './Production'
 import DataImport from './DataImport'
 import Login from './Login'
 import CreditDashboard from './CreditDashboard'
+import Dashboard from './Dashboard'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -8131,31 +8132,7 @@ const App = () => {
         {!activeCust && !activeInv && !activeStock && (!activePage || activePage === 'Dashboard') && (
             <div className="home">
               {authTenant && <CreditDashboard tenant={authTenant} />}
-              <div className="home-stats">
-              <div className="hstat hs-blue"><div className="hstat-ico">📦</div><div className="hstat-body"><span className="hstat-label">Products</span><span className="hstat-value">{stats.products}</span></div></div>
-              <div className="hstat hs-green"><div className="hstat-ico">👥</div><div className="hstat-body"><span className="hstat-label">Customers</span><span className="hstat-value">{stats.customers}</span></div></div>
-              <div className="hstat hs-orange"><div className="hstat-ico">🧾</div><div className="hstat-body"><span className="hstat-label">Orders</span><span className="hstat-value">{stats.orders}</span></div></div>
-              <div className="hstat hs-purple"><div className="hstat-ico">🏪</div><div className="hstat-body"><span className="hstat-label">Inventory Items</span><span className="hstat-value">{stats.inventory}</span></div></div>
-            </div>
-            <div className="charts-row">
-              <div className="chart-card"><h4>📊 Monthly Sales — Last 6 Months</h4>{chartData.sales.some((v) => v > 0) ? <BarChart labels={chartData.months} values={chartData.sales} /> : <div className="chart-empty">No sales data yet</div>}</div>
-              <div className="chart-card"><h4>📦 Stock by Category</h4>{chartData.categories.length ? <DonutChart data={chartData.categories} /> : <div className="chart-empty">No products yet — add items in Stock Master</div>}</div>
-            </div>
-            <div className="home-minis">
-              <div className="hmini hm-cyan"><span className="hmini-label">💰 Stock Value</span><span className="hmini-value">{stats.stockValue.toFixed(2)}</span></div>
-              <div className="hmini hm-indigo"><span className="hmini-label">📈 Order Value</span><span className="hmini-value">{stats.orderValue.toFixed(2)}</span></div>
-              <div className="hmini hm-rose"><span className="hmini-label">⚠️ Low Stock</span><span className="hmini-value">{stats.lowStock}</span></div>
-              <div className="hmini hm-amber"><span className="hmini-label">⏳ Pending Orders</span><span className="hmini-value">{stats.pending}</span></div>
-            </div>
-            <div className="shortcuts">
-              <span className="sc-title">⌨️ Shortcuts</span>
-              <span><b>Ctrl+K</b> Search</span>
-              <span><b>Alt+A/F/S/P/I/B/R</b> Admin/Financials/Sales/Purchase/Inventory/Banking/Reports</span>
-              <span><b>Alt+D</b> Dark mode</span>
-              <span><b>Alt+C</b> Compact menu</span>
-                <span><b>Ctrl+B</b> Toggle menu</span>
-                <span><b>Esc</b> Home</span>
-              </div>
+              <Dashboard fmtMoney={fmtMoney} onNavigate={navigate} />
             </div>
         )}
 
