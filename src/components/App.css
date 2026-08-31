@@ -4208,6 +4208,13 @@ body:has(.dark) {
     transition: transform 0.25s ease;
     overflow: hidden;
   }
+  .mega-menu-wrap::-webkit-scrollbar { width: 6px; }
+  .mega-menu-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mega-menu-wrap::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 3px; }
+  .mega-menu-wrap::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
+  /* Firefox */
+  .mega-menu-wrap { scrollbar-width: thin; scrollbar-color: #8b5cf6 transparent; }
+
   .mega-menu-wrap.mobile-show { transform: translateX(0) !important; }
 
   .mega-menu {
@@ -4219,6 +4226,10 @@ body:has(.dark) {
     flex: 1;
     -webkit-overflow-scrolling: touch;
   }
+  .mega-menu::-webkit-scrollbar { width: 5px; }
+  .mega-menu::-webkit-scrollbar-track { background: transparent; }
+  .mega-menu::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #8b5cf6, #ec4899); border-radius: 3px; }
+  .mega-menu { scrollbar-width: thin; scrollbar-color: #8b5cf6 transparent; }
 
   .menu-panel {
     min-width: 0 !important;
