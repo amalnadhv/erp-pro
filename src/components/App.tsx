@@ -21,6 +21,7 @@ import DataImport from './DataImport'
 import Login from './Login'
 import CreditDashboard from './CreditDashboard'
 import Dashboard from './Dashboard'
+import StockAlerts from './StockAlerts'
 import LicensePage from './LicensePage'
 import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
@@ -94,6 +95,7 @@ const MENUS = [
     { label: 'Physical Stock', icon: '📋' },
     { label: 'Pick & Pack', icon: '📦' },
     { label: 'Barcode Management', icon: '📱' },
+    { label: 'Stock Alerts', icon: '⚠️' },
     { label: 'Stock Aging', icon: '⏳' },
     { label: 'Inventory Valuation', icon: '⚖️' },
   ]},
@@ -645,13 +647,15 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
     await downloadPDF(invoiceData, companyProfile, invItems, docLabel)
   }
 
-  const handleSendEmail = async () => {
-    if (!emailTo.trim()) { setEmailResult('⚠️ Enter an email address'); return }
+  const handleSendEmail = async (emailAddr?: string) => {
+    const to = emailAddr || emailTo
+    if (!to.trim()) { setEmailResult('⚠️ Enter an email address'); return { success: false, error: 'No email' } }
     setEmailSending(true); setEmailResult('')
-    const r = await emailInvoice({ to: emailTo, inv: invoiceData, companyProfile, items: invItems, docType: docLabel })
+    const r = await emailInvoice({ to, inv: invoiceData, companyProfile, items: invItems, docType: docLabel })
     setEmailSending(false)
     setEmailResult(r.success ? '✅ Invoice emailed successfully!' : '⚠️ ' + (r.error || 'Failed to send'))
     if (r.success) { setEmailOpen(false); setEmailTo('') }
+    return r
   }
 
   const handleSendReminder = async () => {
@@ -833,7 +837,16 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
           <h3>Invoice Saved!</h3>
           <p className="success-no">Invoice No: <b>{inv.savedNo}</b></p>
           <p className="success-sum">{inv.customer.name} · {fmt(inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100), 'money')}</p>
-          <ShareBar title={'Invoice ' + (inv.savedNo || '')} text={'Invoice: ' + (inv.savedNo || '') + '\nCustomer: ' + (inv.customer?.name || '') + '\nDate: ' + (inv.date || '') + '\nTotal: ' + fmt(inv.items.reduce((s, it) => s + it.price * it.qty * (1 - (it.discount || 0) / 100), 0) * (1 + inv.vat / 100), 'money') + '\nItems: ' + inv.items.length} />
+          <ShareBar
+            title={'Invoice ' + (inv.savedNo || '')}
+            docNo={inv.savedNo}
+            customerName={inv.customer?.name}
+            customerEmail={inv.customer?.email}
+            grandTotal={grandTotal}
+            balance={grandTotal - amountPaid}
+            text={'Invoice: ' + (inv.savedNo || '') + '\nCustomer: ' + (inv.customer?.name || '') + '\nDate: ' + (inv.date || '') + '\nTotal: ' + fmt(grandTotal, 'money') + '\nItems: ' + inv.items.length}
+            onSendEmail={handleSendEmail}
+          />
           <div className="inv-actions center">
             <button className="btn-print" onClick={() => printWithTemplate(docLabel, { ...companyProfile, invoice_no: inv.savedNo, invoice_date: inv.date || '', due_date: inv.dueDate || '', po_ref: inv.poRef || '', customer_name: inv.customer?.name, customer_vat: inv.customer?.vat, subtotal: invoiceData.subtotal, vat_percent: inv.vat, vat_amount: vatAmt, grand_total: grandTotal, amount_paid: amountPaid, balance: grandTotal - amountPaid, notes: inv.notes || '', items: invItems, company_name: companyProfile?.name, company_vat: companyProfile?.vat_no, company_logo: companyProfile?.logo_url })}>🖨️ Print</button>
             <button className="btn-print" onClick={handleDownloadPDF}>⬇️ Download PDF</button>
@@ -8767,6 +8780,10 @@ const App = () => {
         <StockTransfer />
       )}
 
+      {!activeCust && !activeInv && !activeStock && activePage === 'Stock Alerts' && (
+        <StockAlerts />
+      )}
+
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Audit Log' && (
           <AuditLog />
         )}
@@ -8862,7 +8879,7 @@ const App = () => {
           <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
+        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
 !DOC_MENUS[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">
