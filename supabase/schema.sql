@@ -1340,15 +1340,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_delivery ON delivery_notes;
 CREATE TRIGGER trg_set_ext_doc_no_delivery BEFORE INSERT ON delivery_notes FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_ar_memo ON ar_credit_memos;
 CREATE TRIGGER trg_set_ext_doc_no_ar_memo BEFORE INSERT ON ar_credit_memos FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_ap_memo ON ap_credit_memos;
 CREATE TRIGGER trg_set_ext_doc_no_ap_memo BEFORE INSERT ON ap_credit_memos FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_sales_return ON sales_returns;
 CREATE TRIGGER trg_set_ext_doc_no_sales_return BEFORE INSERT ON sales_returns FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_purchase_return ON purchase_returns;
 CREATE TRIGGER trg_set_ext_doc_no_purchase_return BEFORE INSERT ON purchase_returns FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_req ON purchase_requisitions;
 CREATE TRIGGER trg_set_ext_doc_no_req BEFORE INSERT ON purchase_requisitions FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_po ON purchase_orders;
 CREATE TRIGGER trg_set_ext_doc_no_po BEFORE INSERT ON purchase_orders FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_grn ON goods_receipts;
 CREATE TRIGGER trg_set_ext_doc_no_grn BEFORE INSERT ON goods_receipts FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_pin ON purchase_invoices;
 CREATE TRIGGER trg_set_ext_doc_no_pin BEFORE INSERT ON purchase_invoices FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
+DROP TRIGGER IF EXISTS trg_set_ext_doc_no_lc ON landed_costs;
 CREATE TRIGGER trg_set_ext_doc_no_lc BEFORE INSERT ON landed_costs FOR EACH ROW EXECUTE FUNCTION set_ext_doc_no();
 
 -- Indexes
