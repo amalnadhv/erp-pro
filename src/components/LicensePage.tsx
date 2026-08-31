@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { deductCredit, checkPlanLimits, incrementUsage, MODULE_COSTS, getStripeCheckoutUrl } from '../utils/billing'
 
 interface Props { tenant: any; onTenantUpdate?: (t: any) => void }
 
@@ -117,6 +118,19 @@ const LicensePage = ({ tenant, onTenantUpdate }: Props) => {
     setBusy(false)
   }
 
+  // ---- Stripe Checkout ----
+  const handleStripeCheckout = (planName: string) => {
+    const url = getStripeCheckoutUrl(planName, tenant.id, tenant.email || '')
+    window.open(url, '_blank')
+  }
+
+  // ---- Check Plan Limits ----
+  const [planLimits, setPlanLimits] = useState<any>(null)
+  useEffect(() => {
+    if (!tenant?.id) return
+    checkPlanLimits(tenant.id).then((r) => setPlanLimits(r))
+  }, [tenant?.id, tenant?.plan_name])
+
   return (
     <div className="doc-workspace" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
       <div className="coa-head"><h3>🔑 License & Subscription</h3></div>
@@ -125,6 +139,7 @@ const LicensePage = ({ tenant, onTenantUpdate }: Props) => {
       {/* Action Bar */}
       <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
         <button className="btn-primary" onClick={() => setShowAddCredit(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 0, background: 'linear-gradient(135deg,#6a11cb,#2575fc)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>💰 Add Credit</button>
+        <button className="btn-primary" onClick={() => handleStripeCheckout(tenant?.plan_name || 'Standard')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 0, background: 'linear-gradient(135deg,#635bff,#7c3aed)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>💳 Pay with Stripe</button>
         <div style={{ display: 'flex', gap: 4 }}>
           <input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Promo code" style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 140 }} onKeyDown={(e) => { if (e.key === 'Enter') handlePromo() }} />
           <button className="btn-primary" onClick={handlePromo} disabled={busy || !promoCode} style={{ padding: '8px 14px', borderRadius: 8, border: 0, background: '#22c55e', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: busy || !promoCode ? 0.5 : 1 }}>Apply</button>
@@ -133,6 +148,17 @@ const LicensePage = ({ tenant, onTenantUpdate }: Props) => {
           {tenant?.status === 'Active' ? '⏸ Suspend' : '▶ Reactivate'}
         </button>
       </div>
+
+      {/* Plan Limits Warning */}
+      {planLimits && !planLimits.allowed && (
+        <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 13, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <div>
+            <div style={{ fontWeight: 700 }}>Plan Limit Reached</div>
+            <div>{planLimits.reason}</div>
+          </div>
+        </div>
+      )}
 
       {/* Current Plan Card */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginTop: 16 }}>
@@ -251,6 +277,25 @@ const LicensePage = ({ tenant, onTenantUpdate }: Props) => {
           <div><span style={{ color: '#6b7280' }}>Expires:</span> <b style={{ color: expiryColor }}>{tenant?.expires_at ? new Date(tenant.expires_at).toLocaleDateString() : 'Never'}</b></div>
           <div><span style={{ color: '#6b7280' }}>Days Left:</span> <b style={{ color: expiryColor }}>{daysLeft !== null ? (daysLeft > 0 ? `${daysLeft} days` : 'Expired') : 'Unlimited'}</b></div>
         </div>
+      </div>
+
+      {/* Transaction Costs */}
+      <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e5e7eb', marginTop: 16 }}>
+        <h4 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#111827' }}>💡 Transaction Costs</h4>
+        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>Each transaction deducts credit from your balance. Costs are in AED.</div>
+        <table className="data-grid report-table" style={{ fontSize: 12 }}>
+          <thead>
+            <tr><th>Module</th><th>Cost per Transaction</th></tr>
+          </thead>
+          <tbody>
+            {Object.entries(MODULE_COSTS).sort((a, b) => b[1] - a[1]).map(([mod, cost]) => (
+              <tr key={mod}>
+                <td style={{ fontWeight: 600 }}>{mod.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</td>
+                <td>AED {cost.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Add Credit Modal */}

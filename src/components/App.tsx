@@ -46,9 +46,6 @@ const MENUS = [
     { label: 'Bank Reconciliation', icon: '🔗' },
     { label: 'Debit Note', icon: '📄' },
     { label: 'Credit Note', icon: '📄' },
-    { label: 'Trial Balance', icon: '📊' },
-    { label: 'Balance Sheet', icon: '📋' },
-    { label: 'P&L Statement', icon: '📈' },
     { label: 'Corporate Tax', icon: '🏛️' },
     { label: 'Exchange Rates', icon: '💱' },
     { label: 'Fx Revaluation', icon: '💱' },
@@ -194,150 +191,6 @@ const MODULES = {
     { key: 'vat_amount', label: 'VAT', type: 'money' },
     { key: 'status', label: 'STATUS', type: 'status' },
   ]},
-  'Import / Export (disabled-DOC_MENUS)': { icon: '📥', fields: [
-    { key: 'transfer_type', label: 'Type', type: 'select', options: ['Import', 'Export'] },
-    { key: 'module_name', label: 'Module' },
-    { key: 'file_name', label: 'File Name' },
-    { key: 'entry_date', label: 'Date', type: 'date' },
-    { key: 'records_count', label: 'Records', type: 'number' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Success', 'Failed', 'Pending'] },
-    { key: 'message', label: 'Message', type: 'textarea' },
-  ], columns: [
-    { key: 'transfer_type', label: 'TYPE' },
-    { key: 'module_name', label: 'MODULE' },
-    { key: 'file_name', label: 'FILE' },
-    { key: 'entry_date', label: 'DATE', type: 'date' },
-    { key: 'records_count', label: 'RECORDS' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Audit Log': { icon: '📜', fields: [
-    { key: 'username', label: 'Username' },
-    { key: 'action', label: 'Action', type: 'select', options: ['Created', 'Updated', 'Deleted', 'Viewed', 'Posted', 'Login', 'Logout'] },
-    { key: 'module_name', label: 'Module' },
-    { key: 'record_id', label: 'Record ID' },
-    { key: 'details', label: 'Details', type: 'textarea' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Done', 'Failed'] },
-  ], columns: [
-    { key: 'username', label: 'USER' },
-    { key: 'action', label: 'ACTION' },
-    { key: 'module_name', label: 'MODULE' },
-    { key: 'details', label: 'DETAILS' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Backup & Restore': { icon: '💾', fields: [
-    { key: 'backup_name', label: 'Backup Name', required: true },
-    { key: 'backup_type', label: 'Type', type: 'select', options: ['Full', 'Database', 'Storage', 'Configuration'] },
-    { key: 'size_mb', label: 'Size (MB)', type: 'number' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Complete', 'Running', 'Failed', 'Scheduled'] },
-    { key: 'notes', label: 'Notes', type: 'textarea' },
-  ], columns: [
-    { key: 'backup_name', label: 'BACKUP NAME' },
-    { key: 'backup_type', label: 'TYPE' },
-    { key: 'size_mb', label: 'SIZE (MB)' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'License': { icon: '🔑', fields: [
-    { key: 'company_name', label: 'Company' },
-    { key: 'license_key', label: 'License Key', required: true },
-    { key: 'plan', label: 'Plan', type: 'select', options: ['Enterprise', 'Standard', 'Basic', 'Trial'] },
-    { key: 'seats', label: 'Seats', type: 'number' },
-    { key: 'expires', label: 'Expiry', type: 'date' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Expired', 'Trial', 'Revoked'] },
-  ], columns: [
-    { key: 'company_name', label: 'COMPANY' },
-    { key: 'license_key', label: 'LICENSE KEY' },
-    { key: 'plan', label: 'PLAN' },
-    { key: 'seats', label: 'SEATS' },
-    { key: 'expires', label: 'EXPIRY', type: 'date' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Cash Book': { icon: '💵', fields: [
-    { key: 'entry_date', label: 'Date', type: 'date' },
-    { key: 'description', label: 'Description', required: true },
-    { key: 'reference', label: 'Reference' },
-    { key: 'debit', label: 'Debit', type: 'money' },
-    { key: 'credit', label: 'Credit', type: 'money' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Posted', 'Draft'] },
-  ], columns: [
-    { key: 'entry_date', label: 'DATE', type: 'date' },
-    { key: 'description', label: 'DESCRIPTION' },
-    { key: 'debit', label: 'DEBIT', type: 'money' },
-    { key: 'credit', label: 'CREDIT', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Bank Book': { icon: '🏦', fields: [
-    { key: 'entry_date', label: 'Date', type: 'date' },
-    { key: 'description', label: 'Description', required: true },
-    { key: 'bank_account', label: 'Bank Account' },
-    { key: 'reference', label: 'Reference' },
-    { key: 'debit', label: 'Debit', type: 'money' },
-    { key: 'credit', label: 'Credit', type: 'money' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Posted', 'Draft'] },
-  ], columns: [
-    { key: 'entry_date', label: 'DATE', type: 'date' },
-    { key: 'bank_account', label: 'BANK ACCOUNT' },
-    { key: 'description', label: 'DESCRIPTION' },
-    { key: 'debit', label: 'DEBIT', type: 'money' },
-    { key: 'credit', label: 'CREDIT', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Debit Note': { icon: '📄', fields: [
-    { key: 'note_no', label: 'Note No' },
-    { key: 'party_name', label: 'Party' },
-    { key: 'doc_date', label: 'Date', type: 'date' },
-    { key: 'amount', label: 'Amount', type: 'money' },
-    { key: 'reason', label: 'Reason', type: 'textarea' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Approved', 'Posted'] },
-  ], columns: [
-    { key: 'note_no', label: 'NOTE NO' },
-    { key: 'party_name', label: 'PARTY' },
-    { key: 'doc_date', label: 'DATE', type: 'date' },
-    { key: 'amount', label: 'AMOUNT', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Credit Note': { icon: '📄', fields: [
-    { key: 'note_no', label: 'Note No' },
-    { key: 'party_name', label: 'Party' },
-    { key: 'doc_date', label: 'Date', type: 'date' },
-    { key: 'amount', label: 'Amount', type: 'money' },
-    { key: 'reason', label: 'Reason', type: 'textarea' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Approved', 'Posted'] },
-  ], columns: [
-    { key: 'note_no', label: 'NOTE NO' },
-    { key: 'party_name', label: 'PARTY' },
-    { key: 'doc_date', label: 'DATE', type: 'date' },
-    { key: 'amount', label: 'AMOUNT', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Cost Center': { icon: '🎯', fields: [
-    { key: 'code', label: 'Code' },
-    { key: 'name', label: 'Name', required: true },
-    { key: 'department', label: 'Department' },
-    { key: 'manager', label: 'Manager' },
-    { key: 'annual_budget', label: 'Annual Budget', type: 'money' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
-  ], columns: [
-    { key: 'code', label: 'CODE' },
-    { key: 'name', label: 'NAME' },
-    { key: 'department', label: 'DEPARTMENT' },
-    { key: 'annual_budget', label: 'BUDGET', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Budget': { icon: '💰', fields: [
-    { key: 'budget_code', label: 'Budget Code', required: true },
-    { key: 'fiscal_year', label: 'Fiscal Year' },
-    { key: 'period', label: 'Period', type: 'select', options: ['Annual', 'Quarterly', 'Monthly'] },
-    { key: 'amount', label: 'Budget Amount', type: 'money' },
-    { key: 'spent', label: 'Spent', type: 'money' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Approved', 'Draft', 'Closed'] },
-  ], columns: [
-    { key: 'budget_code', label: 'CODE' },
-    { key: 'fiscal_year', label: 'YEAR' },
-    { key: 'period', label: 'PERIOD' },
-    { key: 'amount', label: 'BUDGET', type: 'money' },
-    { key: 'spent', label: 'SPENT', type: 'money' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
   'Sales Person': { icon: '🧑‍💼', fields: [
     { key: 'code', label: 'Code' },
     { key: 'name', label: 'Name', required: true },
@@ -423,51 +276,18 @@ const MODULES = {
   ]},
   'Stock Transfer': { icon: '🔄', fields: [
     { key: 'transfer_no', label: 'Transfer No' },
-    { key: 'item_name', label: 'Item' },
-    { key: 'from_warehouse', label: 'From Warehouse' },
-    { key: 'to_warehouse', label: 'To Warehouse' },
-    { key: 'quantity', label: 'Qty', type: 'number' },
-    { key: 'transfer_date', label: 'Date', type: 'date' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Completed', 'Cancelled'] },
+    { key: 'product_name', label: 'Item' },
+    { key: 'from_wh', label: 'From Warehouse' },
+    { key: 'to_wh', label: 'To Warehouse' },
+    { key: 'qty', label: 'Qty', type: 'number' },
+    { key: 'requested_by', label: 'Requested By' },
+    { key: 'status', label: 'Status', type: 'select', options: ['Requested', 'Dispatched', 'Received', 'Cancelled'] },
   ], columns: [
     { key: 'transfer_no', label: 'TRANSFER NO' },
-    { key: 'item_name', label: 'ITEM' },
-    { key: 'from_warehouse', label: 'FROM' },
-    { key: 'to_warehouse', label: 'TO' },
-    { key: 'quantity', label: 'QTY' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Stock Adjustment': { icon: '⚖️', fields: [
-    { key: 'adjustment_no', label: 'Adjustment No' },
-    { key: 'product_id', label: 'Product', type: 'product' },
-    { key: 'item_name', label: 'Item' },
-    { key: 'adjustment_type', label: 'Type', type: 'select', options: ['Positive', 'Negative'] },
-    { key: 'quantity', label: 'Qty', type: 'number' },
-    { key: 'adjustment_date', label: 'Date', type: 'date' },
-    { key: 'reason', label: 'Reason', type: 'textarea' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Posted', 'Cancelled'] },
-  ], columns: [
-    { key: 'adjustment_no', label: 'ADJ NO' },
-    { key: 'item_name', label: 'ITEM' },
-    { key: 'adjustment_type', label: 'TYPE' },
-    { key: 'quantity', label: 'QTY' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Stock In / Out': { icon: '📥', fields: [
-    { key: 'stock_date', label: 'Date', type: 'date' },
-    { key: 'product_id', label: 'Product', type: 'product' },
-    { key: 'item_name', label: 'Item' },
-    { key: 'movement_type', label: 'Type', type: 'select', options: ['In', 'Out'] },
-    { key: 'quantity', label: 'Qty', type: 'number' },
-    { key: 'warehouse', label: 'Warehouse' },
-    { key: 'reference', label: 'Reference' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Posted', 'Draft'] },
-  ], columns: [
-    { key: 'stock_date', label: 'DATE', type: 'date' },
-    { key: 'item_name', label: 'ITEM' },
-    { key: 'movement_type', label: 'TYPE' },
-    { key: 'quantity', label: 'QTY' },
-    { key: 'warehouse', label: 'WAREHOUSE' },
+    { key: 'product_name', label: 'ITEM' },
+    { key: 'from_wh', label: 'FROM' },
+    { key: 'to_wh', label: 'TO' },
+    { key: 'qty', label: 'QTY' },
     { key: 'status', label: 'STATUS', type: 'status' },
   ]},
   'Batch / Serial': { icon: '🔢', fields: [
@@ -482,22 +302,6 @@ const MODULES = {
     { key: 'item_name', label: 'ITEM' },
     { key: 'quantity', label: 'QTY' },
     { key: 'expiry_date', label: 'EXPIRY', type: 'date' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Physical Stock': { icon: '📋', fields: [
-    { key: 'count_date', label: 'Date', type: 'date' },
-    { key: 'product_id', label: 'Product', type: 'product' },
-    { key: 'item_name', label: 'Item' },
-    { key: 'system_qty', label: 'System Qty', type: 'number' },
-    { key: 'counted_qty', label: 'Counted Qty', type: 'number' },
-    { key: 'variance', label: 'Variance', type: 'number' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Open', 'Counted', 'Verified'] },
-  ], columns: [
-    { key: 'count_date', label: 'DATE', type: 'date' },
-    { key: 'item_name', label: 'ITEM' },
-    { key: 'system_qty', label: 'SYSTEM' },
-    { key: 'counted_qty', label: 'COUNTED' },
-    { key: 'variance', label: 'VARIANCE' },
     { key: 'status', label: 'STATUS', type: 'status' },
   ]},
   'Pick & Pack': { icon: '📦', fields: [
@@ -524,53 +328,6 @@ const MODULES = {
     { key: 'format', label: 'FORMAT' },
     { key: 'status', label: 'STATUS', type: 'status' },
   ]},
-  'Petty Cash': { icon: '💵', fields: [
-    { key: 'doc_date', label: 'Date', type: 'date' },
-    { key: 'payee', label: 'Payee', required: true },
-    { key: 'description', label: 'Description', required: true },
-    { key: 'amount', label: 'Amount', type: 'money', required: true },
-    { key: 'type', label: 'Type', type: 'select', options: ['Expense', 'Received'] },
-    { key: 'category', label: 'Category' },
-    { key: 'account_code', label: 'Account Code' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Pending', 'Approved', 'Rejected'] },
-  ], columns: [
-    { key: 'voucher_no', label: 'VOUCHER' },
-    { key: 'doc_date', label: 'DATE', type: 'date' },
-    { key: 'payee', label: 'PAYEE' },
-    { key: 'description', label: 'DESCRIPTION' },
-    { key: 'amount', label: 'AMOUNT', type: 'money' },
-    { key: 'type', label: 'TYPE' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Deposits': { icon: '🏦', fields: [
-    { key: 'deposit_date', label: 'Date', type: 'date' },
-    { key: 'description', label: 'Description', required: true },
-    { key: 'amount', label: 'Amount', type: 'money' },
-    { key: 'bank_account', label: 'Bank Account' },
-    { key: 'reference', label: 'Reference' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Deposited', 'Pending', 'Cancelled'] },
-  ], columns: [
-    { key: 'deposit_date', label: 'DATE', type: 'date' },
-    { key: 'description', label: 'DESCRIPTION' },
-    { key: 'amount', label: 'AMOUNT', type: 'money' },
-    { key: 'bank_account', label: 'BANK ACCOUNT' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
-  'Check Management': { icon: '📋', fields: [
-    { key: 'check_no', label: 'Check No', required: true },
-    { key: 'payee', label: 'Payee' },
-    { key: 'amount', label: 'Amount', type: 'money' },
-    { key: 'bank', label: 'Bank' },
-    { key: 'issue_date', label: 'Issue Date', type: 'date' },
-    { key: 'due_date', label: 'Due Date', type: 'date' },
-    { key: 'status', label: 'Status', type: 'select', options: ['In Hand', 'Issued', 'Deposited', 'Cleared', 'Returned', 'Cancelled'] },
-  ], columns: [
-    { key: 'check_no', label: 'CHECK NO' },
-    { key: 'payee', label: 'PAYEE' },
-    { key: 'amount', label: 'AMOUNT', type: 'money' },
-    { key: 'due_date', label: 'DUE DATE', type: 'date' },
-    { key: 'status', label: 'STATUS', type: 'status' },
-  ]},
 }
 
 const DOC_MENUS = {
@@ -578,10 +335,10 @@ const DOC_MENUS = {
   'Delivery Note': { table: 'delivery_notes', noField: 'delivery_no', title: '🚚 Delivery Note', party: 'customer', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'A/R Credit Memo': { table: 'ar_credit_memos', noField: 'memo_no', title: '📄 A/R Credit Memo', party: 'customer', vat: 15, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'Sales Return': { table: 'sales_returns', noField: 'return_no', title: '🔄 Sales Return', party: 'customer', vat: 15, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'Purchase Requisition': { table: 'purchase_requisitions', noField: 'req_no', title: '📝 Purchase Requisition', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'Purchase Order': { table: 'purchase_orders', noField: 'po_no', title: '📑 Purchase Order', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'Goods Receipt PO': { table: 'goods_receipts', noField: 'grn_no', title: '📥 Goods Receipt PO', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
-  'A/P Invoice': { table: 'purchase_invoices', noField: 'pin_no', title: '🧾 A/P Invoice', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id' },
+  'Purchase Requisition': { table: 'purchase_requisitions', noField: 'req_no', title: '📝 Purchase Requisition', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'Purchase Order', convertLabel: '📑 Convert to PO' },
+  'Purchase Order': { table: 'purchase_orders', noField: 'po_no', title: '📑 Purchase Order', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'Goods Receipt PO', convertLabel: '📥 Convert to GRN', sourceField: 'source_doc_no' },
+  'Goods Receipt PO': { table: 'goods_receipts', noField: 'grn_no', title: '📥 Goods Receipt PO', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id', convertTo: 'A/P Invoice', convertLabel: '🧾 Convert to AP Invoice', sourceField: 'source_doc_no', stockImpact: true },
+  'A/P Invoice': { table: 'purchase_invoices', noField: 'pin_no', title: '🧾 A/P Invoice', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id', sourceField: 'source_doc_no' },
   'A/P Credit Memo': { table: 'ap_credit_memos', noField: 'memo_no', title: '📄 A/P Credit Memo', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'Purchase Return': { table: 'purchase_returns', noField: 'return_no', title: '🔄 Purchase Return', party: 'supplier', vat: 5, partyNameKey: 'party_name', partyIdKey: 'party_id' },
   'Landed Cost': { table: 'landed_costs', noField: 'lc_no', title: '🚢 Landed Cost', party: 'supplier', vat: 0, partyNameKey: 'party_name', partyIdKey: 'party_id' },
@@ -2569,7 +2326,7 @@ const PurchaseReport = ({ fmtMoney }) => {
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
   useEffect(() => {
     setLoading(true)
-    supabase.from('orders').select('*, customers(name)').then(({ data }) => { setOrders(data || []); setLoading(false) })
+    supabase.from('purchase_orders').select('*, suppliers(name)').then(({ data }) => { setOrders(data || []); setLoading(false) })
   }, [])
   const filtered = orders.filter((o) => {
     const d = o.created_at?.split('T')[0]
@@ -2801,25 +2558,39 @@ const CustomerBalanceReport = ({ fmtMoney }) => {
 
 const SupplierBalanceReport = ({ fmtMoney }) => {
   const [suppliers, setSuppliers] = useState([])
+  const [invoices, setInvoices] = useState([])
+  const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().split('T')[0])
   useEffect(() => {
     setLoading(true)
-    supabase.from('suppliers').select('*').then(({ data }) => { setSuppliers(data || []); setLoading(false) })
+    Promise.all([
+      supabase.from('suppliers').select('*'),
+      supabase.from('purchase_invoices').select('*'),
+      supabase.from('outgoing_payments').select('*')
+    ]).then(([s, i, p]) => { setSuppliers(s.data || []); setInvoices(i.data || []); setPayments(p.data || []); setLoading(false) })
   }, [])
-  const supData = suppliers.filter((s) => Number(s.opening_balance || 0) !== 0 || s.status === 'Active').map((s) => ({
-    ...s,
-    balance: Number(s.opening_balance || 0)
-  })).sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
+  const supData = suppliers.map((s) => {
+    const name = s.name || `${s.first_name || ''} ${s.last_name || ''}`.trim()
+    const invs = invoices.filter((inv) => (inv.supplier_name === name || inv.supplier_id === s.id) && (!asOfDate || inv.created_at?.split('T')[0] <= asOfDate))
+    const pays = payments.filter((p) => (p.supplier_name === name || p.supplier_id === s.id) && (!asOfDate || p.created_at?.split('T')[0] <= asOfDate))
+    const totalPurchases = invs.reduce((s, inv) => s + Number(inv.grand_total || 0), 0)
+    const totalPaid = pays.reduce((s, p) => s + Number(p.amount || 0), 0)
+    const balance = totalPurchases - totalPaid
+    const openingBal = Number(s.opening_balance || 0)
+    return { ...s, displayName: name, totalPurchases, totalPaid, balance: balance + openingBal, invoiceCount: invs.length }
+  }).filter((s) => s.balance !== 0 || s.totalPurchases > 0).sort((a, b) => b.balance - a.balance)
   const totalBalance = supData.reduce((s, x) => s + x.balance, 0)
+  const totalPurchases = supData.reduce((s, x) => s + x.totalPurchases, 0)
+  const totalPaid = supData.reduce((s, x) => s + x.totalPaid, 0)
 
   const printReport = () => {
     const w = window.open('', '_blank')
     w.document.write('<html><head><title>Supplier Balance</title><style>body{font-family:Arial,sans-serif;padding:30px}h1{color:#1e1b4b;font-size:20px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:5px 10px;border:1px solid #e2e8f0;font-size:12px}th{text-align:left;background:#f1f5f9}.col-r{text-align:right}.total{font-weight:700;background:#f8fafc}.hdr{text-align:center;margin-bottom:20px}</style></head><body>')
     w.document.write('<div class="hdr"><h1>🏭 Supplier Balance Report</h1><div class="sub">As of ' + asOfDate + '</div></div>')
-    w.document.write('<table><tr><th>Code</th><th>Supplier</th><th>Type</th><th>City</th><th class="col-r">Balance</th></tr>')
-    supData.forEach((s) => { w.document.write('<tr><td>' + (s.code || '') + '</td><td>' + (s.name || '') + '</td><td>' + (s.sup_type || '') + '</td><td>' + (s.city || '') + '</td><td class="col-r" style="color:' + (s.balance > 0 ? '#dc2626' : '#059669') + '">' + fmtMoney(s.balance) + '</td></tr>') })
-    w.document.write('<tr class="total"><td colspan="4"><b>TOTAL</b></td><td class="col-r"><b>' + fmtMoney(totalBalance) + '</b></td></tr></table>')
+    w.document.write('<table><tr><th>Code</th><th>Supplier</th><th>Invoices</th><th class="col-r">Total Purchases</th><th class="col-r">Paid</th><th class="col-r">Balance Due</th></tr>')
+    supData.forEach((s) => { w.document.write('<tr><td>' + (s.code || '') + '</td><td>' + (s.displayName || '') + '</td><td>' + s.invoiceCount + '</td><td class="col-r">' + fmtMoney(s.totalPurchases) + '</td><td class="col-r">' + fmtMoney(s.totalPaid) + '</td><td class="col-r" style="color:' + (s.balance > 0 ? '#dc2626' : '#059669') + '">' + fmtMoney(s.balance) + '</td></tr>') })
+    w.document.write('<tr class="total"><td colspan="2"><b>TOTAL</b></td><td></td><td class="col-r"><b>' + fmtMoney(totalPurchases) + '</b></td><td class="col-r"><b>' + fmtMoney(totalPaid) + '</b></td><td class="col-r"><b>' + fmtMoney(totalBalance) + '</b></td></tr></table>')
     w.document.write('</body></html>')
     w.document.close(); w.print()
   }
@@ -2835,26 +2606,28 @@ const SupplierBalanceReport = ({ fmtMoney }) => {
        </div>
       <div className="report-kpi-row">
         <div className="report-kpi kpi-blue"><div className="kpi-val">{supData.length}</div><div className="kpi-lbl">Suppliers</div></div>
-        <div className="report-kpi kpi-red"><div className="kpi-val">{fmtMoney(totalBalance)}</div><div className="kpi-lbl">Total Balance</div></div>
+        <div className="report-kpi kpi-green"><div className="kpi-val">{fmtMoney(totalPurchases)}</div><div className="kpi-lbl">Total Purchases</div></div>
+        <div className="report-kpi kpi-red"><div className="kpi-val">{fmtMoney(totalBalance)}</div><div className="kpi-lbl">Outstanding</div></div>
       </div>
       <div className="report-section" style={{ marginTop: 12 }}>
         <div className="grid-wrap">
           <table className="data-grid report-table">
-            <thead><tr><th>CODE</th><th>SUPPLIER</th><th>TYPE</th><th>CITY</th><th className="col-money">BALANCE</th></tr></thead>
+            <thead><tr><th>CODE</th><th>SUPPLIER</th><th className="col-money">INVOICES</th><th className="col-money">TOTAL PURCHASES</th><th className="col-money">PAID</th><th className="col-money">BALANCE DUE</th></tr></thead>
             <tbody>
-              {loading && <tr><td colSpan="5" className="empty">Loading...</td></tr>}
-              {!loading && supData.length === 0 && <tr><td colSpan="5" className="empty">No supplier balances</td></tr>}
+              {loading && <tr><td colSpan="6" className="empty">Loading...</td></tr>}
+              {!loading && supData.length === 0 && <tr><td colSpan="6" className="empty">No supplier balances</td></tr>}
               {!loading && supData.map((s, i) => (
                 <tr key={s.id || i} className={i % 2 ? 'alt' : ''}>
                   <td className="code-cell">{s.code || '—'}</td>
-                  <td>{s.name || '—'}</td>
-                  <td>{s.sup_type || '—'}</td>
-                  <td>{s.city || '—'}</td>
-                  <td className={`col-money ${s.balance > 0 ? 'dr' : s.balance < 0 ? 'cr' : ''}`}>{fmtMoney(s.balance)}</td>
+                  <td>{s.displayName || '—'}</td>
+                  <td className="col-money">{s.invoiceCount}</td>
+                  <td className="col-money">{fmtMoney(s.totalPurchases)}</td>
+                  <td className="col-money cr">{fmtMoney(s.totalPaid)}</td>
+                  <td className={`col-money ${s.balance > 0 ? 'dr' : 'cr'}`}>{fmtMoney(s.balance)}</td>
                 </tr>
               ))}
             </tbody>
-            <tfoot><tr className="total-row"><td colSpan="4"><b>TOTAL</b></td><td className="col-money"><b>{fmtMoney(totalBalance)}</b></td></tr></tfoot>
+            <tfoot><tr className="total-row"><td colSpan="2"><b>TOTAL</b></td><td></td><td className="col-money"><b>{fmtMoney(totalPurchases)}</b></td><td className="col-money"><b>{fmtMoney(totalPaid)}</b></td><td className="col-money"><b>{fmtMoney(totalBalance)}</b></td></tr></tfoot>
           </table>
         </div>
       </div>
@@ -4281,6 +4054,12 @@ const SalesDocs = ({ docType, fmtMoney }) => {
       } else {
         const { error } = await supabase.from(TABLE).insert(payload)
         if (error) throw error
+        // Deduct credit for new document
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, TABLE, null, `${cfg.title || TABLE}: new document`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
       }
       setForm(null)
       loadDocs()
@@ -4578,6 +4357,8 @@ const ModuleWorkspace = ({ module, cfg, fmtMoney }) => {
     'Cost Center': 'cost_centers', 'Budget': 'budgets', 'Debit Note': 'debit_notes',
     'Credit Note': 'credit_notes', 'Batch / Serial': 'batch_serials', 'Pick & Pack': 'pick_pack',
     'Barcode Management': 'barcodes', 'Petty Cash': 'petty_cash',
+    'Stock Adjustment': 'stock_adjustments', 'Stock In / Out': 'stock_movements', 'Physical Stock': 'physical_stock',
+    'Deposits': 'bank_deposits', 'Stock Transfer': 'stock_transfers',
   }
   const realTable = TABLE_MAP[module]
 
@@ -4648,6 +4429,12 @@ const ModuleWorkspace = ({ module, cfg, fmtMoney }) => {
         } else {
           const { error } = await supabase.from(realTable).insert(payload)
           if (error) throw error
+          // Deduct credit for new record
+          try {
+            const { deductCredit } = await import('../utils/billing')
+            const tenantId = authTenant?.id
+            if (tenantId) await deductCredit(tenantId, realTable, null, `${module}: new record`)
+          } catch (e) { console.error('Credit deduction failed:', e) }
         }
       } else {
         const payload = { module, status: form.status, data }
@@ -4793,6 +4580,245 @@ const ModuleWorkspace = ({ module, cfg, fmtMoney }) => {
   )
 }
 
+const LandedCostWorkspace = ({ fmtMoney }) => {
+  const [docs, setDocs] = useState([])
+  const [grnDocs, setGrnDocs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const TABLE = 'landed_costs'
+
+  const loadDocs = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase.from(TABLE).select('*').order('created_at', { ascending: false }).limit(200)
+      setDocs(data || [])
+    } catch (err) { console.error(err) } finally { setLoading(false) }
+  }
+
+  useEffect(() => { loadDocs() }, [])
+  useEffect(() => {
+    supabase.from('goods_receipts').select('id, grn_no, party_id, party_name, items, grand_total, status').eq('status', 'Approved').then(({ data }) => setGrnDocs(data || []))
+  }, [])
+
+  const counts = { All: docs.length }
+  docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+  const filtered = docs.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (!search) return true
+    return ((d.lc_no || '') + ' ' + (d.party_name || '') + ' ' + (d.grn_no || '')).toLowerCase().includes(search.toLowerCase())
+  })
+
+  const blankDoc = () => ({
+    recId: null, lc_no: '', _grn_id: '', grn_no: '', party_id: '', party_name: '',
+    doc_date: new Date().toISOString().split('T')[0], currency: 'AED',
+    costLines: [{ account: 'Freight', amount: '', description: '' }],
+    notes: '', status: 'Draft', saving: false, error: ''
+  })
+
+  const calcTotals = (costLines) => {
+    const total = costLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)
+    return { total, vat: total * 0 / 100, grand_total: total }
+  }
+
+  const selectGrn = (grnId) => {
+    const grn = grnDocs.find((g) => g.id === grnId)
+    if (grn) {
+      setForm({ ...form, _grn_id: grn.id, grn_no: grn.grn_no, party_id: grn.party_id, party_name: grn.party_name })
+    }
+  }
+
+  const addCostLine = () => {
+    setForm({ ...form, costLines: [...form.costLines, { account: 'Freight', amount: '', description: '' }] })
+  }
+
+  const updateCostLine = (idx, key, val) => {
+    const lines = [...form.costLines]
+    lines[idx] = { ...lines[idx], [key]: val }
+    setForm({ ...form, costLines: lines })
+  }
+
+  const removeCostLine = (idx) => {
+    if (form.costLines.length <= 1) return
+    setForm({ ...form, costLines: form.costLines.filter((_, i) => i !== idx) })
+  }
+
+  const saveDoc = async (approveAfter) => {
+    if (!form._grn_id) { setForm({ ...form, error: 'Please select a GRN to allocate landed cost.' }); return }
+    if (!form.costLines.some((l) => Number(l.amount) > 0)) { setForm({ ...form, error: 'Enter at least one cost amount.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+
+    const totals = calcTotals(form.costLines)
+    const payload = {
+      party_id: form.party_id, party_name: form.party_name, grn_no: form.grn_no,
+      doc_date: form.doc_date, currency: form.currency,
+      items: form.costLines.filter((l) => Number(l.amount) > 0),
+      cost_lines: form.costLines.filter((l) => Number(l.amount) > 0),
+      subtotal: totals.total, vat_percent: 0, vat_amount: 0, grand_total: totals.grand_total,
+      notes: form.notes, status: approveAfter ? 'Approved' : 'Draft'
+    }
+
+    try {
+      let docId = form.recId
+      let docNo = form.recId ? form.lc_no : null
+
+      if (form.recId) {
+        const { error } = await supabase.from(TABLE).update(payload).eq('id', form.recId)
+        if (error) throw error
+      } else {
+        const { data, error } = await supabase.from(TABLE).insert(payload).select()
+        if (error) throw error
+        docId = data?.[0]?.id
+        docNo = data?.[0]?.lc_no
+      }
+
+      if (approveAfter && form._grn_id) {
+        const grnTotal = Number(calcGrnTotal(form._grn_id) || 1)
+        const landedTotal = Number(totals.grand_total || 0)
+        const { data: grnDoc } = await supabase.from('goods_receipts').select('items, notes').eq('id', form._grn_id).single()
+        if (grnDoc && grnDoc.items) {
+          const allocatedItems = grnDoc.items.map((it) => {
+            const itemValue = Number(it.qty || 0) * Number(it.price || 0)
+            const share = grnTotal > 0 ? (itemValue / grnTotal) : (1 / grnDoc.items.length)
+            return { ...it, landed_cost: Number((landedTotal * share).toFixed(2)) }
+          })
+          const lcNote = `Landed Cost: ${docNo || 'LC'} — ${fmtMoney(landedTotal)}`
+          await supabase.from('goods_receipts').update({
+            items: allocatedItems,
+            notes: (grnDoc.notes || '') ? (grnDoc.notes + '\n' + lcNote) : lcNote
+          }).eq('id', form._grn_id)
+        }
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const { data: { authTenant } } = await supabase.auth.getSession()
+          if (authTenant?.id) await deductCredit(authTenant.id, TABLE, docNo, `Landed Cost: ${docNo || ''}`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
+      }
+
+      setForm({ ...form, recId: docId, lc_no: docNo, error: '' })
+      loadDocs()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const calcGrnTotal = (grnId) => {
+    const grn = grnDocs.find((g) => g.id === grnId)
+    return grn ? Number(grn.grand_total || 0) : 0
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>🚢 Landed Cost</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Document</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`status-pill ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+        </div>
+        {loading ? <div className="no-data"><i className="bi bi-arrow-clockwise"></i>Loading...</div> : filtered.length === 0 ? (
+          <div className="no-data"><i className="bi bi-inbox"></i>No landed cost records</div>
+        ) : (
+          <table className="data-grid report-table">
+            <thead><tr><th>LC #</th><th>GRN</th><th>SUPPLIER</th><th>DATE</th><th>AMOUNT</th><th>STATUS</th><th style={{ width: 90 }}></th></tr></thead>
+            <tbody>
+              {filtered.map((d) => (
+                <tr key={d.id}>
+                  <td>{d.lc_no || '—'}</td><td>{d.grn_no || '—'}</td><td>{d.party_name || '—'}</td>
+                  <td>{(d.doc_date || '').slice(0, 10)}</td>
+                  <td className="col-money">{fmtMoney(d.grand_total)}</td>
+                  <td className={`status-cell ${(d.status || '').toLowerCase()}`}>{d.status}</td>
+                  <td className="td-actions">
+                    <button className="act-btn edit" title="Edit" onClick={() => setForm({ ...d, recId: d.id, _grn_id: d._grn_id || '', grn_no: d.grn_no || '', costLines: d.cost_lines || d.items || [{ account: 'Freight', amount: '', description: '' }], saving: false, error: '' })}>✏️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    )
+  }
+
+  const totals = calcTotals(form.costLines)
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.lc_no || ''}` : '＋ New Landed Cost'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Allocate to GRN *
+          <select value={form._grn_id || ''} onChange={(e) => selectGrn(e.target.value)}>
+            <option value="">Select GRN to allocate landed cost</option>
+            {grnDocs.map((g) => <option key={g.id} value={g.id}>{g.grn_no} — {g.party_name} ({fmtMoney(g.grand_total)})</option>)}
+          </select>
+        </label>
+        <label>Supplier<input value={form.party_name || ''} readOnly style={{ background: '#f1f5f9' }} /></label>
+        <label>Date<input type="date" value={form.doc_date || ''} onChange={(e) => setForm({ ...form, doc_date: e.target.value })} /></label>
+        <label>Currency
+          <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+            {['AED', 'SAR', 'USD', 'EUR', 'GBP'].map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {form._grn_no && (
+        <div style={{ padding: '10px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, marginTop: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>Allocating to: {form.grn_no} — GRN Total: {fmtMoney(calcGrnTotal(form._grn_id))}</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>Landed cost will be proportionally distributed across GRN items based on value.</div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <h4 style={{ margin: 0 }}>Cost Lines</h4>
+          <button className="btn-add" style={{ padding: '4px 12px', fontSize: 12 }} onClick={addCostLine}>＋ Add Line</button>
+        </div>
+        <table className="data-grid report-table">
+          <thead><tr><th style={{ width: '25%' }}>ACCOUNT</th><th className="col-money" style={{ width: '20%' }}>AMOUNT</th><th>DESCRIPTION</th><th style={{ width: 40 }}></th></tr></thead>
+          <tbody>
+            {form.costLines.map((line, idx) => (
+              <tr key={idx}>
+                <td>
+                  <select value={line.account || 'Freight'} onChange={(e) => updateCostLine(idx, 'account', e.target.value)}>
+                    {['Freight', 'Customs Duty', 'Insurance', 'Handling', 'Demurrage', 'Clearance', 'Inland Transport', 'Other'].map((a) => <option key={a}>{a}</option>)}
+                  </select>
+                </td>
+                <td><input type="number" inputMode="decimal" placeholder="0.00" value={line.amount || ''} onChange={(e) => updateCostLine(idx, 'amount', e.target.value)} /></td>
+                <td><input type="text" placeholder="Description (optional)" value={line.description || ''} onChange={(e) => updateCostLine(idx, 'description', e.target.value)} /></td>
+                <td><button className="act-btn del" onClick={() => removeCostLine(idx)} disabled={form.costLines.length <= 1}>🗑️</button></td>
+              </tr>
+            ))}
+            {form.costLines.length === 0 && <tr><td colSpan="4" className="empty">No cost lines added</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <div className="je-totals">
+          <span>Total: <b>{fmtMoney(totals.total)}</b></span>
+          <span className="grand">Grand Total: <b>{fmtMoney(totals.grand_total)}</b></span>
+        </div>
+        <label style={{ display: 'block', marginTop: 10 }}>Notes<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes..." /></label>
+      </div>
+
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Draft'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Approve</button>
+      </div>
+    </div>
+  )
+}
+
 const DocWorkspace = ({ cfg, fmtMoney }) => {
   const isInv = !!cfg.inv
   const TABLE = cfg.table
@@ -4809,9 +4835,12 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
   const [form, setForm] = useState(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [grnDocs, setGrnDocs] = useState([])
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
   useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [!form])
+
+  const isLandedCost = TABLE === 'landed_costs'
 
   const loadDocs = async () => {
     setLoading(true)
@@ -4829,6 +4858,12 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
       .catch((err) => console.error(err))
   }, [PARTY_TABLE])
 
+  useEffect(() => {
+    if (isLandedCost) {
+      supabase.from('goods_receipts').select('id, grn_no, party_name, items, grand_total, status').eq('status', 'Approved').then(({ data }) => setGrnDocs(data || []))
+    }
+  }, [isLandedCost])
+
   const docDate = (d) => (isInv ? (d.invoice_date || d.created_at || '').slice(0, 10) : d.doc_date)
   const counts = { All: docs.length }
   docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
@@ -4839,14 +4874,16 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     return ((d[NO_FIELD] || '') + ' ' + (d[PARTY_KEY] || '')).toLowerCase().includes(search.toLowerCase())
   })
 
-  const calcTotals = (items) => {
+  const calcTotals = (items, otherCosts) => {
     const subtotal = items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.price || 0), 0)
-    const vat_amount = subtotal * (cfg.vat || 0) / 100
-    return { subtotal, vat_amount, grand_total: subtotal + vat_amount }
+    const other = Number(otherCosts || 0)
+    const vat_amount = (subtotal + other) * (cfg.vat || 0) / 100
+    return { subtotal, otherCosts: other, vat_amount, grand_total: subtotal + other + vat_amount }
   }
 
   const blankDoc = () => {
-    const f = { id: `new-${Date.now()}`, recId: null, _party_id: '', [PARTY_KEY]: '', items: [], notes: '', status: 'Draft', saving: false, error: '' }
+    const f = { id: `new-${Date.now()}`, recId: null, _party_id: '', [PARTY_KEY]: '', items: [], notes: '', status: 'Draft', saving: false, error: '', source_doc_no: '', otherCosts: 0, otherCostDesc: '' }
+    if (isLandedCost) { f._grn_id = ''; f._grn_no = ''; f._grn_total = 0; f.cost_type = 'Freight' }
     if (isInv) { f.payment_method = 'Cash' }
     else { f[PARTY_ID_KEY] = ''; f.doc_date = new Date().toISOString().split('T')[0]; f.currency = 'AED'; f.payment_terms = 'Net 30' }
     return f
@@ -4936,14 +4973,15 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     if (isInv && !form[PARTY_KEY]) { setForm({ ...form, error: 'Please select a customer.' }); return }
     if (!form.items.length) { setForm({ ...form, error: 'Add at least one item.' }); return }
     setForm({ ...form, saving: true, error: '' })
-    const totals = calcTotals(form.items)
+    const totals = calcTotals(form.items, form.otherCosts)
     const items = form.items.map((it) => ({ ...it, qty: Number(it.qty) || 0, price: Number(it.price) || 0 }))
     const payload = {
       [PARTY_KEY]: (isInv && !party) ? form[PARTY_KEY] : (party ? party.name : ''),
-      items, subtotal: totals.subtotal, vat_percent: cfg.vat, vat_amount: totals.vat_amount, grand_total: totals.grand_total,
+      items, subtotal: totals.subtotal, other_costs: totals.otherCosts, other_cost_desc: form.otherCostDesc || '', vat_percent: cfg.vat, vat_amount: totals.vat_amount, grand_total: totals.grand_total,
       notes: form.notes,
       status: approveAfter ? 'Approved' : 'Draft',
     }
+    if (form.source_doc_no) payload.source_doc_no = form.source_doc_no
     if (!isInv) {
       payload[PARTY_ID_KEY] = form._party_id
       payload.doc_date = form.doc_date
@@ -4965,9 +5003,43 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
         if (error) throw error
         docId = data?.[0]?.id
         docNo = data?.[0]?.[NO_FIELD]
+        // Deduct credit for new document
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, TABLE, docNo, `${cfg.title || TABLE}: ${docNo || ''}`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
       }
       if (approveAfter) {
         await postToLedger({ ...payload, id: docId, [NO_FIELD]: docNo }, totals).catch((e) => console.error('Ledger post failed:', e))
+        if (cfg.stockImpact) {
+          for (const it of items) {
+            if (it.product_id) {
+              const { data: prod } = await supabase.from('products').select('stock_quantity').eq('id', it.product_id).single()
+              if (prod) {
+                await supabase.from('products').update({ stock_quantity: Number(prod.stock_quantity || 0) + Number(it.qty || 0) }).eq('id', it.product_id)
+              }
+            }
+          }
+        }
+        if (isLandedCost && form._grn_id) {
+          const grnTotal = Number(form._grn_total || 1)
+          const landedTotal = Number(totals.grand_total || 0)
+          const { data: grnDoc } = await supabase.from('goods_receipts').select('items, notes').eq('id', form._grn_id).single()
+          if (grnDoc && grnDoc.items) {
+            const allocatedItems = grnDoc.items.map((it) => {
+              const itemValue = Number(it.qty || 0) * Number(it.price || 0)
+              const share = grnTotal > 0 ? (itemValue / grnTotal) : (1 / grnDoc.items.length)
+              return { ...it, landed_cost: Number((landedTotal * share).toFixed(2)) }
+            })
+            const existingNotes = grnDoc.notes || ''
+            const lcNote = `${form.cost_type || 'Landed Cost'}: ${docNo || 'LC'} — ${fmtMoney(landedTotal)}`
+            await supabase.from('goods_receipts').update({
+              items: allocatedItems,
+              notes: existingNotes ? existingNotes + '\n' + lcNote : lcNote,
+            }).eq('id', form._grn_id)
+          }
+        }
       }
       setForm({ ...form, recId: docId, [NO_FIELD]: docNo, savedCode: docNo, error: '' })
       loadDocs()
@@ -4985,11 +5057,36 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     if (!error) loadDocs()
   }
 
+  const convertDoc = async (doc) => {
+    if (!cfg.convertTo) return
+    const targetCfg = DOC_MENUS[cfg.convertTo]
+    if (!targetCfg) return
+    if (!window.confirm(`Convert ${doc[NO_FIELD]} to ${cfg.convertLabel || cfg.convertTo}?`)) return
+    const payload = {
+      party_id: doc[PARTY_ID_KEY], party_name: doc[PARTY_KEY],
+      doc_date: new Date().toISOString().split('T')[0],
+      currency: doc.currency, payment_terms: doc.payment_terms,
+      items: doc.items,
+      subtotal: doc.subtotal, vat_percent: targetCfg.vat, vat_amount: doc.subtotal * (targetCfg.vat || 0) / 100,
+      grand_total: doc.subtotal + doc.subtotal * (targetCfg.vat || 0) / 100,
+      notes: `Converted from ${doc[NO_FIELD]}`,
+      source_doc_id: doc.id, source_doc_no: doc[NO_FIELD],
+      status: 'Draft',
+    }
+    try {
+      const { error } = await supabase.from(targetCfg.table).insert(payload)
+      if (error) throw error
+      await supabase.from(TABLE).update({ status: 'Converted' }).eq('id', doc.id)
+      alert(`Converted to ${cfg.convertTo}.`)
+      loadDocs()
+    } catch (err) { alert('Conversion failed: ' + err.message) }
+  }
+
   const printDoc = (doc) => {
     const w = window.open('', '_blank')
     w.document.write('<html><head><title>' + (doc[NO_FIELD] || '') + '</title><style>body{font-family:Arial,sans-serif;padding:30px;max-width:800px}h1{color:#1e1b4b;font-size:22px;margin:0}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:6px 10px;border:1px solid #e2e8f0;font-size:12px;text-align:left}th{background:#f1f5f9}.col-r{text-align:right}.total{font-weight:700;background:#f8fafc}.meta{margin-top:12px;font-size:13px;color:#334155}.hdr{display:flex;justify-content:space-between;border-bottom:3px solid #8b5cf6;padding-bottom:10px}</style></head><body>')
     w.document.write('<div class="hdr"><div><h1>' + cfg.title + '</h1><div class="meta">' + (doc[NO_FIELD] || '') + '</div></div><div class="meta" style="text-align:right"><b>Date:</b> ' + docDate(doc) + '<br><b>Status:</b> ' + doc.status + '</div></div>')
-    w.document.write('<div class="meta"><b>' + PARTY_LABEL + ':</b> ' + (doc[PARTY_KEY] || '—') + (isInv ? '' : '<br><b>Payment Terms:</b> ' + doc.payment_terms) + '</div>')
+    w.document.write('<div class="meta"><b>' + PARTY_LABEL + ':</b> ' + (doc[PARTY_KEY] || '—') + (isInv ? '' : '<br><b>Payment Terms:</b> ' + doc.payment_terms) + (doc.source_doc_no ? '<br><b>Ref:</b> ' + doc.source_doc_no : '') + '</div>')
     w.document.write('<table><tr><th>Item</th><th class="col-r">Qty</th><th class="col-r">Price</th><th class="col-r">Total</th></tr>')
     ;(doc.items || []).forEach((it) => { w.document.write('<tr><td>' + (it.name || '') + '</td><td class="col-r">' + it.qty + '</td><td class="col-r">' + fmtMoney(it.price) + '</td><td class="col-r">' + fmtMoney(Number(it.qty) * Number(it.price)) + '</td></tr>') })
     w.document.write('<tr class="total"><td colspan="3">Subtotal</td><td class="col-r">' + fmtMoney(doc.subtotal) + '</td></tr>')
@@ -5001,7 +5098,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
   }
 
   const editDoc = (d) => {
-    const f = { recId: d.id, _party_id: isInv ? '' : d[PARTY_ID_KEY], [PARTY_KEY]: d[PARTY_KEY] || '', items: d.items || [], notes: d.notes || '', status: d.status || 'Draft', saving: false, error: '' }
+    const f = { recId: d.id, _party_id: isInv ? '' : d[PARTY_ID_KEY], [PARTY_KEY]: d[PARTY_KEY] || '', items: d.items || [], notes: d.notes || '', status: d.status || 'Draft', saving: false, error: '', source_doc_no: d.source_doc_no || '', otherCosts: d.other_costs || 0, otherCostDesc: d.other_cost_desc || '' }
     if (isInv) { f.payment_method = d.payment_method || 'Cash' }
     else { f[PARTY_ID_KEY] = d[PARTY_ID_KEY] || ''; f.doc_date = d.doc_date; f.currency = d.currency || 'AED'; f.payment_terms = d.payment_terms || 'Net 30' }
     setForm(f)
@@ -5046,11 +5143,15 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
                   <td className="td-actions">
                     <button className="act edit" title="Edit" onClick={() => editDoc(d)}>✏️</button>
                     {d.status === 'Draft' && <button className="act edit" title="Approve" onClick={() => setStatus(d, 'Approved')}>✅</button>}
+                    {d.status === 'Approved' && cfg.convertTo && <button className="act conv" title={cfg.convertLabel || 'Convert'} onClick={() => convertDoc(d)}>🔄</button>}
                     {d.status === 'Approved' && <button className="act edit" title="Post" onClick={() => setStatus(d, 'Posted')}>📌</button>}
                     <button className="act edit" title="Print" onClick={() => printDoc(d)}>🖨️</button>
-                    {d.status !== 'Posted' && d.status !== 'Cancelled' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
+                    {d.status !== 'Posted' && d.status !== 'Cancelled' && d.status !== 'Converted' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
                   </td>
-                  <td className="code-cell">{d[NO_FIELD]}</td>
+                  <td className="code-cell">
+                    {d[NO_FIELD]}
+                    {d.source_doc_no && <div style={{ fontSize: 10, color: '#64748b' }}>Ref: {d.source_doc_no}</div>}
+                  </td>
                   <td>{docDate(d)}</td>
                   <td><b>{d[PARTY_KEY]}</b></td>
                   {isInv && <td className="col-money">{fmtMoney(d.balance, 'AED')}</td>}
@@ -5065,20 +5166,50 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
     )
   }
 
-  const totals = calcTotals(form.items)
+  const totals = calcTotals(form.items, form.otherCosts)
+
+  const addNewLine = () => {
+    const newItems = [...form.items, { product_id: '', name: '', qty: '', price: '' }]
+    setForm({ ...form, items: newItems })
+    setTimeout(() => {
+      const rows = wrapRef.current.querySelectorAll('tbody tr')
+      if (rows.length > 0) {
+        const lastRow = rows[rows.length - 1]
+        const firstInput = lastRow.querySelector('select, input')
+        if (firstInput) firstInput.focus()
+      }
+    }, 100)
+  }
+
+  const handleItemEnter = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      addNewLine()
+    }
+  }
+
+  const handlePaymentTermsEnter = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      addNewLine()
+    }
+  }
 
   return (
     <div className="report-wrap" ref={wrapRef} onKeyDown={(e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return
+        if (e.target.dataset.addline) return
         e.preventDefault()
         const inputs = Array.from(wrapRef.current.querySelectorAll('input, select'))
         const idx = inputs.indexOf(e.target)
-        if (idx > -1 && idx < inputs.length - 1) inputs[idx + 1].focus()
+        if (idx > -1 && idx < inputs.length - 1) {
+          inputs[idx + 1].focus()
+        }
       }
     }}>
       <div className="coa-head">
-        <h3>{form.recId ? `✏️ Edit — ${form[NO_FIELD] || ''}` : '＋ New Document'}</h3>
+        <h3>{form.recId ? `✏️ Edit — ${form[NO_FIELD] || ''}` : '＋ New Document'}{form.source_doc_no ? <span style={{ fontSize: 13, fontWeight: 400, color: '#64748b', marginLeft: 8 }}>Ref: {form.source_doc_no}</span> : null}</h3>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <ScanToInvoice realId={form.recId || null} entityType={cfg.key} onFill={fillFromScan} />
           <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
@@ -5107,15 +5238,42 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
           </label>
         ) : (
           <label>Payment Terms
-            <select value={form.payment_terms} onChange={(e) => setForm({ ...form, payment_terms: e.target.value })}>
+            <select value={form.payment_terms} onChange={(e) => setForm({ ...form, payment_terms: e.target.value })} data-addline="1" onKeyDown={handlePaymentTermsEnter}>
               {['Cash', 'Net 15', 'Net 30', 'Net 60', 'Net 90'].map((t) => <option key={t}>{t}</option>)}
             </select>
           </label>
         )}
+        {isLandedCost && <label>Cost Type
+          <select value={form.cost_type || 'Freight'} onChange={(e) => setForm({ ...form, cost_type: e.target.value })}>
+            {['Freight', 'Customs', 'Insurance', 'Handling', 'Other'].map((t) => <option key={t}>{t}</option>)}
+          </select>
+        </label>}
       </div>
 
       <div className="report-section" style={{ marginTop: 14 }}>
         <h4>Items</h4>
+        {isLandedCost && (
+          <div style={{ marginBottom: 12, padding: '10px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+            <label style={{ fontWeight: 600 }}>Allocate to GRN
+              <select value={form._grn_id || ''} onChange={(e) => {
+                const grn = grnDocs.find((g) => g.id === e.target.value)
+                setForm({ ...form, _grn_id: e.target.value, _grn_no: grn?.grn_no || '', items: grn?.items || [], _grn_total: grn?.grand_total || 0 })
+              }} style={{ width: '100%', marginTop: 4 }}>
+                <option value="">Select GRN to allocate landed cost</option>
+                {grnDocs.map((g) => <option key={g.id} value={g.id}>{g.grn_no} — {g.party_name} ({fmtMoney(g.grand_total)})</option>)}
+              </select>
+            </label>
+            {form._grn_no && <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4 }}>Allocating to: <b>{form._grn_no}</b> — Items auto-populated from GRN</div>}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+          <label style={{ flex: '1 1 200px', fontSize: 12, fontWeight: 600 }}>Other Costs (Customs, Demurrage, Freight, etc.)
+            <input type="number" inputMode="decimal" placeholder="0.00" value={form.otherCosts ?? ''} onChange={(e) => setForm({ ...form, otherCosts: e.target.value })} style={{ width: '100%', marginTop: 4, padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} />
+          </label>
+          <label style={{ flex: '2 1 300px', fontSize: 12, fontWeight: 600 }}>Cost Description
+            <input type="text" placeholder="e.g. Customs Duty, Demurrage Charges" value={form.otherCostDesc || ''} onChange={(e) => setForm({ ...form, otherCostDesc: e.target.value })} style={{ width: '100%', marginTop: 4, padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} />
+          </label>
+        </div>
         <table className="data-grid report-table">
           <thead><tr><th style={{ width: '40%' }}>ITEM</th><th className="col-money" style={{ width: '15%' }}>QTY</th><th className="col-money" style={{ width: '20%' }}>PRICE</th><th className="col-money">TOTAL</th><th className="th-actions"></th></tr></thead>
           <tbody>
@@ -5129,7 +5287,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
                   </select>
                 </td>
                 <td><input type="text" inputMode="decimal" placeholder="0" value={it.qty ?? ''} onChange={(e) => setItem(idx, 'qty', e.target.value)} /></td>
-                <td><input type="text" inputMode="decimal" placeholder="0.00" value={it.price ?? ''} onChange={(e) => setItem(idx, 'price', e.target.value)} /></td>
+                <td><input type="text" inputMode="decimal" placeholder="0.00" value={it.price ?? ''} onChange={(e) => setItem(idx, 'price', e.target.value)} data-addline="1" onKeyDown={handleItemEnter} /></td>
                 <td className="col-money">{fmtMoney((Number(it.qty) || 0) * (Number(it.price) || 0))}</td>
                 <td className="td-actions"><button className="act del" title="Remove" onClick={() => setForm({ ...form, items: form.items.filter((_, i) => i !== idx) })}>🗑️</button></td>
               </tr>
@@ -5142,6 +5300,7 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
       <div className="report-section" style={{ marginTop: 14 }}>
         <div className="je-totals">
           <span>Subtotal: <b>{fmtMoney(totals.subtotal)}</b></span>
+          {totals.otherCosts > 0 && <span>Other Costs: <b>{fmtMoney(totals.otherCosts)}</b></span>}
           <span>VAT ({cfg.vat}%): <b>{fmtMoney(totals.vat_amount)}</b></span>
           <span className="grand">Grand Total: <b>{fmtMoney(totals.grand_total)}</b></span>
         </div>
@@ -5152,6 +5311,1651 @@ const DocWorkspace = ({ cfg, fmtMoney }) => {
         <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
         <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Draft'}</button>
         <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Approve</button>
+      </div>
+    </div>
+  )
+}
+
+const CashBook = ({ fmtMoney }) => {
+  const [entries, setEntries] = useState([])
+  const [accounts, setAccounts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [selectedAccount, setSelectedAccount] = useState('all')
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('accounts').select('id, code, name, type').ilike('name', '%cash%'),
+      supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
+    ]).then(([acctRes, lineRes]) => {
+      setAccounts(acctRes.data || [])
+      const cashIds = (acctRes.data || []).map((a) => a.id)
+      const lines = (lineRes.data || []).filter((l) => cashIds.includes(l.account_id))
+      setEntries(lines)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const filtered = entries.filter((l) => {
+    const je = l.journal_entries
+    if (!je) return false
+    if (dateFrom && je.entry_date < dateFrom) return false
+    if (dateTo && je.entry_date > dateTo) return false
+    if (selectedAccount !== 'all' && l.account_id !== selectedAccount) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((je.reference || '') + ' ' + (je.narration || '') + ' ' + (l.description || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalDebit = filtered.reduce((s, l) => s + Number(l.debit || 0), 0)
+  const totalCredit = filtered.reduce((s, l) => s + Number(l.credit || 0), 0)
+  const closingBalance = totalDebit - totalCredit
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>💵 Cash Book</h3>
+        <div className="coa-head-right">
+          <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+      <div className="report-controls" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <label style={{ fontSize: 12 }}>From<input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ marginLeft: 4 }} /></label>
+        <label style={{ fontSize: 12 }}>To<input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ marginLeft: 4 }} /></label>
+        <label style={{ fontSize: 12 }}>Account
+          <select value={selectedAccount} onChange={(e) => setSelectedAccount(e.target.value)} style={{ marginLeft: 4 }}>
+            <option value="all">All Cash Accounts</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+          </select>
+        </label>
+        <span className="total-records" style={{ marginLeft: 'auto' }}>
+          Debit: <b>{fmtMoney(totalDebit)}</b> | Credit: <b>{fmtMoney(totalCredit)}</b> | Balance: <b style={{ color: closingBalance >= 0 ? '#16a34a' : '#ef4444' }}>{fmtMoney(closingBalance)}</b>
+        </span>
+      </div>
+      <div className="grid-wrap">
+        <table className="data-grid">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>REFERENCE</th>
+              <th>DESCRIPTION</th>
+              <th className="col-money">DEBIT</th>
+              <th className="col-money">CREDIT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan="5" className="empty">Loading...</td></tr>}
+            {!loading && filtered.length === 0 && <tr><td colSpan="5" className="empty">No cash transactions found</td></tr>}
+            {!loading && filtered.map((l, i) => {
+              const je = l.journal_entries
+              return (
+                <tr key={l.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td>{je?.entry_date || ''}</td>
+                  <td className="code-cell">{je?.reference || ''}</td>
+                  <td>{l.description || je?.narration || ''}</td>
+                  <td className="col-money">{Number(l.debit || 0) ? fmtMoney(l.debit) : ''}</td>
+                  <td className="col-money">{Number(l.credit || 0) ? fmtMoney(l.credit) : ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const BankBook = ({ fmtMoney }) => {
+  const [entries, setEntries] = useState([])
+  const [accounts, setAccounts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [selectedAccount, setSelectedAccount] = useState('all')
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('accounts').select('id, code, name, type').ilike('name', '%bank%'),
+      supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
+    ]).then(([acctRes, lineRes]) => {
+      setAccounts(acctRes.data || [])
+      const bankIds = (acctRes.data || []).map((a) => a.id)
+      const lines = (lineRes.data || []).filter((l) => bankIds.includes(l.account_id))
+      setEntries(lines)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const filtered = entries.filter((l) => {
+    const je = l.journal_entries
+    if (!je) return false
+    if (dateFrom && je.entry_date < dateFrom) return false
+    if (dateTo && je.entry_date > dateTo) return false
+    if (selectedAccount !== 'all' && l.account_id !== selectedAccount) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((je.reference || '') + ' ' + (je.narration || '') + ' ' + (l.description || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalDebit = filtered.reduce((s, l) => s + Number(l.debit || 0), 0)
+  const totalCredit = filtered.reduce((s, l) => s + Number(l.credit || 0), 0)
+  const closingBalance = totalDebit - totalCredit
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>🏦 Bank Book</h3>
+        <div className="coa-head-right">
+          <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+      <div className="report-controls" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <label style={{ fontSize: 12 }}>From<input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ marginLeft: 4 }} /></label>
+        <label style={{ fontSize: 12 }}>To<input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ marginLeft: 4 }} /></label>
+        <label style={{ fontSize: 12 }}>Account
+          <select value={selectedAccount} onChange={(e) => setSelectedAccount(e.target.value)} style={{ marginLeft: 4 }}>
+            <option value="all">All Bank Accounts</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+          </select>
+        </label>
+        <span className="total-records" style={{ marginLeft: 'auto' }}>
+          Debit: <b>{fmtMoney(totalDebit)}</b> | Credit: <b>{fmtMoney(totalCredit)}</b> | Balance: <b style={{ color: closingBalance >= 0 ? '#16a34a' : '#ef4444' }}>{fmtMoney(closingBalance)}</b>
+        </span>
+      </div>
+      <div className="grid-wrap">
+        <table className="data-grid">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>REFERENCE</th>
+              <th>DESCRIPTION</th>
+              <th className="col-money">DEBIT</th>
+              <th className="col-money">CREDIT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan="5" className="empty">Loading...</td></tr>}
+            {!loading && filtered.length === 0 && <tr><td colSpan="5" className="empty">No bank transactions found</td></tr>}
+            {!loading && filtered.map((l, i) => {
+              const je = l.journal_entries
+              return (
+                <tr key={l.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td>{je?.entry_date || ''}</td>
+                  <td className="code-cell">{je?.reference || ''}</td>
+                  <td>{l.description || je?.narration || ''}</td>
+                  <td className="col-money">{Number(l.debit || 0) ? fmtMoney(l.debit) : ''}</td>
+                  <td className="col-money">{Number(l.credit || 0) ? fmtMoney(l.credit) : ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const DebitCreditNotes = ({ type, fmtMoney }) => {
+  const isDebit = type === 'debit'
+  const TABLE = isDebit ? 'debit_notes' : 'credit_notes'
+  const TITLE = isDebit ? '📄 Debit Note' : '📄 Credit Note'
+  const [docs, setDocs] = useState([])
+  const [customers, setCustomers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadDocs = async () => {
+    setLoading(true)
+    const { data } = await supabase.from(TABLE).select('*').order('created_at', { ascending: false }).limit(200)
+    setDocs(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadDocs() }, [TABLE])
+
+  useEffect(() => {
+    supabase.from('customers').select('id, code, name').eq('status', 'Active').then(({ data }) => setCustomers(data || []))
+  }, [])
+
+  const counts = { All: docs.length }
+  docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = docs.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((d.note_no || '') + ' ' + (d.party_name || '') + ' ' + (d.reason || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, customer_id: '', party_name: '',
+    doc_date: new Date().toISOString().split('T')[0], amount: '', reason: '',
+    status: 'Draft', saving: false, error: ''
+  })
+
+  const saveDoc = async (approveAfter) => {
+    if (!form.party_name) { setForm({ ...form, error: 'Please select a party.' }); return }
+    if (!form.amount || Number(form.amount) <= 0) { setForm({ ...form, error: 'Enter a valid amount.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = {
+      party_name: form.party_name, doc_date: form.doc_date,
+      amount: Number(form.amount), vat_amount: Number(form.amount) * 0.15,
+      reason: form.reason, status: approveAfter ? 'Approved' : 'Draft',
+    }
+    try {
+      let docId = form.recId
+      if (form.recId) {
+        const { error } = await supabase.from(TABLE).update(payload).eq('id', form.recId)
+        if (error) throw error
+      } else {
+        const { data, error } = await supabase.from(TABLE).insert(payload).select()
+        if (error) throw error
+        docId = data?.[0]?.id
+      }
+      if (approveAfter) {
+        const { data: accts } = await supabase.from('accounts').select('*')
+        if (accts) {
+          const find = (pred) => accts.find((a) => !a.is_group && pred(a))
+          const ar = find((a) => a.name.toLowerCase().includes('receivable'))
+          const sales = find((a) => a.type === 'Income') || find((a) => a.name.toLowerCase().includes('sales'))
+          const vatOut = find((a) => a.name.toLowerCase().includes('output'))
+          const lines = []
+          if (isDebit) {
+            if (ar) lines.push({ account_id: ar.id, debit: Number(payload.amount) + Number(payload.vat_amount), credit: 0, description: `${TITLE} ${form.note_no || ''}` })
+            if (sales) lines.push({ account_id: sales.id, debit: 0, credit: Number(payload.amount), description: 'Debit note revenue' })
+            if (vatOut && payload.vat_amount) lines.push({ account_id: vatOut.id, debit: 0, credit: payload.vat_amount, description: 'Output VAT on debit note' })
+          } else {
+            if (ar) lines.push({ account_id: ar.id, debit: 0, credit: Number(payload.amount) + Number(payload.vat_amount), description: `${TITLE} ${form.note_no || ''}` })
+            if (sales) lines.push({ account_id: sales.id, debit: Number(payload.amount), credit: 0, description: 'Credit note reversal' })
+            if (vatOut && payload.vat_amount) lines.push({ account_id: vatOut.id, debit: payload.vat_amount, credit: 0, description: 'VAT reversal on credit note' })
+          }
+          if (lines.length) {
+            const totalDebit = lines.reduce((s, l) => s + Number(l.debit || 0), 0)
+            const totalCredit = lines.reduce((s, l) => s + Number(l.credit || 0), 0)
+            const { data: je } = await supabase.from('journal_entries').insert({
+              entry_date: form.doc_date, reference: form.note_no || TITLE, narration: `${TITLE} — ${form.party_name}`,
+              status: 'Posted', total_debit: totalDebit, total_credit: totalCredit, currency: 'AED',
+            }).select()
+            if (je && je.length) {
+              const jeLines = lines.map((l, i) => ({ entry_id: je[0].id, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit || 0), credit: Number(l.credit || 0), description: l.description }))
+              await supabase.from('journal_lines').insert(jeLines)
+              for (const l of lines) {
+                const acct = accts.find((a) => a.id === l.account_id)
+                if (acct) {
+                  const newBal = Number(acct.current_balance || 0) + Number(l.debit || 0) - Number(l.credit || 0)
+                  await supabase.from('accounts').update({ current_balance: newBal }).eq('id', acct.id)
+                }
+              }
+            }
+          }
+        }
+      }
+      setForm(null)
+      loadDocs()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteDoc = async (doc) => {
+    if (!window.confirm(`Delete ${doc.note_no || 'document'}?`)) return
+    await supabase.from(TABLE).delete().eq('id', doc.id)
+    loadDocs()
+  }
+
+  const printDoc = (doc) => {
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>' + (doc.note_no || '') + '</title><style>body{font-family:Arial,sans-serif;padding:30px;max-width:800px}h1{color:#1e1b4b;font-size:22px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:8px;border:1px solid #e2e8f0;font-size:13px}.total{font-weight:700;background:#f8fafc}</style></head><body>')
+    w.document.write('<h1>' + TITLE + '</h1>')
+    w.document.write('<p><b>No:</b> ' + (doc.note_no || '—') + '<br><b>Date:</b> ' + doc.doc_date + '<br><b>Party:</b> ' + doc.party_name + '<br><b>Status:</b> ' + doc.status + '</p>')
+    w.document.write('<table><tr><td>Amount</td><td class="total">' + fmtMoney(doc.amount) + '</td></tr><tr><td>VAT (15%)</td><td>' + fmtMoney(doc.vat_amount) + '</td></tr><tr><td><b>Total</b></td><td class="total"><b>' + fmtMoney(Number(doc.amount) + Number(doc.vat_amount || 0)) + '</b></td></tr></table>')
+    if (doc.reason) w.document.write('<p><b>Reason:</b> ' + doc.reason + '</p>')
+    w.document.write('</body></html>')
+    w.document.close(); w.print()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>{TITLE}</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New {isDebit ? 'Debit Note' : 'Credit Note'}</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+          <span className="total-records">Total: <b>{fmtMoney(filtered.reduce((s, d) => s + Number(d.amount || 0), 0))}</b></span>
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>NOTE NO</th>
+                <th>DATE</th>
+                <th>PARTY</th>
+                <th className="col-money">AMOUNT</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="6" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="6" className="empty">No notes found</td></tr>}
+              {!loading && filtered.map((d, i) => (
+                <tr key={d.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: d.id, customer_id: '', party_name: d.party_name || '', doc_date: d.doc_date, amount: String(d.amount || ''), reason: d.reason || '', status: d.status, saving: false, error: '' })}>✏️</button>
+                    {d.status === 'Draft' && <button className="act edit" title="Approve" onClick={async () => { await supabase.from(TABLE).update({ status: 'Approved' }).eq('id', d.id); loadDocs() }}>✅</button>}
+                    <button className="act edit" title="Print" onClick={() => printDoc(d)}>🖨️</button>
+                    {d.status !== 'Posted' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
+                  </td>
+                  <td className="code-cell">{d.note_no}</td>
+                  <td>{d.doc_date}</td>
+                  <td><b>{d.party_name}</b></td>
+                  <td className="col-money">{fmtMoney(d.amount)}</td>
+                  <td><span className={`badge ${d.status === 'Approved' ? 'b-green' : d.status === 'Posted' ? 'b-blue' : 'b-amber'}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.note_no || ''}` : `＋ New ${isDebit ? 'Debit Note' : 'Credit Note'}`}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Party *
+          <select ref={firstRef} value={form.customer_id || ''} onChange={(e) => {
+            const c = customers.find((x) => x.id === e.target.value)
+            setForm({ ...form, customer_id: e.target.value, party_name: c?.name || '' })
+          }}>
+            <option value="">Select Customer</option>
+            {customers.map((c) => <option key={c.id} value={c.id}>{c.code ? `${c.code} — ` : ''}{c.name}</option>)}
+          </select>
+        </label>
+        <label>Date<input type="date" value={form.doc_date} onChange={(e) => setForm({ ...form, doc_date: e.target.value })} /></label>
+        <label>Amount<input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" /></label>
+      </div>
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <label>Reason / Description<textarea rows="3" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="Reason for this note..." /></label>
+      </div>
+      {form.amount && Number(form.amount) > 0 && (
+        <div className="report-section" style={{ marginTop: 14 }}>
+          <div className="je-totals">
+            <span>Amount: <b>{fmtMoney(Number(form.amount))}</b></span>
+            <span>VAT (15%): <b>{fmtMoney(Number(form.amount) * 0.15)}</b></span>
+            <span className="grand">Total: <b>{fmtMoney(Number(form.amount) * 1.15)}</b></span>
+          </div>
+        </div>
+      )}
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Draft'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Approve</button>
+      </div>
+    </div>
+  )
+}
+
+const CostCenterBudget = ({ fmtMoney }) => {
+  const [centers, setCenters] = useState([])
+  const [budgets, setBudgets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [tab, setTab] = useState('centers')
+
+  const loadData = async () => {
+    setLoading(true)
+    const [cRes, bRes] = await Promise.all([
+      supabase.from('cost_centers').select('*').order('created_at', { ascending: false }),
+      supabase.from('budgets').select('*').order('created_at', { ascending: false })
+    ])
+    setCenters(cRes.data || [])
+    setBudgets(bRes.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadData() }, [])
+
+  const filteredCenters = centers.filter((c) => {
+    if (!search) return true
+    return ((c.code || '') + ' ' + (c.name || '') + ' ' + (c.department || '')).toLowerCase().includes(search.toLowerCase())
+  })
+
+  const filteredBudgets = budgets.filter((b) => {
+    if (!search) return true
+    return ((b.budget_code || '') + ' ' + (b.account_name || '')).toLowerCase().includes(search.toLowerCase())
+  })
+
+  const saveCenter = async () => {
+    if (!form.name) { setForm({ ...form, error: 'Name is required.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = { code: form.code, name: form.name, department: form.department, manager: form.manager, annual_budget: Number(form.annual_budget || 0), status: form.status || 'Active' }
+    try {
+      if (form.recId) { await supabase.from('cost_centers').update(payload).eq('id', form.recId) }
+      else { await supabase.from('cost_centers').insert(payload) }
+      setForm(null); loadData()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const saveBudget = async () => {
+    if (!form.budget_code) { setForm({ ...form, error: 'Budget code is required.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = { budget_code: form.budget_code, fiscal_year: Number(form.fiscal_year || new Date().getFullYear()), period: form.period || 'Annual', account_name: form.account_name, amount: Number(form.amount || 0), spent: Number(form.spent || 0), status: form.status || 'Draft' }
+    try {
+      if (form.recId) { await supabase.from('budgets').update(payload).eq('id', form.recId) }
+      else { await supabase.from('budgets').insert(payload) }
+      setForm(null); loadData()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteRecord = async (table, id) => {
+    if (!window.confirm('Delete this record?')) return
+    await supabase.from(table).delete().eq('id', id)
+    loadData()
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>🎯 Cost Center & Budget</h3>
+        <div className="coa-head-right">
+          <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <button className="btn-add" onClick={() => setForm(tab === 'centers' ? { id: `new-${Date.now()}`, recId: null, code: '', name: '', department: '', manager: '', annual_budget: '', status: 'Active', saving: false, error: '' } : { id: `new-${Date.now()}`, recId: null, budget_code: '', fiscal_year: new Date().getFullYear(), period: 'Annual', account_name: '', amount: '', spent: '0', status: 'Draft', saving: false, error: '' })}>＋ New</button>
+        </div>
+      </div>
+      <div className="report-controls" style={{ marginBottom: 12 }}>
+        <button className={`filter-btn ${tab === 'centers' ? 'active' : ''}`} onClick={() => setTab('centers')}>Cost Centers ({centers.length})</button>
+        <button className={`filter-btn ${tab === 'budgets' ? 'active' : ''}`} onClick={() => setTab('budgets')}>Budgets ({budgets.length})</button>
+      </div>
+
+      {form && (
+        <div className="report-section" style={{ marginBottom: 16, padding: 16, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+          <h4>{form.recId ? 'Edit' : 'New'} {tab === 'centers' ? 'Cost Center' : 'Budget'}</h4>
+          {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+          {tab === 'centers' ? (
+            <div className="inv-grid coa-form-grid">
+              <label>Code<input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></label>
+              <label>Name *<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+              <label>Department<input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></label>
+              <label>Manager<input value={form.manager} onChange={(e) => setForm({ ...form, manager: e.target.value })} /></label>
+              <label>Annual Budget<input type="number" value={form.annual_budget} onChange={(e) => setForm({ ...form, annual_budget: e.target.value })} /></label>
+              <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option>Active</option><option>Inactive</option></select></label>
+            </div>
+          ) : (
+            <div className="inv-grid coa-form-grid">
+              <label>Budget Code *<input value={form.budget_code} onChange={(e) => setForm({ ...form, budget_code: e.target.value })} /></label>
+              <label>Fiscal Year<input type="number" value={form.fiscal_year} onChange={(e) => setForm({ ...form, fiscal_year: e.target.value })} /></label>
+              <label>Period<select value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })}><option>Annual</option><option>Quarterly</option><option>Monthly</option></select></label>
+              <label>Account / Description<input value={form.account_name} onChange={(e) => setForm({ ...form, account_name: e.target.value })} /></label>
+              <label>Budget Amount<input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></label>
+              <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option>Draft</option><option>Approved</option><option>Closed</option></select></label>
+            </div>
+          )}
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+            <button className="btn-cancel" onClick={() => setForm(null)}>Cancel</button>
+            <button className="btn-primary" onClick={tab === 'centers' ? saveCenter : saveBudget}>{form.saving ? 'Saving...' : 'Save'}</button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid-wrap">
+        <table className="data-grid">
+          <thead>
+            <tr>
+              <th className="th-actions"></th>
+              {tab === 'centers' ? (<>
+                <th>CODE</th><th>NAME</th><th>DEPARTMENT</th><th>MANAGER</th><th className="col-money">BUDGET</th><th>STATUS</th>
+              </>) : (<>
+                <th>CODE</th><th>YEAR</th><th>PERIOD</th><th>ACCOUNT</th><th className="col-money">BUDGET</th><th className="col-money">SPENT</th><th>STATUS</th>
+              </>)}
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan={tab === 'centers' ? 7 : 8} className="empty">Loading...</td></tr>}
+            {!loading && tab === 'centers' && filteredCenters.length === 0 && <tr><td colSpan="7" className="empty">No cost centers found</td></tr>}
+            {!loading && tab === 'budgets' && filteredBudgets.length === 0 && <tr><td colSpan="8" className="empty">No budgets found</td></tr>}
+            {!loading && tab === 'centers' && filteredCenters.map((c, i) => (
+              <tr key={c.id || i} className={i % 2 ? 'alt' : ''}>
+                <td className="td-actions">
+                  <button className="act edit" title="Edit" onClick={() => setForm({ recId: c.id, code: c.code || '', name: c.name, department: c.department || '', manager: c.manager || '', annual_budget: String(c.annual_budget || ''), status: c.status || 'Active', saving: false, error: '' })}>✏️</button>
+                  <button className="act del" title="Delete" onClick={() => deleteRecord('cost_centers', c.id)}>🗑️</button>
+                </td>
+                <td className="code-cell">{c.code}</td>
+                <td><b>{c.name}</b></td>
+                <td>{c.department}</td>
+                <td>{c.manager}</td>
+                <td className="col-money">{fmtMoney(c.annual_budget)}</td>
+                <td><span className={`badge ${c.status === 'Active' ? 'b-green' : 'b-gray'}`}>{c.status}</span></td>
+              </tr>
+            ))}
+            {!loading && tab === 'budgets' && filteredBudgets.map((b, i) => {
+              const pct = b.amount > 0 ? ((b.spent / b.amount) * 100).toFixed(0) : 0
+              return (
+                <tr key={b.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: b.id, budget_code: b.budget_code, fiscal_year: b.fiscal_year, period: b.period, account_name: b.account_name || '', amount: String(b.amount || ''), spent: String(b.spent || '0'), status: b.status || 'Draft', saving: false, error: '' })}>✏️</button>
+                    <button className="act del" title="Delete" onClick={() => deleteRecord('budgets', b.id)}>🗑️</button>
+                  </td>
+                  <td className="code-cell">{b.budget_code}</td>
+                  <td>{b.fiscal_year}</td>
+                  <td>{b.period}</td>
+                  <td>{b.account_name}</td>
+                  <td className="col-money">{fmtMoney(b.amount)}</td>
+                  <td className="col-money">
+                    {fmtMoney(b.spent)}
+                    <div style={{ fontSize: 10, color: pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#16a34a' }}>{pct}% used</div>
+                  </td>
+                  <td><span className={`badge ${b.status === 'Approved' ? 'b-green' : b.status === 'Closed' ? 'b-gray' : 'b-amber'}`}>{b.status}</span></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const PettyCashModule = ({ fmtMoney }) => {
+  const [vouchers, setVouchers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadVouchers = async () => {
+    setLoading(true)
+    const { data } = await supabase.from('petty_cash').select('*').order('created_at', { ascending: false }).limit(200)
+    setVouchers(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadVouchers() }, [])
+
+  const counts = { All: vouchers.length }
+  vouchers.forEach((v) => { const s = v.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = vouchers.filter((v) => {
+    if (statusFilter !== 'All' && v.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((v.voucher_no || '') + ' ' + (v.payee || '') + ' ' + (v.description || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalExpense = filtered.filter((v) => v.type === 'Expense').reduce((s, v) => s + Number(v.amount || 0), 0)
+  const totalReceived = filtered.filter((v) => v.type === 'Received').reduce((s, v) => s + Number(v.amount || 0), 0)
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, payee: '', description: '', amount: '',
+    type: 'Expense', category: '', account_code: '', doc_date: new Date().toISOString().split('T')[0],
+    status: 'Pending', saving: false, error: ''
+  })
+
+  const saveVoucher = async (approveAfter) => {
+    if (!form.payee) { setForm({ ...form, error: 'Payee is required.' }); return }
+    if (!form.amount || Number(form.amount) <= 0) { setForm({ ...form, error: 'Enter a valid amount.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = {
+      payee: form.payee, description: form.description, amount: Number(form.amount),
+      type: form.type, category: form.category, account_code: form.account_code,
+      doc_date: form.doc_date, status: approveAfter ? 'Approved' : 'Pending',
+    }
+    try {
+      if (form.recId) { await supabase.from('petty_cash').update(payload).eq('id', form.recId) }
+      else { await supabase.from('petty_cash').insert(payload) }
+      if (approveAfter) {
+        const { data: accts } = await supabase.from('accounts').select('*')
+        if (accts) {
+          const find = (pred) => accts.find((a) => !a.is_group && pred(a))
+          const pettyCashAcct = find((a) => /petty.?cash/i.test(a.name))
+          const exp = find((a) => a.type === 'Expense') || find((a) => /misc|general|office/i.test(a.name))
+          if (pettyCashAcct && exp) {
+            const lines = []
+            if (form.type === 'Expense') {
+              lines.push({ account_id: exp.id, debit: payload.amount, credit: 0, description: `Petty cash: ${form.payee} — ${form.description}` })
+              lines.push({ account_id: pettyCashAcct.id, debit: 0, credit: payload.amount, description: `Petty cash disbursement` })
+            } else {
+              lines.push({ account_id: pettyCashAcct.id, debit: payload.amount, credit: 0, description: `Petty cash received: ${form.payee}` })
+              lines.push({ account_id: exp.id, debit: 0, credit: payload.amount, description: `Petty cash receipt` })
+            }
+            const totalDebit = lines.reduce((s, l) => s + Number(l.debit || 0), 0)
+            const { data: je } = await supabase.from('journal_entries').insert({
+              entry_date: form.doc_date, reference: form.voucher_no || 'Petty Cash', narration: `Petty cash — ${form.payee}`,
+              status: 'Posted', total_debit: totalDebit, total_credit: totalDebit, currency: 'AED',
+            }).select()
+            if (je && je.length) {
+              const jeLines = lines.map((l, i) => ({ entry_id: je[0].id, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit || 0), credit: Number(l.credit || 0), description: l.description }))
+              await supabase.from('journal_lines').insert(jeLines)
+              for (const l of lines) {
+                const acct = accts.find((a) => a.id === l.account_id)
+                if (acct) {
+                  const newBal = Number(acct.current_balance || 0) + Number(l.debit || 0) - Number(l.credit || 0)
+                  await supabase.from('accounts').update({ current_balance: newBal }).eq('id', acct.id)
+                }
+              }
+            }
+          }
+        }
+      }
+      setForm(null); loadVouchers()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteVoucher = async (v) => {
+    if (!window.confirm('Delete this voucher?')) return
+    await supabase.from('petty_cash').delete().eq('id', v.id)
+    loadVouchers()
+  }
+
+  const printVoucher = (v) => {
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>' + (v.voucher_no || '') + '</title><style>body{font-family:Arial,sans-serif;padding:30px;max-width:600px}h1{color:#1e1b4b;font-size:20px}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:8px;border:1px solid #e2e8f0;font-size:13px}.total{font-weight:700;background:#f8fafc}</style></head><body>')
+    w.document.write('<h1>💵 Petty Cash Voucher</h1>')
+    w.document.write('<table><tr><td>Voucher No</td><td><b>' + (v.voucher_no || '—') + '</b></td></tr><tr><td>Date</td><td>' + v.doc_date + '</td></tr><tr><td>Payee</td><td>' + v.payee + '</td></tr><tr><td>Description</td><td>' + (v.description || '—') + '</td></tr><tr><td>Type</td><td>' + v.type + '</td></tr><tr><td>Category</td><td>' + (v.category || '—') + '</td></tr><tr><td class="total">Amount</td><td class="total">' + fmtMoney(v.amount) + '</td></tr><tr><td>Status</td><td>' + v.status + '</td></tr></table>')
+    w.document.write('</body></html>')
+    w.document.close(); w.print()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>💵 Petty Cash</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Voucher</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+          <span className="total-records">Expense: <b style={{ color: '#ef4444' }}>{fmtMoney(totalExpense)}</b> | Received: <b style={{ color: '#16a34a' }}>{fmtMoney(totalReceived)}</b> | Net: <b>{fmtMoney(totalReceived - totalExpense)}</b></span>
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>VOUCHER</th>
+                <th>DATE</th>
+                <th>PAYEE</th>
+                <th>DESCRIPTION</th>
+                <th className="col-money">AMOUNT</th>
+                <th>TYPE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="8" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="8" className="empty">No vouchers found</td></tr>}
+              {!loading && filtered.map((v, i) => (
+                <tr key={v.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: v.id, payee: v.payee, description: v.description || '', amount: String(v.amount || ''), type: v.type || 'Expense', category: v.category || '', account_code: v.account_code || '', doc_date: v.doc_date, status: v.status, saving: false, error: '' })}>✏️</button>
+                    {v.status === 'Pending' && <button className="act edit" title="Approve" onClick={async () => { await supabase.from('petty_cash').update({ status: 'Approved' }).eq('id', v.id); loadVouchers() }}>✅</button>}
+                    <button className="act edit" title="Print" onClick={() => printVoucher(v)}>🖨️</button>
+                    <button className="act del" title="Delete" onClick={() => deleteVoucher(v)}>🗑️</button>
+                  </td>
+                  <td className="code-cell">{v.voucher_no}</td>
+                  <td>{v.doc_date}</td>
+                  <td><b>{v.payee}</b></td>
+                  <td>{v.description}</td>
+                  <td className="col-money" style={{ color: v.type === 'Expense' ? '#ef4444' : '#16a34a' }}>{fmtMoney(v.amount)}</td>
+                  <td><span className={`badge ${v.type === 'Expense' ? 'b-red' : 'b-green'}`}>{v.type}</span></td>
+                  <td><span className={`badge ${v.status === 'Approved' ? 'b-green' : v.status === 'Rejected' ? 'b-red' : 'b-amber'}`}>{v.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit Voucher` : '＋ New Petty Cash Voucher'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Payee *<input ref={firstRef} value={form.payee} onChange={(e) => setForm({ ...form, payee: e.target.value })} placeholder="Who was paid/received from" /></label>
+        <label>Date<input type="date" value={form.doc_date} onChange={(e) => setForm({ ...form, doc_date: e.target.value })} /></label>
+        <label>Amount *<input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" /></label>
+        <label>Type<select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}><option value="Expense">Expense</option><option value="Received">Received</option></select></label>
+        <label>Category<input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Office, Travel, etc." /></label>
+        <label>Account Code<input value={form.account_code} onChange={(e) => setForm({ ...form, account_code: e.target.value })} placeholder="COA code" /></label>
+      </div>
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <label>Description<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What was this for?" /></label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveVoucher(false)}>{form.saving ? 'Saving…' : '💾 Save'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveVoucher(true)}>✅ Save & Approve</button>
+      </div>
+    </div>
+  )
+}
+
+const StockAdjustmentModule = ({ fmtMoney }) => {
+  const [docs, setDocs] = useState([])
+  const [products, setProducts] = useState([])
+  const [warehouses, setWarehouses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadDocs = async () => {
+    setLoading(true)
+    const [adjRes, prodRes, whRes] = await Promise.all([
+      supabase.from('stock_adjustments').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('products').select('id, code, name, stock_quantity'),
+      supabase.from('warehouses').select('id, name').eq('status', 'Active')
+    ])
+    setDocs(adjRes.data || [])
+    setProducts(prodRes.data || [])
+    setWarehouses(whRes.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadDocs() }, [])
+
+  const counts = { All: docs.length }
+  docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = docs.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((d.adjustment_no || '') + ' ' + (d.item_name || '') + ' ' + (d.reason || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, product_id: '', item_name: '',
+    adjustment_type: 'Positive', quantity: '', reason: '',
+    adjustment_date: new Date().toISOString().split('T')[0], warehouse: '',
+    status: 'Draft', saving: false, error: ''
+  })
+
+  const saveDoc = async (postAfter) => {
+    if (!form.product_id) { setForm({ ...form, error: 'Select a product.' }); return }
+    if (!form.quantity || Number(form.quantity) <= 0) { setForm({ ...form, error: 'Enter a valid quantity.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const prod = products.find((p) => p.id === form.product_id)
+    const payload = {
+      product_id: form.product_id, item_name: prod?.name || form.item_name,
+      adjustment_type: form.adjustment_type, quantity: Number(form.quantity),
+      adjustment_date: form.adjustment_date, reason: form.reason, warehouse: form.warehouse,
+      status: postAfter ? 'Posted' : 'Draft',
+    }
+    try {
+      let docId = form.recId
+      if (form.recId) { await supabase.from('stock_adjustments').update(payload).eq('id', form.recId) }
+      else { const { data } = await supabase.from('stock_adjustments').insert(payload).select(); docId = data?.[0]?.id }
+      if (postAfter && form.product_id) {
+        const { data: p } = await supabase.from('products').select('stock_quantity').eq('id', form.product_id).single()
+        if (p) {
+          const cur = Number(p.stock_quantity || 0)
+          const qty = Number(form.quantity)
+          const next = form.adjustment_type === 'Negative' ? cur - qty : cur + qty
+          await supabase.from('products').update({ stock_quantity: Math.max(0, next) }).eq('id', form.product_id)
+        }
+      }
+      setForm(null); loadDocs()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteDoc = async (d) => {
+    if (!window.confirm('Delete this adjustment?')) return
+    await supabase.from('stock_adjustments').delete().eq('id', d.id)
+    loadDocs()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>⚖️ Stock Adjustment</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Adjustment</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>ADJ NO</th>
+                <th>DATE</th>
+                <th>ITEM</th>
+                <th>TYPE</th>
+                <th className="col-money">QTY</th>
+                <th>WAREHOUSE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="8" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="8" className="empty">No adjustments found</td></tr>}
+              {!loading && filtered.map((d, i) => (
+                <tr key={d.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: d.id, product_id: d.product_id || '', item_name: d.item_name || '', adjustment_type: d.adjustment_type, quantity: String(d.quantity || ''), reason: d.reason || '', adjustment_date: d.adjustment_date, warehouse: d.warehouse || '', status: d.status, saving: false, error: '' })}>✏️</button>
+                    {d.status === 'Draft' && <button className="act edit" title="Post" onClick={() => saveDoc(true)}>✅</button>}
+                    {d.status !== 'Posted' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
+                  </td>
+                  <td className="code-cell">{d.adjustment_no}</td>
+                  <td>{d.adjustment_date}</td>
+                  <td><b>{d.item_name}</b></td>
+                  <td><span className={`badge ${d.adjustment_type === 'Positive' ? 'b-green' : 'b-red'}`}>{d.adjustment_type}</span></td>
+                  <td className="col-money">{d.quantity}</td>
+                  <td>{d.warehouse || '—'}</td>
+                  <td><span className={`badge ${d.status === 'Posted' ? 'b-green' : 'b-amber'}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.adjustment_no || ''}` : '＋ New Stock Adjustment'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Product *
+          <select ref={firstRef} value={form.product_id} onChange={(e) => {
+            const p = products.find((x) => x.id === e.target.value)
+            setForm({ ...form, product_id: e.target.value, item_name: p?.name || '' })
+          }}>
+            <option value="">Select Product</option>
+            {products.map((p) => <option key={p.id} value={p.id}>{p.code ? `${p.code} — ` : ''}{p.name} (Stock: {p.stock_quantity})</option>)}
+          </select>
+        </label>
+        <label>Adjustment Type
+          <select value={form.adjustment_type} onChange={(e) => setForm({ ...form, adjustment_type: e.target.value })}>
+            <option value="Positive">Positive (Add Stock)</option>
+            <option value="Negative">Negative (Reduce Stock)</option>
+          </select>
+        </label>
+        <label>Quantity *<input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></label>
+        <label>Date<input type="date" value={form.adjustment_date} onChange={(e) => setForm({ ...form, adjustment_date: e.target.value })} /></label>
+        <label>Warehouse
+          <select value={form.warehouse} onChange={(e) => setForm({ ...form, warehouse: e.target.value })}>
+            <option value="">Select Warehouse</option>
+            {warehouses.map((w) => <option key={w.id} value={w.name}>{w.name}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <label>Reason<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="Reason for adjustment..." /></label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Draft'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Post</button>
+      </div>
+    </div>
+  )
+}
+
+const StockInOutModule = ({ fmtMoney }) => {
+  const [docs, setDocs] = useState([])
+  const [products, setProducts] = useState([])
+  const [warehouses, setWarehouses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadDocs = async () => {
+    setLoading(true)
+    const [mvRes, prodRes, whRes] = await Promise.all([
+      supabase.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('products').select('id, code, name, stock_quantity'),
+      supabase.from('warehouses').select('id, name').eq('status', 'Active')
+    ])
+    setDocs(mvRes.data || [])
+    setProducts(prodRes.data || [])
+    setWarehouses(whRes.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadDocs() }, [])
+
+  const counts = { All: docs.length }
+  docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = docs.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((d.movement_no || '') + ' ' + (d.item_name || '') + ' ' + (d.reference || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalIn = filtered.filter((d) => d.movement_type === 'In' && d.status === 'Posted').reduce((s, d) => s + Number(d.quantity || 0), 0)
+  const totalOut = filtered.filter((d) => d.movement_type === 'Out' && d.status === 'Posted').reduce((s, d) => s + Number(d.quantity || 0), 0)
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, product_id: '', item_name: '',
+    movement_type: 'In', quantity: '', warehouse: '', reference: '',
+    movement_date: new Date().toISOString().split('T')[0],
+    status: 'Draft', saving: false, error: ''
+  })
+
+  const saveDoc = async (postAfter) => {
+    if (!form.product_id) { setForm({ ...form, error: 'Select a product.' }); return }
+    if (!form.quantity || Number(form.quantity) <= 0) { setForm({ ...form, error: 'Enter a valid quantity.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const prod = products.find((p) => p.id === form.product_id)
+    const payload = {
+      product_id: form.product_id, item_name: prod?.name || form.item_name,
+      movement_type: form.movement_type, quantity: Number(form.quantity),
+      warehouse: form.warehouse, reference: form.reference,
+      movement_date: form.movement_date, status: postAfter ? 'Posted' : 'Draft',
+    }
+    try {
+      let docId = form.recId
+      if (form.recId) { await supabase.from('stock_movements').update(payload).eq('id', form.recId) }
+      else { const { data } = await supabase.from('stock_movements').insert(payload).select(); docId = data?.[0]?.id }
+      if (postAfter && form.product_id) {
+        const { data: p } = await supabase.from('products').select('stock_quantity').eq('id', form.product_id).single()
+        if (p) {
+          const cur = Number(p.stock_quantity || 0)
+          const qty = Number(form.quantity)
+          const next = form.movement_type === 'Out' ? cur - qty : cur + qty
+          await supabase.from('products').update({ stock_quantity: Math.max(0, next) }).eq('id', form.product_id)
+        }
+      }
+      setForm(null); loadDocs()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteDoc = async (d) => {
+    if (!window.confirm('Delete this movement?')) return
+    await supabase.from('stock_movements').delete().eq('id', d.id)
+    loadDocs()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>📥 Stock In / Out</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Movement</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+          <span className="total-records">In: <b style={{ color: '#16a34a' }}>{totalIn}</b> | Out: <b style={{ color: '#ef4444' }}>{totalOut}</b></span>
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>MOVEMENT NO</th>
+                <th>DATE</th>
+                <th>ITEM</th>
+                <th>TYPE</th>
+                <th className="col-money">QTY</th>
+                <th>WAREHOUSE</th>
+                <th>REFERENCE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="9" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="9" className="empty">No movements found</td></tr>}
+              {!loading && filtered.map((d, i) => (
+                <tr key={d.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: d.id, product_id: d.product_id || '', item_name: d.item_name || '', movement_type: d.movement_type, quantity: String(d.quantity || ''), warehouse: d.warehouse || '', reference: d.reference || '', movement_date: d.movement_date, status: d.status, saving: false, error: '' })}>✏️</button>
+                    {d.status === 'Draft' && <button className="act edit" title="Post" onClick={() => saveDoc(true)}>✅</button>}
+                    {d.status !== 'Posted' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
+                  </td>
+                  <td className="code-cell">{d.movement_no}</td>
+                  <td>{d.movement_date}</td>
+                  <td><b>{d.item_name}</b></td>
+                  <td><span className={`badge ${d.movement_type === 'In' ? 'b-green' : 'b-red'}`}>{d.movement_type}</span></td>
+                  <td className="col-money">{d.quantity}</td>
+                  <td>{d.warehouse || '—'}</td>
+                  <td>{d.reference || '—'}</td>
+                  <td><span className={`badge ${d.status === 'Posted' ? 'b-green' : 'b-amber'}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.movement_no || ''}` : '＋ New Stock Movement'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Product *
+          <select ref={firstRef} value={form.product_id} onChange={(e) => {
+            const p = products.find((x) => x.id === e.target.value)
+            setForm({ ...form, product_id: e.target.value, item_name: p?.name || '' })
+          }}>
+            <option value="">Select Product</option>
+            {products.map((p) => <option key={p.id} value={p.id}>{p.code ? `${p.code} — ` : ''}{p.name} (Stock: {p.stock_quantity})</option>)}
+          </select>
+        </label>
+        <label>Movement Type
+          <select value={form.movement_type} onChange={(e) => setForm({ ...form, movement_type: e.target.value })}>
+            <option value="In">Stock In (Receive)</option>
+            <option value="Out">Stock Out (Issue)</option>
+          </select>
+        </label>
+        <label>Quantity *<input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></label>
+        <label>Date<input type="date" value={form.movement_date} onChange={(e) => setForm({ ...form, movement_date: e.target.value })} /></label>
+        <label>Warehouse
+          <select value={form.warehouse} onChange={(e) => setForm({ ...form, warehouse: e.target.value })}>
+            <option value="">Select Warehouse</option>
+            {warehouses.map((w) => <option key={w.id} value={w.name}>{w.name}</option>)}
+          </select>
+        </label>
+        <label>Reference<input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="PO, GRN, or other ref" /></label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Draft'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Post</button>
+      </div>
+    </div>
+  )
+}
+
+const PhysicalStockModule = ({ fmtMoney }) => {
+  const [docs, setDocs] = useState([])
+  const [products, setProducts] = useState([])
+  const [warehouses, setWarehouses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadDocs = async () => {
+    setLoading(true)
+    const [psRes, prodRes, whRes] = await Promise.all([
+      supabase.from('physical_stock').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('products').select('id, code, name, stock_quantity'),
+      supabase.from('warehouses').select('id, name').eq('status', 'Active')
+    ])
+    setDocs(psRes.data || [])
+    setProducts(prodRes.data || [])
+    setWarehouses(whRes.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadDocs() }, [])
+
+  const counts = { All: docs.length }
+  docs.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = docs.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((d.count_no || '') + ' ' + (d.item_name || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, product_id: '', item_name: '',
+    system_qty: '', counted_qty: '', variance: '0',
+    count_date: new Date().toISOString().split('T')[0], warehouse: '', notes: '',
+    status: 'Open', saving: false, error: ''
+  })
+
+  const saveDoc = async (verifyAfter) => {
+    if (!form.product_id) { setForm({ ...form, error: 'Select a product.' }); return }
+    if (!form.counted_qty && form.counted_qty !== '0') { setForm({ ...form, error: 'Enter counted quantity.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const variance = Number(form.counted_qty || 0) - Number(form.system_qty || 0)
+    const payload = {
+      product_id: form.product_id, item_name: form.item_name,
+      system_qty: Number(form.system_qty || 0), counted_qty: Number(form.counted_qty),
+      variance, count_date: form.count_date, warehouse: form.warehouse,
+      notes: form.notes, status: verifyAfter ? 'Verified' : 'Counted',
+    }
+    try {
+      if (form.recId) { await supabase.from('physical_stock').update(payload).eq('id', form.recId) }
+      else { await supabase.from('physical_stock').insert(payload) }
+      if (verifyAfter && form.product_id) {
+        await supabase.from('products').update({ stock_quantity: Number(form.counted_qty) }).eq('id', form.product_id)
+      }
+      setForm(null); loadDocs()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteDoc = async (d) => {
+    if (!window.confirm('Delete this count?')) return
+    await supabase.from('physical_stock').delete().eq('id', d.id)
+    loadDocs()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>📋 Physical Stock Count</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Count</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>COUNT NO</th>
+                <th>DATE</th>
+                <th>ITEM</th>
+                <th className="col-money">SYSTEM</th>
+                <th className="col-money">COUNTED</th>
+                <th className="col-money">VARIANCE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="8" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="8" className="empty">No counts found</td></tr>}
+              {!loading && filtered.map((d, i) => (
+                <tr key={d.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: d.id, product_id: d.product_id || '', item_name: d.item_name || '', system_qty: String(d.system_qty || ''), counted_qty: String(d.counted_qty || ''), variance: String(d.variance || '0'), count_date: d.count_date, warehouse: d.warehouse || '', notes: d.notes || '', status: d.status, saving: false, error: '' })}>✏️</button>
+                    {d.status === 'Counted' && <button className="act edit" title="Verify & Update Stock" onClick={() => saveDoc(true)}>✅</button>}
+                    {d.status !== 'Verified' && <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>}
+                  </td>
+                  <td className="code-cell">{d.count_no}</td>
+                  <td>{d.count_date}</td>
+                  <td><b>{d.item_name}</b></td>
+                  <td className="col-money">{d.system_qty}</td>
+                  <td className="col-money">{d.counted_qty}</td>
+                  <td className="col-money" style={{ color: Number(d.variance) > 0 ? '#16a34a' : Number(d.variance) < 0 ? '#ef4444' : '#64748b' }}>
+                    {Number(d.variance) > 0 ? '+' : ''}{d.variance}
+                  </td>
+                  <td><span className={`badge ${d.status === 'Verified' ? 'b-green' : d.status === 'Counted' ? 'b-blue' : 'b-amber'}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.count_no || ''}` : '＋ New Physical Count'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Product *
+          <select ref={firstRef} value={form.product_id} onChange={(e) => {
+            const p = products.find((x) => x.id === e.target.value)
+            setForm({ ...form, product_id: e.target.value, item_name: p?.name || '', system_qty: String(p?.stock_quantity || 0) })
+          }}>
+            <option value="">Select Product</option>
+            {products.map((p) => <option key={p.id} value={p.id}>{p.code ? `${p.code} — ` : ''}{p.name} (System: {p.stock_quantity})</option>)}
+          </select>
+        </label>
+        <label>System Qty<input type="number" value={form.system_qty} readOnly style={{ background: '#f1f5f9' }} /></label>
+        <label>Counted Qty *<input type="number" min="0" value={form.counted_qty} onChange={(e) => {
+          const counted = Number(e.target.value || 0)
+          const system = Number(form.system_qty || 0)
+          setForm({ ...form, counted_qty: e.target.value, variance: String(counted - system) })
+        }} /></label>
+        <label>Variance<input type="number" value={form.variance} readOnly style={{ background: Number(form.variance) > 0 ? '#f0fdf4' : Number(form.variance) < 0 ? '#fef2f2' : '#f1f5f9', color: Number(form.variance) > 0 ? '#16a34a' : Number(form.variance) < 0 ? '#ef4444' : '#64748b' }} /></label>
+        <label>Date<input type="date" value={form.count_date} onChange={(e) => setForm({ ...form, count_date: e.target.value })} /></label>
+        <label>Warehouse
+          <select value={form.warehouse} onChange={(e) => setForm({ ...form, warehouse: e.target.value })}>
+            <option value="">Select Warehouse</option>
+            {warehouses.map((w) => <option key={w.id} value={w.name}>{w.name}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <label>Notes<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Count notes..." /></label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save Count'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Verify & Update Stock</button>
+      </div>
+    </div>
+  )
+}
+
+const DepositsModule = ({ fmtMoney }) => {
+  const [deposits, setDeposits] = useState([])
+  const [bankAccounts, setBankAccounts] = useState([])
+  const [pdcCheques, setPdcCheques] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const firstRef = useRef(null)
+
+  const loadData = async () => {
+    setLoading(true)
+    const [depRes, acctRes, pdcRes] = await Promise.all([
+      supabase.from('bank_deposits').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('accounts').select('id, code, name').ilike('name', '%bank%').eq('is_group', false),
+      supabase.from('pdc_cheques').select('*').eq('status', 'Pending').order('cheque_date')
+    ])
+    setDeposits(depRes.data || [])
+    setBankAccounts(acctRes.data || [])
+    setPdcCheques(pdcRes.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadData() }, [])
+
+  const counts = { All: deposits.length }
+  deposits.forEach((d) => { const s = d.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = deposits.filter((d) => {
+    if (statusFilter !== 'All' && d.status !== statusFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((d.deposit_no || '') + ' ' + (d.description || '') + ' ' + (d.bank_account || '') + ' ' + (d.reference || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalDeposited = filtered.filter((d) => d.status === 'Deposited' || d.status === 'Cleared').reduce((s, d) => s + Number(d.amount || 0), 0)
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, deposit_date: new Date().toISOString().split('T')[0],
+    description: '', amount: '', bank_account: '', bank_account_id: '', reference: '',
+    deposit_type: 'Cash', cheques: [], notes: '', status: 'Pending', saving: false, error: ''
+  })
+
+  const saveDoc = async (processAfter) => {
+    if (!form.description) { setForm({ ...form, error: 'Description is required.' }); return }
+    if (!form.amount || Number(form.amount) <= 0) { setForm({ ...form, error: 'Enter a valid amount.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = {
+      deposit_date: form.deposit_date, description: form.description,
+      amount: Number(form.amount), bank_account: form.bank_account,
+      bank_account_id: form.bank_account_id || null, reference: form.reference,
+      deposit_type: form.deposit_type, cheques: form.cheques || [],
+      notes: form.notes, status: processAfter ? 'Deposited' : 'Pending',
+    }
+    try {
+      if (form.recId) { await supabase.from('bank_deposits').update(payload).eq('id', form.recId) }
+      else { await supabase.from('bank_deposits').insert(payload) }
+      if (processAfter && form.deposit_type === 'PDC' && form.cheques.length) {
+        for (const ch of form.cheques) {
+          if (ch.id) await supabase.from('pdc_cheques').update({ status: 'Cleared' }).eq('id', ch.id)
+        }
+      }
+      if (processAfter && form.bank_account_id) {
+        const { data: acct } = await supabase.from('accounts').select('current_balance').eq('id', form.bank_account_id).single()
+        if (acct) {
+          await supabase.from('accounts').update({ current_balance: Number(acct.current_balance || 0) + Number(form.amount) }).eq('id', form.bank_account_id)
+        }
+      }
+      setForm(null); loadData()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const deleteDoc = async (d) => {
+    if (!window.confirm('Delete this deposit?')) return
+    await supabase.from('bank_deposits').delete().eq('id', d.id)
+    loadData()
+  }
+
+  const addCheque = (ch) => {
+    const exists = (form.cheques || []).find((c) => c.id === ch.id)
+    if (exists) return
+    setForm({ ...form, cheques: [...(form.cheques || []), ch], amount: String(Number(form.amount || 0) + Number(ch.amount || 0)) })
+  }
+
+  const removeCheque = (idx) => {
+    const ch = form.cheques[idx]
+    const newCheques = form.cheques.filter((_, i) => i !== idx)
+    setForm({ ...form, cheques: newCheques, amount: String(Number(form.amount || 0) - Number(ch?.amount || 0)) })
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>🏦 Deposits</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Deposit</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12 }}>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+          <span className="total-records">Total Deposited: <b>{fmtMoney(totalDeposited)}</b></span>
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>DEPOSIT NO</th>
+                <th>DATE</th>
+                <th>DESCRIPTION</th>
+                <th className="col-money">AMOUNT</th>
+                <th>BANK ACCOUNT</th>
+                <th>TYPE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="8" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="8" className="empty">No deposits found</td></tr>}
+              {!loading && filtered.map((d, i) => (
+                <tr key={d.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: d.id, deposit_date: d.deposit_date, description: d.description || '', amount: String(d.amount || ''), bank_account: d.bank_account || '', bank_account_id: d.bank_account_id || '', reference: d.reference || '', deposit_type: d.deposit_type || 'Cash', cheques: d.cheques || [], notes: d.notes || '', status: d.status, saving: false, error: '' })}>✏️</button>
+                    {d.status === 'Pending' && <button className="act edit" title="Mark Deposited" onClick={async () => { await supabase.from('bank_deposits').update({ status: 'Deposited' }).eq('id', d.id); loadData() }}>✅</button>}
+                    <button className="act del" title="Delete" onClick={() => deleteDoc(d)}>🗑️</button>
+                  </td>
+                  <td className="code-cell">{d.deposit_no}</td>
+                  <td>{d.deposit_date}</td>
+                  <td><b>{d.description}</b></td>
+                  <td className="col-money">{fmtMoney(d.amount)}</td>
+                  <td>{d.bank_account || '—'}</td>
+                  <td><span className={`badge ${d.deposit_type === 'PDC' ? 'b-blue' : d.deposit_type === 'Cheque' ? 'b-purple' : 'b-gray'}`}>{d.deposit_type}</span></td>
+                  <td><span className={`badge ${d.status === 'Deposited' ? 'b-green' : d.status === 'Cleared' ? 'b-blue' : d.status === 'Cancelled' ? 'b-red' : 'b-amber'}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit — ${form.deposit_no || ''}` : '＋ New Deposit'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Description *<input ref={firstRef} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Deposit description" /></label>
+        <label>Amount *<input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></label>
+        <label>Date<input type="date" value={form.deposit_date} onChange={(e) => setForm({ ...form, deposit_date: e.target.value })} /></label>
+        <label>Bank Account
+          <select value={form.bank_account_id} onChange={(e) => {
+            const acct = bankAccounts.find((a) => a.id === e.target.value)
+            setForm({ ...form, bank_account_id: e.target.value, bank_account: acct?.name || '' })
+          }}>
+            <option value="">Select Bank Account</option>
+            {bankAccounts.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+          </select>
+        </label>
+        <label>Deposit Type
+          <select value={form.deposit_type} onChange={(e) => setForm({ ...form, deposit_type: e.target.value })}>
+            <option value="Cash">Cash</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Transfer">Bank Transfer</option>
+            <option value="PDC">PDC Cheque</option>
+          </select>
+        </label>
+        <label>Reference<input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="Ref number" /></label>
+      </div>
+
+      {form.deposit_type === 'PDC' && pdcCheques.length > 0 && (
+        <div className="report-section" style={{ marginTop: 14, padding: 12, background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8 }}>
+          <h4 style={{ margin: '0 0 8px' }}>Available PDC Cheques to Deposit</h4>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {pdcCheques.map((ch) => {
+              const added = (form.cheques || []).find((c) => c.id === ch.id)
+              return (
+                <button key={ch.id} className={`filter-btn ${added ? 'active' : ''}`} onClick={() => added ? removeCheque(form.cheques.indexOf(added)) : addCheque(ch)} style={{ fontSize: 11 }}>
+                  {ch.cheque_no} — {ch.party_name} ({fmtMoney(ch.amount)})
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="report-section" style={{ marginTop: 14 }}>
+        <label>Notes<textarea rows="2" style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes..." /></label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={() => saveDoc(false)}>{form.saving ? 'Saving…' : '💾 Save'}</button>
+        <button className="btn-primary" disabled={form.saving} style={{ background: '#10b981' }} onClick={() => saveDoc(true)}>✅ Save & Deposit</button>
+      </div>
+    </div>
+  )
+}
+
+const CheckManagementModule = ({ fmtMoney }) => {
+  const [cheques, setCheques] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [dirFilter, setDirFilter] = useState('all')
+  const firstRef = useRef(null)
+
+  const loadCheques = async () => {
+    setLoading(true)
+    const { data } = await supabase.from('pdc_cheques').select('*').order('cheque_date', { ascending: false }).limit(300)
+    setCheques(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { loadCheques() }, [])
+
+  const counts = { All: cheques.length }
+  cheques.forEach((c) => { const s = c.status || '—'; counts[s] = (counts[s] || 0) + 1 })
+
+  const filtered = cheques.filter((c) => {
+    if (statusFilter !== 'All' && c.status !== statusFilter) return false
+    if (dirFilter !== 'all' && c.direction !== dirFilter) return false
+    if (search) {
+      const s = search.toLowerCase()
+      return ((c.cheque_no || '') + ' ' + (c.party_name || '') + ' ' + (c.bank || '')).toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const totalPending = filtered.filter((c) => c.status === 'Pending').reduce((s, c) => s + Number(c.amount || 0), 0)
+  const totalCleared = filtered.filter((c) => c.status === 'Cleared').reduce((s, c) => s + Number(c.amount || 0), 0)
+
+  const blankDoc = () => ({
+    id: `new-${Date.now()}`, recId: null, direction: 'Received', cheque_no: '',
+    cheque_date: new Date().toISOString().split('T')[0], amount: '',
+    party_name: '', party_id: '', bank: '', status: 'Pending', saving: false, error: ''
+  })
+
+  const saveDoc = async () => {
+    if (!form.cheque_no) { setForm({ ...form, error: 'Cheque number is required.' }); return }
+    if (!form.amount || Number(form.amount) <= 0) { setForm({ ...form, error: 'Enter a valid amount.' }); return }
+    setForm({ ...form, saving: true, error: '' })
+    const payload = {
+      direction: form.direction, cheque_no: form.cheque_no,
+      cheque_date: form.cheque_date, amount: Number(form.amount),
+      party_name: form.party_name, party_id: form.party_id || null,
+      bank: form.bank, status: form.status,
+    }
+    try {
+      if (form.recId) { await supabase.from('pdc_cheques').update(payload).eq('id', form.recId) }
+      else { await supabase.from('pdc_cheques').insert(payload) }
+      setForm(null); loadCheques()
+    } catch (err) { setForm({ ...form, saving: false, error: err.message }) }
+  }
+
+  const updateStatus = async (id, status) => {
+    await supabase.from('pdc_cheques').update({ status }).eq('id', id)
+    loadCheques()
+  }
+
+  const deleteDoc = async (c) => {
+    if (!window.confirm('Delete this cheque?')) return
+    await supabase.from('pdc_cheques').delete().eq('id', c.id)
+    loadCheques()
+  }
+
+  if (!form) {
+    return (
+      <div className="report-wrap">
+        <div className="coa-head">
+          <h3>📋 Check Management</h3>
+          <div className="coa-head-right">
+            <input className="coa-search" placeholder="🔍 Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <button className="btn-add" onClick={() => setForm(blankDoc())}>＋ New Cheque</button>
+          </div>
+        </div>
+        <div className="report-controls" style={{ marginBottom: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button className={`filter-btn ${dirFilter === 'all' ? 'active' : ''}`} onClick={() => setDirFilter('all')}>All Dir</button>
+          <button className={`filter-btn ${dirFilter === 'Received' ? 'active' : ''}`} onClick={() => setDirFilter('Received')}>Received</button>
+          <button className={`filter-btn ${dirFilter === 'Issued' ? 'active' : ''}`} onClick={() => setDirFilter('Issued')}>Issued</button>
+          <span style={{ width: 1, background: '#e2e8f0' }}></span>
+          {Object.entries(counts).map(([st, n]) => (
+            <button key={st} className={`filter-btn ${statusFilter === st ? 'active' : ''}`} onClick={() => setStatusFilter(st)}>{st} ({n})</button>
+          ))}
+          <span className="total-records" style={{ marginLeft: 'auto' }}>
+            Pending: <b style={{ color: '#f59e0b' }}>{fmtMoney(totalPending)}</b> | Cleared: <b style={{ color: '#16a34a' }}>{fmtMoney(totalCleared)}</b>
+          </span>
+        </div>
+        <div className="grid-wrap">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th className="th-actions"></th>
+                <th>CHEQUE NO</th>
+                <th>DATE</th>
+                <th>DIRECTION</th>
+                <th>PARTY</th>
+                <th>BANK</th>
+                <th className="col-money">AMOUNT</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan="8" className="empty">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan="8" className="empty">No cheques found</td></tr>}
+              {!loading && filtered.map((c, i) => (
+                <tr key={c.id || i} className={i % 2 ? 'alt' : ''}>
+                  <td className="td-actions">
+                    <button className="act edit" title="Edit" onClick={() => setForm({ recId: c.id, direction: c.direction, cheque_no: c.cheque_no, cheque_date: c.cheque_date, amount: String(c.amount || ''), party_name: c.party_name || '', party_id: c.party_id || '', bank: c.bank || '', status: c.status, saving: false, error: '' })}>✏️</button>
+                    {c.status === 'Pending' && <>
+                      <button className="act edit" title="Mark Cleared" onClick={() => updateStatus(c.id, 'Cleared')}>✅</button>
+                      <button className="act edit" title="Mark Bounced" onClick={() => updateStatus(c.id, 'Bounced')}>❌</button>
+                    </>}
+                    <button className="act del" title="Delete" onClick={() => deleteDoc(c)}>🗑️</button>
+                  </td>
+                  <td className="code-cell">{c.cheque_no}</td>
+                  <td>{c.cheque_date}</td>
+                  <td><span className={`badge ${c.direction === 'Received' ? 'b-green' : 'b-red'}`}>{c.direction}</span></td>
+                  <td><b>{c.party_name || '—'}</b></td>
+                  <td>{c.bank || '—'}</td>
+                  <td className="col-money">{fmtMoney(c.amount)}</td>
+                  <td><span className={`badge ${c.status === 'Cleared' ? 'b-green' : c.status === 'Bounced' || c.status === 'Cancelled' ? 'b-red' : c.status === 'Issued' ? 'b-blue' : 'b-amber'}`}>{c.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="report-wrap">
+      <div className="coa-head">
+        <h3>{form.recId ? `✏️ Edit Cheque` : '＋ New Cheque'}</h3>
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+      </div>
+      {form.error && <div className="inv-error">⚠️ {form.error}</div>}
+      <div className="inv-grid coa-form-grid" style={{ marginTop: 14 }}>
+        <label>Direction
+          <select ref={firstRef} value={form.direction} onChange={(e) => setForm({ ...form, direction: e.target.value })}>
+            <option value="Received">Received (Incoming)</option>
+            <option value="Issued">Issued (Outgoing)</option>
+          </select>
+        </label>
+        <label>Cheque No *<input value={form.cheque_no} onChange={(e) => setForm({ ...form, cheque_no: e.target.value })} placeholder="Cheque number" /></label>
+        <label>Amount *<input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></label>
+        <label>Party / Payee<input value={form.party_name} onChange={(e) => setForm({ ...form, party_name: e.target.value })} placeholder="Who gave/received" /></label>
+        <label>Bank<input value={form.bank} onChange={(e) => setForm({ ...form, bank: e.target.value })} placeholder="Bank name" /></label>
+        <label>Cheque Date<input type="date" value={form.cheque_date} onChange={(e) => setForm({ ...form, cheque_date: e.target.value })} /></label>
+        <label>Status
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            <option>Pending</option><option>In Hand</option><option>Issued</option><option>Deposited</option><option>Cleared</option><option>Bounced</option><option>Returned</option><option>Cancelled</option>
+          </select>
+        </label>
+      </div>
+      <div className="inv-actions">
+        <button className="btn-cancel" onClick={() => setForm(null)}>✕ Cancel</button>
+        <button className="btn-primary" disabled={form.saving} onClick={saveDoc}>{form.saving ? 'Saving…' : '💾 Save'}</button>
       </div>
     </div>
   )
@@ -5573,7 +7377,14 @@ const App = () => {
       delete payload.id
       let error
       let newId
-      if (form.recId) { ({ error } = await supabase.from(table).update(payload).eq('id', form.recId)) } else { const { data: ins, error: insErr } = await supabase.from(table).insert(payload).select(); error = insErr; newId = ins?.[0]?.id }
+      if (form.recId) { ({ error } = await supabase.from(table).update(payload).eq('id', form.recId)) } else { const { data: ins, error: insErr } = await supabase.from(table).insert(payload).select(); error = insErr; newId = ins?.[0]?.id
+        // Deduct credit for new partner
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, table, code, `${form.kind}: ${form.data.name} (${code})`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
+      }
       if (error) throw error
       patchCust(form.id, { saving: false, savedCode: code, recId: form.recId || newId, data: { ...form.data, code } })
       logActivity(form.recId ? 'UPDATE' : 'CREATE', 'Partner', `${form.kind} ${form.data.name} (${code})`, form.recId || newId)
@@ -5641,7 +7452,14 @@ const App = () => {
       const payload = { name: form.data.name.trim(), sku: form.data.sku, code, description: form.data.description, category: form.data.category, barcode: form.data.barcode, unit: form.data.unit, alt_units: form.data.alt_units || [], price: Number(form.data.price) || 0, cost_price: Number(form.data.cost_price) || 0, stock_quantity: Number(form.data.stock_quantity) || 0, min_stock: Number(form.data.min_stock) || 0, max_stock: Number(form.data.max_stock) || 0, reorder_level: Number(form.data.reorder_level) || 10, location: form.data.location, supplier_id: form.data.supplier_id || null, hsn_code: form.data.hsn_code, vat_rate: Number(form.data.vat_rate) || 15, status: form.data.status, notes: form.data.notes }
       let error
       let newId
-      if (form.recId) { ({ error } = await supabase.from('products').update(payload).eq('id', form.recId)) } else { const { data: ins, error: insErr } = await supabase.from('products').insert(payload).select(); error = insErr; newId = ins?.[0]?.id }
+      if (form.recId) { ({ error } = await supabase.from('products').update(payload).eq('id', form.recId)) } else { const { data: ins, error: insErr } = await supabase.from('products').insert(payload).select(); error = insErr; newId = ins?.[0]?.id
+        // Deduct credit for new product
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, 'products', code, `Product: ${form.data.name} (${code})`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
+      }
       if (error) throw error
       patchStock(form.id, { saving: false, savedCode: code, recId: form.recId || newId, data: { ...form.data, code } })
     } catch (err) { patchStock(form.id, { saving: false, error: err.message }) }
@@ -5733,6 +7551,12 @@ const App = () => {
         const { data, error } = await supabase.from('journal_entries').insert(entryPayload).select()
         if (error) throw error
         entryId = data[0].id
+        // Deduct credit for new journal entry
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, 'journal_entries', data[0].entry_no, `Journal Entry: ${data[0].entry_no || ''}`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
       }
       const linePayloads = lines.map((l, i) => ({ entry_id: entryId, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: l.description }))
       const { error: lineErr } = await supabase.from('journal_lines').insert(linePayloads)
@@ -5903,6 +7727,12 @@ const App = () => {
         const { data, error } = await supabase.from('incoming_payments').insert(payload).select()
         if (error) throw error
         newId = data?.[0]?.id
+        // Deduct credit for new payment
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, 'incoming_payments', data?.[0]?.payment_no, `Incoming Payment: ${data?.[0]?.payment_no || ''}`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
       }
       await loadIncoming()
       setFormFn({ ...form, saving: false, recId: form.recId || newId, error: '' })
@@ -5984,6 +7814,12 @@ const App = () => {
         const { data, error } = await supabase.from('outgoing_payments').insert(payload).select()
         if (error) throw error
         newId = data?.[0]?.id
+        // Deduct credit for new payment
+        try {
+          const { deductCredit } = await import('../utils/billing')
+          const tenantId = authTenant?.id
+          if (tenantId) await deductCredit(tenantId, 'outgoing_payments', data?.[0]?.payment_no, `Outgoing Payment: ${data?.[0]?.payment_no || ''}`)
+        } catch (e) { console.error('Credit deduction failed:', e) }
       }
       await loadOutgoing()
       setFormFn({ ...form, saving: false, recId: form.recId || newId, error: '' })
@@ -6478,7 +8314,55 @@ const App = () => {
           <StockAgingReport fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && DOC_MENUS[activePage] && (
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Cash Book' && (
+          <CashBook fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Bank Book' && (
+          <BankBook fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Debit Note' && (
+          <DebitCreditNotes type="debit" fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Credit Note' && (
+          <DebitCreditNotes type="credit" fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Cost Center' || activePage === 'Budget') && (
+          <CostCenterBudget fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Petty Cash' && (
+          <PettyCashModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Stock Adjustment' && (
+          <StockAdjustmentModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Stock In / Out' && (
+          <StockInOutModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Physical Stock' && (
+          <PhysicalStockModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Deposits' && (
+          <DepositsModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Check Management' && (
+          <CheckManagementModule fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Landed Cost' && (
+          <LandedCostWorkspace fmtMoney={fmtMoney} />
+        )}
+
+        {!activeCust && !activeInv && !activeStock && activePage && DOC_MENUS[activePage] && activePage !== 'Landed Cost' && (
           <DocWorkspace key={activePage} cfg={DOC_MENUS[activePage]} fmtMoney={fmtMoney} />
         )}
 
@@ -6486,7 +8370,7 @@ const App = () => {
           <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
         )}
 
-        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && 
+        {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
 !DOC_MENUS[activePage] && !MODULES[activePage] && (
           <>
             <div className="list-toolbar">

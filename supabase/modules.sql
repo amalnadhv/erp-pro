@@ -239,6 +239,7 @@ ALTER TABLE batch_serials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pick_pack ENABLE ROW LEVEL SECURITY;
 ALTER TABLE barcodes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE petty_cash ENABLE ROW LEVEL SECURITY;
+ALTER TABLE warehouses ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE tbl TEXT;
@@ -246,7 +247,7 @@ BEGIN
   FOR tbl IN SELECT unnest(ARRAY[
     'item_groups','price_lists','sales_persons','leads','sales_targets',
     'cost_centers','budgets','debit_notes','credit_notes',
-    'batch_serials','pick_pack','barcodes','petty_cash'
+    'batch_serials','pick_pack','barcodes','petty_cash','warehouses'
   ]) LOOP
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_select ON %I', tbl);
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_insert ON %I', tbl);
