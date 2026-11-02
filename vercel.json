@@ -5,13 +5,14 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "functions": {
-    "api/*.mjs": {
+    "api/index.mjs": {
       "includeFiles": "server/**",
       "maxDuration": 30,
       "memory": 1024
     }
   },
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index?__path=:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
