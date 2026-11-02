@@ -44,6 +44,7 @@ import { logActivity } from '../utils/audit'
 import { downloadPDF } from '../utils/generatePDF'
 import { emailInvoice } from '../utils/emailInvoice'
 import { fetchTaxConfig, TaxConfig } from '../utils/taxConfig'
+import { COUNTRY_CURRENCIES, formatMoney, getActiveCurrency, setActiveCountry } from '../utils/currency'
 import './App.css'
 
 const MENUS = [
@@ -162,7 +163,7 @@ const DEFAULT_COLUMNS = [
   { key: 'name', label: 'NAME' },
 ]
 
-const fmtMoney = (v, currency) => `${currency || 'USD'} ${Number(v || 0).toLocaleString('en', { minimumFractionDigits: 2 })}`
+const fmtMoney = (v: any, currency?: string) => formatMoney(v, currency)
 
 const LISTINGS = {
   'Stock Master': {
@@ -631,7 +632,7 @@ const StockForm = ({ form, patch, save, close }) => {
 
 const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, lookup, save, openNew, close, companyProfile }) => {
   const fmt = (v, t) => {
-    if (t === 'money') return `SAR ${Number(v || 0).toFixed(2)}`
+    if (t === 'money') return formatMoney(v)
     if (t === 'date') return v ? new Date(v).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }) : ''
     return v || ''
   }
@@ -1201,7 +1202,7 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
           <span className={`coa-name ${account.is_group ? 'coa-name-group' : ''}`}>{account.name}</span>
           {account.is_group && <span className="coa-badge-group">GROUP</span>}
           <span className="coa-balance" style={{ color: account.current_balance > 0 ? '#10b981' : account.current_balance < 0 ? '#ef4444' : '#94a3b8' }}>
-            {account.is_group ? '' : `${account.currency || 'AED'} ${Number(account.current_balance || 0).toLocaleString('en', { minimumFractionDigits: 2 })}`}
+            {account.is_group ? '' : fmtMoney(account.current_balance, account.currency || getActiveCurrency())}
           </span>
           <span className={`coa-status ${account.status === 'Active' ? 'st-active' : 'st-inactive'}`}>{account.status}</span>
           <div className="coa-actions">
@@ -1251,10 +1252,10 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
               <select value={form.data.currency} onChange={async (e) => {
                 const cur = e.target.value
                 let rate = 1
-                if (cur !== companyProfile?.base_currency && cur !== 'AED') {
+                if (cur !== (companyProfile?.base_currency || getActiveCurrency())) {
                   try {
                     const { data } = await supabase.from('exchange_rates')
-                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || 'AED')
+                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || getActiveCurrency())
                       .eq('is_active', true).order('rate_date', { ascending: false }).limit(1)
                     if (data?.length) rate = Number(data[0].rate)
                   } catch (_) {}
@@ -1264,14 +1265,14 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
                 <option>AED</option><option>USD</option><option>SAR</option><option>EUR</option><option>GBP</option><option>INR</option><option>PKR</option>
               </select>
             </label>
-            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && (
+            {form.data.currency !== (companyProfile?.base_currency || getActiveCurrency()) && (
               <label>Exchange Rate
                 <input type="number" step="0.0001" min="0" value={form.data.exchange_rate} onChange={(e) => setForm({ ...form, data: { ...form.data, exchange_rate: Number(e.target.value) } })} />
               </label>
             )}
-            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && form.data.exchange_rate > 0 && (
+            {form.data.currency !== (companyProfile?.base_currency || getActiveCurrency()) && form.data.exchange_rate > 0 && (
               <div style={{ gridColumn: '1 / -1', background: '#eff6ff', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#1e40af' }}>
-                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || 'AED'}</b> at rate {form.data.exchange_rate}
+                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || getActiveCurrency()}</b> at rate {form.data.exchange_rate}
               </div>
             )}
             <label>Status
@@ -1312,7 +1313,7 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
             {Object.entries(ACC_TYPE_COLORS).map(([type, color]) => (
               <div key={type} className="coa-sum-card" style={{ borderLeftColor: color }}>
                 <span className="coa-sum-type">{ACC_TYPE_ICONS[type]} {type}</span>
-                <span className="coa-sum-value" style={{ color }}>AED {(totalByType[type] || 0).toLocaleString('en', { minimumFractionDigits: 2 })}</span>
+                <span className="coa-sum-value" style={{ color }}>{fmtMoney(totalByType[type] || 0)}</span>
               </div>
             ))}
           </div>
@@ -1469,7 +1470,7 @@ const JournalEntry = ({ entries, accounts, form, setForm, onSave, onPost, onDele
           <input className="coa-search" placeholder="🔍 Search entry no, reference..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <PermGate module="Journal Entry" action="can_create"><button className="btn-add" onClick={() => setForm({
             id: `je-${Date.now()}`, recId: null,
-            data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: '', narration: '', currency: 'AED', status: 'Draft', lines: [{ account_id: '', description: '', debit: 0, credit: 0 }, { account_id: '', description: '', debit: 0, credit: 0 }] },
+            data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: '', narration: '', currency: getActiveCurrency(), status: 'Draft', lines: [{ account_id: '', description: '', debit: 0, credit: 0 }, { account_id: '', description: '', debit: 0, credit: 0 }] },
             saving: false, error: ''
           })}>＋ New Entry</button></PermGate>
         </div>
@@ -1567,7 +1568,7 @@ const JournalEntry = ({ entries, accounts, form, setForm, onSave, onPost, onDele
                 <div className="coa-head-right">
                   <button className="btn-add" onClick={() => setRecurringForm({
                     id: `rj-${Date.now()}`, recId: null,
-                    data: { template_name: '', reference: '', narration: '', frequency: 'Monthly', start_date: new Date().toISOString().slice(0, 10), end_date: '', currency: 'AED', status: 'Active', lines: [{ account_id: '', description: '', debit: 0, credit: 0 }, { account_id: '', description: '', debit: 0, credit: 0 }] },
+                    data: { template_name: '', reference: '', narration: '', frequency: 'Monthly', start_date: new Date().toISOString().slice(0, 10), end_date: '', currency: getActiveCurrency(), status: 'Active', lines: [{ account_id: '', description: '', debit: 0, credit: 0 }, { account_id: '', description: '', debit: 0, credit: 0 }] },
                     saving: false, error: ''
                   })}>＋ New Template</button>
                 </div>
@@ -1703,7 +1704,7 @@ const IncomingPayments = ({ payments, accounts, custList, form, setForm, onSave,
               <input className="coa-search" placeholder="🔍 Search payment no, customer..." value={search} onChange={(e) => setSearch(e.target.value)} />
               <PermGate module="Incoming Payments" action="can_create"><button className="btn-add" onClick={() => setForm({
                 id: `ip-${Date.now()}`, recId: null,
-                data: { payment_date: new Date().toISOString().slice(0, 10), customer_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: 'AED', exchange_rate: 1, notes: '', applied_to: 'AR Invoice' },
+                data: { payment_date: new Date().toISOString().slice(0, 10), customer_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: getActiveCurrency(), exchange_rate: 1, notes: '', applied_to: 'AR Invoice' },
                 saving: false, error: ''
               })}>＋ New Payment</button></PermGate>
             </div>
@@ -1861,7 +1862,7 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
               <input className="coa-search" placeholder="🔍 Search payment no, supplier..." value={search} onChange={(e) => setSearch(e.target.value)} />
               <PermGate module="Outgoing Payments" action="can_create"><button className="btn-add" onClick={() => setForm({
                 id: `op-${Date.now()}`, recId: null,
-                data: { payment_date: new Date().toISOString().slice(0, 10), supplier_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: 'AED', exchange_rate: 1, notes: '', applied_to: 'AP Invoice' },
+                data: { payment_date: new Date().toISOString().slice(0, 10), supplier_id: '', payment_method: 'Bank Transfer', bank_account_id: '', reference: '', cheque_no: '', cheque_date: new Date().toISOString().slice(0, 10), amount: 0, currency: getActiveCurrency(), exchange_rate: 1, notes: '', applied_to: 'AP Invoice' },
                 saving: false, error: ''
               })}>＋ New Payment</button></PermGate>
             </div>
@@ -1954,10 +1955,10 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
               <select value={form.data.currency} onChange={async (e) => {
                 const cur = e.target.value
                 let rate = 1
-                if (cur !== companyProfile?.base_currency && cur !== 'AED') {
+                if (cur !== (companyProfile?.base_currency || getActiveCurrency())) {
                   try {
                     const { data } = await supabase.from('exchange_rates')
-                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || 'AED')
+                      .select('rate').eq('from_currency', cur).eq('to_currency', companyProfile?.base_currency || getActiveCurrency())
                       .eq('is_active', true).order('rate_date', { ascending: false }).limit(1)
                     if (data?.length) rate = Number(data[0].rate)
                   } catch (_) {}
@@ -1967,14 +1968,14 @@ const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, 
                 <option>AED</option><option>USD</option><option>SAR</option><option>EUR</option><option>GBP</option><option>INR</option><option>PKR</option>
               </select>
             </label>
-            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && (
+            {form.data.currency !== (companyProfile?.base_currency || getActiveCurrency()) && (
               <label>Exchange Rate
                 <input type="number" step="0.0001" min="0" value={form.data.exchange_rate} onChange={(e) => setForm({ ...form, data: { ...form.data, exchange_rate: Number(e.target.value) } })} />
               </label>
             )}
-            {form.data.currency !== 'AED' && form.data.currency !== (companyProfile?.base_currency || 'AED') && form.data.exchange_rate > 0 && (
+            {form.data.currency !== (companyProfile?.base_currency || getActiveCurrency()) && form.data.exchange_rate > 0 && (
               <div style={{ gridColumn: '1 / -1', background: '#eff6ff', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#1e40af' }}>
-                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || 'AED'}</b> at rate {form.data.exchange_rate}
+                💱 {form.data.amount || 0} {form.data.currency} = <b>{((Number(form.data.amount) || 0) * form.data.exchange_rate).toFixed(2)} {companyProfile?.base_currency || getActiveCurrency()}</b> at rate {form.data.exchange_rate}
               </div>
             )}
             <label>Reference
@@ -3603,7 +3604,7 @@ const ExchangeRates = ({ fmtMoney }) => {
           <div className="coa-head-right">
             <input className="coa-search" placeholder="🔍 Search currency, rate..." value={search} onChange={(e) => setSearch(e.target.value)} />
             <button className="btn-add" onClick={() => setForm({
-              id: null, from_currency: '', to_currency: 'AED', rate: '', rate_date: new Date().toISOString().split('T')[0],
+              id: null, from_currency: '', to_currency: getActiveCurrency(), rate: '', rate_date: new Date().toISOString().split('T')[0],
               rate_type: 'Spot', source: '', is_active: true, saving: false
             })}>＋ New Rate</button>
           </div>
@@ -4405,7 +4406,7 @@ const PaymentWizard = ({ accounts, fmtMoney, custList, supList }) => {
         transaction_id: p.id,
         description: paymentType === 'Outgoing' ? (p.suppliers?.name || p.supplier_name || p.description || '') : (p.customers?.name || p.customer_name || p.description || ''),
         amount: Number(p.amount || 0),
-        currency: p.currency || 'AED',
+        currency: p.currency || getActiveCurrency(),
         reference: paymentType === 'Outgoing' ? p.payment_no : p.receipt_no,
         sequence: i + 1,
         processed: false,
@@ -4627,7 +4628,7 @@ const SalesDocs = ({ docType, fmtMoney, taxRate = 0, authTenant }) => {
     doc_date: new Date().toISOString().split('T')[0],
     valid_until: isQuote ? (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0] })() : null,
     delivery_date: !isQuote ? new Date().toISOString().split('T')[0] : null,
-    currency: 'AED', payment_terms: 'Net 30',
+    currency: getActiveCurrency(), payment_terms: 'Net 30',
     items: [], notes: '', status: 'Draft', saving: false, error: ''
   })
 
@@ -5241,7 +5242,7 @@ const LandedCostWorkspace = ({ fmtMoney }) => {
 
   const blankDoc = () => ({
     recId: null, lc_no: '', _grn_id: '', grn_no: '', party_id: '', party_name: '',
-    doc_date: new Date().toISOString().split('T')[0], currency: 'AED',
+    doc_date: new Date().toISOString().split('T')[0], currency: getActiveCurrency(),
     costLines: [{ account: 'Freight', amount: '', description: '' }],
     notes: '', status: 'Draft', saving: false, error: ''
   })
@@ -5584,7 +5585,7 @@ const DocWorkspace = ({ cfg, fmtMoney, taxConfig, authTenant }) => {
       status: 'Posted',
       total_debit: totalDebit,
       total_credit: totalCredit,
-      currency: doc.currency || 'AED',
+      currency: doc.currency || getActiveCurrency(),
     }).select()
     if (jeErr || !je || !je.length) return
     const jeId = je[0].id
@@ -5746,7 +5747,7 @@ const DocWorkspace = ({ cfg, fmtMoney, taxConfig, authTenant }) => {
   const editDoc = (d) => {
     const f = { recId: d.id, _party_id: isInv ? '' : d[PARTY_ID_KEY], [PARTY_KEY]: d[PARTY_KEY] || '', items: d.items || [], notes: d.notes || '', status: d.status || 'Draft', saving: false, error: '', source_doc_no: d.source_doc_no || '', otherCosts: d.other_costs || 0, otherCostDesc: d.other_cost_desc || '' }
     if (isInv) { f.payment_method = d.payment_method || 'Cash' }
-    else { f[PARTY_ID_KEY] = d[PARTY_ID_KEY] || ''; f.doc_date = d.doc_date; f.currency = d.currency || 'AED'; f.payment_terms = d.payment_terms || 'Net 30' }
+    else { f[PARTY_ID_KEY] = d[PARTY_ID_KEY] || ''; f.doc_date = d.doc_date; f.currency = d.currency || getActiveCurrency(); f.payment_terms = d.payment_terms || 'Net 30' }
     setForm(f)
   }
 
@@ -6281,7 +6282,7 @@ const DebitCreditNotes = ({ type, fmtMoney, taxRate = 0 }) => {
             const totalCredit = lines.reduce((s, l) => s + Number(l.credit || 0), 0)
             const { data: je } = await supabase.from('journal_entries').insert({
               entry_date: form.doc_date, reference: form.note_no || TITLE, narration: `${TITLE} — ${form.party_name}`,
-              status: 'Posted', total_debit: totalDebit, total_credit: totalCredit, currency: 'AED',
+              status: 'Posted', total_debit: totalDebit, total_credit: totalCredit, currency: getActiveCurrency(),
             }).select()
             if (je && je.length) {
               const jeLines = lines.map((l, i) => ({ entry_id: je[0].id, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit || 0), credit: Number(l.credit || 0), description: l.description }))
@@ -6640,7 +6641,7 @@ const PettyCashModule = ({ fmtMoney }) => {
             const totalDebit = lines.reduce((s, l) => s + Number(l.debit || 0), 0)
             const { data: je } = await supabase.from('journal_entries').insert({
               entry_date: form.doc_date, reference: form.voucher_no || 'Petty Cash', narration: `Petty cash — ${form.payee}`,
-              status: 'Posted', total_debit: totalDebit, total_credit: totalDebit, currency: 'AED',
+              status: 'Posted', total_debit: totalDebit, total_credit: totalDebit, currency: getActiveCurrency(),
             }).select()
             if (je && je.length) {
               const jeLines = lines.map((l, i) => ({ entry_id: je[0].id, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit || 0), credit: Number(l.credit || 0), description: l.description }))
@@ -7702,7 +7703,7 @@ const App = () => {
   const [custList, setCustList] = useState([])
   const [supList, setSupList] = useState([])
   const [companyProfile, setCompanyProfile] = useState(null)
-  const [taxConfig, setTaxConfig] = useState<TaxConfig>({ country: 'Global', tax_name: 'Tax', standard_rate: 0, reduced_rate: 0, currency: 'USD', tax_authority: 'N/A', compliance_mode: 'None', tax_id_label: 'Tax ID', invoice_label: 'Invoice' })
+  const [taxConfig, setTaxConfig] = useState<TaxConfig>({ country: region, tax_name: 'Tax', standard_rate: 0, reduced_rate: 0, currency: getActiveCurrency(), tax_authority: 'N/A', compliance_mode: 'None', tax_id_label: 'Tax ID', invoice_label: 'Invoice' })
   const [erpUsers, setErpUsers] = useState([])
   const [userForm, setUserForm] = useState(null)
   const [userSearch, setUserSearch] = useState('')
@@ -7723,7 +7724,20 @@ const App = () => {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => { localStorage.setItem('erp-dark', dark ? '1' : '0') }, [dark])
-  useEffect(() => { localStorage.setItem('erp-region', region) }, [region])
+  useEffect(() => {
+    localStorage.setItem('erp-region', region)
+    const cfg = setActiveCountry(region)
+    setTaxConfig((prev) => (prev.country === region && prev.currency === cfg.currency ? prev : { ...prev, country: region, currency: cfg.currency }))
+  }, [region])
+
+  const handleRegionChange = async (value: string) => {
+    setRegion(value)
+    const cfg = setActiveCountry(value)
+    let fetched: TaxConfig | null = null
+    try { fetched = await fetchTaxConfig(value) } catch (_) {}
+    setTaxConfig((prev) => ({ ...(fetched && fetched.country === value ? fetched : prev), country: value, currency: cfg.currency }))
+    setCompanyProfile((prev: any) => prev?.data ? { ...prev, data: { ...prev.data, country: value, base_currency: cfg.currency } } : prev)
+  }
 
   // Auth: check session on mount
   useEffect(() => {
@@ -7852,7 +7866,7 @@ const App = () => {
   })()
 
   const fmt = (v, t) => {
-    if (t === 'money') return `SAR ${Number(v || 0).toFixed(2)}`
+    if (t === 'money') return formatMoney(v)
     if (t === 'date') return v ? new Date(v).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }) : ''
     return v || ''
   }
@@ -8188,7 +8202,7 @@ const App = () => {
   const toggleCoaExpand = (id) => { setCoaExpanded((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next }) }
 
   const openCoaEdit = (account) => {
-    setCoaForm({ id: `coa-${Date.now()}`, recId: account.id, parentId: account.parent_id, parentName: account.parent_id ? (coaAccounts.find((a) => a.id === account.parent_id)?.name || '') : '', data: { code: account.code, name: account.name, type: account.type, parent_id: account.parent_id || '', opening_balance: account.opening_balance || 0, currency: account.currency || 'AED', status: account.status || 'Inactive', notes: account.notes || '' }, saving: false, error: '' })
+    setCoaForm({ id: `coa-${Date.now()}`, recId: account.id, parentId: account.parent_id, parentName: account.parent_id ? (coaAccounts.find((a) => a.id === account.parent_id)?.name || '') : '', data: { code: account.code, name: account.name, type: account.type, parent_id: account.parent_id || '', opening_balance: account.opening_balance || 0, currency: account.currency || getActiveCurrency(), status: account.status || 'Inactive', notes: account.notes || '' }, saving: false, error: '' })
     setActiveCust(null)
     setActiveInv(null)
     setActiveStock(null)
@@ -8197,7 +8211,7 @@ const App = () => {
   const openCoaAddChild = (parent) => {
     const parentType = parent ? parent.type : 'Asset'
     const parentName = parent ? parent.name : ''
-    setCoaForm({ id: `coa-${Date.now()}`, recId: null, parentId: parent?.id || null, parentName, data: { code: '', name: '', type: parentType, parent_id: parent?.id || '', opening_balance: 0, currency: 'AED', status: 'Inactive', notes: '' }, saving: false, error: '' })
+    setCoaForm({ id: `coa-${Date.now()}`, recId: null, parentId: parent?.id || null, parentName, data: { code: '', name: '', type: parentType, parent_id: parent?.id || '', opening_balance: 0, currency: getActiveCurrency(), status: 'Inactive', notes: '' }, saving: false, error: '' })
     setActiveCust(null)
     setActiveInv(null)
     setActiveStock(null)
@@ -8317,13 +8331,13 @@ const App = () => {
     if (entry._fromRecurring) {
       setJeForm({
         id: `je-${Date.now()}`, recId: null,
-        data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: entry.reference || '', narration: entry.narration || '', currency: entry.currency || 'AED', status: 'Draft', lines: (entry.lines || []).map((l) => ({ account_id: l.account_id, description: l.description || '', debit: l.debit, credit: l.credit })) },
+        data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: entry.reference || '', narration: entry.narration || '', currency: entry.currency || getActiveCurrency(), status: 'Draft', lines: (entry.lines || []).map((l) => ({ account_id: l.account_id, description: l.description || '', debit: l.debit, credit: l.credit })) },
         saving: false, error: ''
       })
     } else {
       setJeForm({
         id: `je-${Date.now()}`, recId: null,
-        data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: (entry.reference ? entry.reference + ' (copy)' : ''), narration: entry.narration || '', currency: entry.currency || 'AED', status: 'Draft', lines: (entry.lines || []).map((l) => ({ account_id: l.account_id, description: l.description || '', debit: l.debit, credit: l.credit })) },
+        data: { entry_no: '', entry_date: new Date().toISOString().slice(0, 10), reference: (entry.reference ? entry.reference + ' (copy)' : ''), narration: entry.narration || '', currency: entry.currency || getActiveCurrency(), status: 'Draft', lines: (entry.lines || []).map((l) => ({ account_id: l.account_id, description: l.description || '', debit: l.debit, credit: l.credit })) },
         saving: false, error: ''
       })
     }
@@ -8597,6 +8611,7 @@ const App = () => {
         setCompanyProfile({ id: data[0].id, data: data[0], saving: false, error: '' })
         const tc = await fetchTaxConfig(data[0].country)
         setTaxConfig(tc)
+        if (COUNTRY_CURRENCIES[data[0].country]) setRegion(data[0].country)
       }
     } catch (err) { console.error('Profile load error:', err) }
   }
@@ -8613,6 +8628,7 @@ const App = () => {
       // Reload tax config after profile save
       const tc = await fetchTaxConfig(form.data.country)
       setTaxConfig(tc)
+      if (COUNTRY_CURRENCIES[form.data.country]) setRegion(form.data.country)
     } catch (err) { setFormFn({ ...form, saving: false, error: err.message }) }
   }
 
@@ -8722,23 +8738,10 @@ const App = () => {
           <div className="brand-text">
             <h1>Comrade ERP Pro</h1>
             {authTenant && <span style={{ fontSize: 11, color: '#6b7280' }}>{authTenant.name} — {authTenant.plan_name}</span>}
-            <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} title="Select Region">
-              <option>GCC — MENA</option>
-              <option>Saudi Arabia</option>
-              <option>UAE</option>
-              <option>Kuwait</option>
-              <option>Bahrain</option>
-              <option>Oman</option>
-              <option>Qatar</option>
-              <option>Egypt</option>
-              <option>India</option>
-              <option>Pakistan</option>
-              <option>Turkey</option>
-              <option>Africa</option>
-              <option>Europe</option>
-              <option>Asia Pacific</option>
-              <option>Americas</option>
-              <option>Global</option>
+            <select className="region-select" value={region} onChange={(e) => handleRegionChange(e.target.value)} title="Select country (sets currency and number format)">
+              {Object.keys(COUNTRY_CURRENCIES).map((name) => (
+                <option key={name} value={name}>{name} ({COUNTRY_CURRENCIES[name].currency})</option>
+              ))}
             </select>
           </div>
         </div>
@@ -8983,7 +8986,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Fx Revaluation' && (
-          <FxRevaluation accounts={coaAccounts} baseCurrency={companyProfile?.base_currency || 'AED'} />
+          <FxRevaluation accounts={coaAccounts} baseCurrency={companyProfile?.base_currency || getActiveCurrency()} />
         )}
 
       {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Inventory Valuation' && (
