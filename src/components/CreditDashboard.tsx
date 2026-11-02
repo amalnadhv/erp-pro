@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { formatMoney } from '../utils/currency'
 
 interface Props { tenant: any; onRefresh?: () => void }
 
@@ -26,7 +27,7 @@ const CreditDashboard = ({ tenant, onRefresh }: Props) => {
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Remaining Credit</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', fontFamily: "'Bahnschrift',sans-serif" }}>
-              {tenant?.currency || 'AED'} {Number(tenant?.credit_balance || 0).toFixed(2)}
+              {formatMoney(tenant?.credit_balance || 0)}
             </div>
           </div>
         </div>
@@ -59,7 +60,7 @@ const CreditDashboard = ({ tenant, onRefresh }: Props) => {
             <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, borderBottom: '1px solid #f9fafb' }}>
               <div>
                 <span style={{ color: h.tx_type === 'Credit' || h.tx_type === 'Bonus' ? '#22c55e' : h.tx_type === 'Debit' ? '#ef4444' : '#6b7280', fontWeight: 600, marginRight: 6 }}>
-                  {h.tx_type === 'Credit' || h.tx_type === 'Bonus' ? '+' : '-'}{Math.abs(Number(h.amount)).toFixed(2)}
+                  {h.tx_type === 'Credit' || h.tx_type === 'Bonus' ? '+' : '-'}{formatMoney(Math.abs(Number(h.amount)))}
                 </span>
                 {h.description}
               </div>
