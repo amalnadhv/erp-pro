@@ -25,7 +25,7 @@ Node **22.13+** is required (the server uses the built-in `node:sqlite` module).
 
 ## Option A — Vercel (free demo)
 
-The repo already contains `vercel.json`, `api/index.mjs` and `api/[...path].mjs`.
+The repo already contains `vercel.json` and the `api/index.mjs` function. `vercel.json` rewrites every `/api/*` request to that one function and passes the original sub-path along.
 
 1. Push the repo to GitHub (see **GitHub** below).
 2. Go to <https://vercel.com/new>, import the repo.
