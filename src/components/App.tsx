@@ -629,7 +629,7 @@ const StockForm = ({ form, patch, save, close }) => {
   )
 }
 
-const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, lookup, save, openNew, close }) => {
+const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, lookup, save, openNew, close, companyProfile }) => {
   const fmt = (v, t) => {
     if (t === 'money') return `SAR ${Number(v || 0).toFixed(2)}`
     if (t === 'date') return v ? new Date(v).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }) : ''
@@ -1148,7 +1148,7 @@ const PartnerForm = ({ form, patch, save, close }) => {
 const ACC_TYPE_COLORS = { Asset: '#3b82f6', Liability: '#ef4444', Equity: '#8b5cf6', Income: '#10b981', Expense: '#f59e0b' }
 const ACC_TYPE_ICONS = { Asset: '📊', Liability: '📉', Equity: '🏛️', Income: '💰', Expense: '💸' }
 
-const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild, onDelete, search, setSearch, typeFilter, setTypeFilter, onSave, form, setForm, closeForm }) => {
+const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild, onDelete, search, setSearch, typeFilter, setTypeFilter, onSave, form, setForm, closeForm, companyProfile }) => {
   const firstRef = useRef(null)
   const wrapRef = useRef(null)
 
@@ -1829,7 +1829,7 @@ const IncomingPayments = ({ payments, accounts, custList, form, setForm, onSave,
   )
 }
 
-const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, onApprove, onCancel, onDelete, onPrint, search, setSearch, statusFilter, setStatusFilter }) => {
+const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, onApprove, onCancel, onDelete, onPrint, search, setSearch, statusFilter, setStatusFilter, companyProfile }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
   useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [form])
@@ -3098,6 +3098,7 @@ const TaxReport = ({ fmtMoney, taxConfig: taxCfg }) => {
   const taxName = activeTaxConfig.tax_name || 'Tax'
   const taxAuthority = activeTaxConfig.tax_authority || 'N/A'
   const complianceMode = activeTaxConfig.compliance_mode || 'None'
+  const regime = /zatca/i.test(complianceMode) ? 'zatca' : 'uae'
 
   const outputTaxItems = filteredInvoices.map((inv) => ({
     invoice_no: inv.invoice_no || inv.doc_no || '—',
@@ -4582,11 +4583,12 @@ const PaymentWizard = ({ accounts, fmtMoney, custList, supList }) => {
   )
 }
 
-const SalesDocs = ({ docType, fmtMoney, taxRate = 0 }) => {
+const SalesDocs = ({ docType, fmtMoney, taxRate = 0, authTenant }) => {
   const isQuote = docType === 'quotation'
   const TABLE = isQuote ? 'sales_quotations' : 'sales_orders'
   const NO_FIELD = isQuote ? 'quote_no' : 'order_no'
   const TITLE = isQuote ? '💼 Sales Quotation' : '📋 Sales Order'
+  const cfg = { title: isQuote ? 'Sales Quotation' : 'Sales Order', key: TABLE }
   const [docs, setDocs] = useState([])
   const [customers, setCustomers] = useState([])
   const [products, setProducts] = useState([])
@@ -4965,7 +4967,7 @@ const Authorization = ({ permissions, modules, roles, onSave, onToggle }) => {
 
 const STATUS_CLASS = (s) => s === 'Posted' || s === 'Approved' || s === 'Active' || s === 'Complete' || s === 'Done' || s === 'Success' || s === 'Deposited' || s === 'Validated' || s === 'Shipped' || s === 'Picked' || s === 'Packed' || s === 'Counted' || s === 'Verified' || s === 'Cleared' ? 'b-green' : (s === 'Cancelled' || s === 'Rejected' || s === 'Failed' || s === 'Expired' || s === 'Lost' || s === 'Closed' || s === 'Revoked' || s === 'Returned' ? 'b-red' : (s === 'Draft' || s === 'Pending' || s === 'Open' || s === 'Partial' || s === 'Scheduled' || s === 'Running' || s === 'Submitted' || s === 'Qualified' ? 'b-amber' : 'b-blue'))
 
-const ModuleWorkspace = ({ module, cfg, fmtMoney }) => {
+const ModuleWorkspace = ({ module, cfg, fmtMoney, authTenant }) => {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState(null)
@@ -5446,7 +5448,7 @@ const LandedCostWorkspace = ({ fmtMoney }) => {
   )
 }
 
-const DocWorkspace = ({ cfg, fmtMoney }) => {
+const DocWorkspace = ({ cfg, fmtMoney, taxConfig, authTenant }) => {
   const isInv = !!cfg.inv
   const TABLE = cfg.table
   const NO_FIELD = cfg.noField
@@ -7994,7 +7996,7 @@ const App = () => {
       const jeId = je[0].id
       const jeLines = lines.map((l, i) => ({ entry_id: jeId, line_no: i + 1, account_id: l.account_id, debit: Number(l.debit || 0), credit: Number(l.credit || 0), description: l.description }))
     await supabase.from('journal_lines').insert(jeLines)
-    logActivity('POST', cfg.title || 'Document', ref + ' | debit ' + totalDebit.toFixed(2) + ' credit ' + totalCredit.toFixed(2), jeId)
+    logActivity('POST', 'A/R Invoice', invoiceNo + ' | debit ' + Number(grandTotal || 0).toFixed(2) + ' credit ' + (Number(subtotal || 0) + Number(vatAmount || 0)).toFixed(2), jeId)
       for (const l of lines) {
         const acct = accts.find((a) => a.id === l.account_id)
         if (!acct) continue
@@ -8478,7 +8480,7 @@ const App = () => {
       await supabase.from('incoming_payments').update({ status: 'Approved', ar_entry_id: jeId }).eq('id', p.id)
       if (isCheque) {
         await supabase.from('pdc_cheques').insert({ direction: 'Received', cheque_no: p.cheque_no || p.payment_no, cheque_date: p.cheque_date || p.payment_date, amount: Number(p.amount), party_name: p.customer_name || '', party_id: p.customer_id || null, bank: '', status: isPdc ? 'Pending' : 'Cleared' })
-        logActivity('CREATE', 'PDC', `${isPdc ? 'Post-dated' : 'Same-day'} received cheque ${p.cheque_no || p.payment_no} ${money(Number(p.amount))}`)
+        logActivity('CREATE', 'PDC', `${isPdc ? 'Post-dated' : 'Same-day'} received cheque ${p.cheque_no || p.payment_no} ${fmtMoney(Number(p.amount), taxConfig.currency)}`)
       }
       await Promise.all([loadIncoming(), loadJeEntries()])
     } catch (err) { alert('Error: ' + err.message) }
@@ -8556,7 +8558,7 @@ const App = () => {
       await supabase.from('outgoing_payments').update({ status: 'Approved', ap_entry_id: jeId }).eq('id', p.id)
       if (isCheque) {
         await supabase.from('pdc_cheques').insert({ direction: 'Issued', cheque_no: p.cheque_no || p.payment_no, cheque_date: p.cheque_date || p.payment_date, amount: Number(p.amount), party_name: p.supplier_name || '', party_id: p.supplier_id || null, bank: '', status: isPdc ? 'Pending' : 'Cleared' })
-        logActivity('CREATE', 'PDC', `${isPdc ? 'Post-dated' : 'Same-day'} issued cheque ${p.cheque_no || p.payment_no} ${money(Number(p.amount))}`)
+        logActivity('CREATE', 'PDC', `${isPdc ? 'Post-dated' : 'Same-day'} issued cheque ${p.cheque_no || p.payment_no} ${fmtMoney(Number(p.amount), taxConfig.currency)}`)
       }
       await Promise.all([loadOutgoing(), loadJeEntries()])
     } catch (err) { alert('Error: ' + err.message) }
@@ -8854,7 +8856,7 @@ const App = () => {
         )}
 
         {!activeCust && activeInv && invoices.find((i) => i.id === activeInv) && (
-          <InvoiceWorkspace inv={invoices.find((i) => i.id === activeInv)} products={products} patch={(p) => patchInv(activeInv, p)} addItem={() => addItem(activeInv)} updItem={(idx, p) => updItem(activeInv, idx, p)} rmItem={(idx) => rmItem(activeInv, idx)} lookup={(idx, code) => lookupProduct(activeInv, idx, code)} save={() => saveInvoice(invoices.find((i) => i.id === activeInv))} openNew={() => { setActiveCust(null); openInvoice() }} close={() => closeInvoice(activeInv)} />
+          <InvoiceWorkspace inv={invoices.find((i) => i.id === activeInv)} products={products} patch={(p) => patchInv(activeInv, p)} addItem={() => addItem(activeInv)} updItem={(idx, p) => updItem(activeInv, idx, p)} rmItem={(idx) => rmItem(activeInv, idx)} lookup={(idx, code) => lookupProduct(activeInv, idx, code)} save={() => saveInvoice(invoices.find((i) => i.id === activeInv))} openNew={() => { setActiveCust(null); openInvoice() }} close={() => closeInvoice(activeInv)} companyProfile={companyProfile?.data || null} />
         )}
 
         {!activeCust && !activeInv && activeStock && stockForms.find((f) => f.id === activeStock) && (
@@ -8869,7 +8871,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Chart of Accounts' && (
-          <ChartOfAccounts accounts={coaAccounts} expanded={coaExpanded} toggleExpand={toggleCoaExpand} onEdit={openCoaEdit} onAddChild={openCoaAddChild} onDelete={deleteCoa} search={coaSearch} setSearch={setCoaSearch} typeFilter={coaTypeFilter} setTypeFilter={setCoaTypeFilter} onSave={saveCoa} form={coaForm} setForm={setCoaForm} closeForm={() => setCoaForm(null)} />
+          <ChartOfAccounts accounts={coaAccounts} expanded={coaExpanded} toggleExpand={toggleCoaExpand} onEdit={openCoaEdit} onAddChild={openCoaAddChild} onDelete={deleteCoa} search={coaSearch} setSearch={setCoaSearch} typeFilter={coaTypeFilter} setTypeFilter={setCoaTypeFilter} onSave={saveCoa} form={coaForm} setForm={setCoaForm} closeForm={() => setCoaForm(null)} companyProfile={companyProfile?.data || null} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Journal Entry' && (
@@ -8881,7 +8883,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Outgoing Payments' && (
-          <OutgoingPayments payments={outgoingPayments} accounts={coaAccounts} supList={supList} form={outgoingForm} setForm={setOutgoingForm} onSave={saveOutgoing} onApprove={approveOutgoing} onCancel={cancelOutgoing} onDelete={deleteOutgoing} onPrint={printOutgoing} search={outgoingSearch} setSearch={setOutgoingSearch} statusFilter={outgoingStatusFilter} setStatusFilter={setOutgoingStatusFilter} />
+          <OutgoingPayments payments={outgoingPayments} accounts={coaAccounts} supList={supList} form={outgoingForm} setForm={setOutgoingForm} onSave={saveOutgoing} onApprove={approveOutgoing} onCancel={cancelOutgoing} onDelete={deleteOutgoing} onPrint={printOutgoing} search={outgoingSearch} setSearch={setOutgoingSearch} statusFilter={outgoingStatusFilter} setStatusFilter={setOutgoingStatusFilter} companyProfile={companyProfile?.data || null} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Reconciliation' && (
@@ -8917,11 +8919,11 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Sales Quotation' && (
-          <SalesDocs docType="quotation" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
+          <SalesDocs docType="quotation" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} authTenant={authTenant} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Sales Order' && (
-          <SalesDocs docType="order" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} />
+          <SalesDocs docType="order" fmtMoney={fmtMoney} taxRate={taxConfig.standard_rate} authTenant={authTenant} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Trial Balance Report' || activePage === 'Trial Balance') && (
@@ -9139,11 +9141,11 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && getDocMenus(taxConfig.standard_rate)[activePage] && activePage !== 'Landed Cost' && (
-          <DocWorkspace key={activePage} cfg={getDocMenus(taxConfig.standard_rate)[activePage]} fmtMoney={fmtMoney} />
+          <DocWorkspace key={activePage} cfg={getDocMenus(taxConfig.standard_rate)[activePage]} fmtMoney={fmtMoney} taxConfig={taxConfig} authTenant={authTenant} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && MODULES[activePage] && (
-          <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} />
+          <ModuleWorkspace key={activePage} module={activePage} cfg={MODULES[activePage]} fmtMoney={fmtMoney} authTenant={authTenant} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage !== 'Chart of Accounts' && activePage !== 'Journal Entry' && activePage !== 'Incoming Payments' && activePage !== 'Outgoing Payments' && activePage !== 'Reconciliation' && activePage !== 'Payment Wizard' && activePage !== 'Company Profile' && activePage !== 'Users & Roles' && activePage !== 'Document Numbering' && activePage !== 'Authorization' && activePage !== 'Trial Balance Report' && activePage !== 'Trial Balance' && activePage !== 'Balance Sheet Report' && activePage !== 'Balance Sheet' && activePage !== 'Profit & Loss Statement' && activePage !== 'P&L Statement' && activePage !== 'Sales Report' && activePage !== 'Purchase Report' && activePage !== 'Stock Report' && activePage !== 'Customer Balance' && activePage !== 'Supplier Balance' && activePage !== 'Stock Aging Report' && activePage !== 'Cash Flow Statement' && activePage !== 'Tax Report' && activePage !== 'Corporate Tax' && activePage !== 'Audit Report' && activePage !== 'Fixed Assets' && activePage !== 'Exchange Rates' && activePage !== 'Sales Quotation' && activePage !== 'Sales Order' && activePage !== 'Bank Reconciliation' && activePage !== 'Customer Ledger' && activePage !== 'Supplier Ledger' && activePage !== 'Stock Aging' && activePage !== 'Dashboard' && activePage !== 'Screen Designer' && activePage !== 'Fx Revaluation' && activePage !== 'Inventory Valuation' && activePage !== 'Audit Log' && activePage !== 'Statements & Aging' && activePage !== 'PDC Report' && activePage !== 'Cheque Templates' && activePage !== 'Stock Transfer' && activePage !== 'Stock Alerts' && activePage !== 'Recurring Invoices' && activePage !== 'Inventory Movement Report' && activePage !== 'Aged Receivables' && activePage !== 'Print Barcode Labels' && activePage !== 'Bank CSV Import' && activePage !== 'Payment Schedules' && activePage !== 'Dunning Letters' && activePage !== 'Transaction Reversal' && activePage !== 'Batch / Serial Tracking' && activePage !== 'Stock Rotation' && activePage !== 'Approval Workflow' && activePage !== 'Custom Fields' && activePage !== 'Multi-Company' && activePage !== 'Integrations' && activePage !== 'Production / BOM' && activePage !== 'Import / Export' && activePage !== 'Cash Book' && activePage !== 'Bank Book' && activePage !== 'Debit Note' && activePage !== 'Credit Note' && activePage !== 'Cost Center' && activePage !== 'Budget' && activePage !== 'Petty Cash' && activePage !== 'Stock Adjustment' && activePage !== 'Stock In / Out' && activePage !== 'Physical Stock' && activePage !== 'Deposits' && activePage !== 'Check Management' && 
