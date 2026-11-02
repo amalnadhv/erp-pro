@@ -1,4 +1,4 @@
-# Deploying ERP Pro (SQLite edition)
+# Deploying Comrade ERP Pro (SQLite edition)
 
 This app is a **React UI + a small Node API + a SQLite file** (`data/erp.db`).
 It is not a static site: the API needs a Node process and a writable folder.
@@ -114,7 +114,7 @@ npm run build
 ```bash
 sudo tee /etc/systemd/system/erp.service >/dev/null <<'EOF'
 [Unit]
-Description=ERP Pro
+Description=Comrade ERP Pro
 After=network.target
 
 [Service]

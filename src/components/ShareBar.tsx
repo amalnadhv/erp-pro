@@ -56,7 +56,7 @@ export default function ShareBar({
       if (customerName) msg += `👤 To: ${customerName}\n`
       msg += `💰 Total: SAR ${fmt(grandTotal)}\n`
       if (balance !== undefined && balance > 0) msg += `⚠️ Balance Due: SAR ${fmt(balance)}\n`
-      msg += `\nGenerated from ERP Pro`
+      msg += `\nGenerated from Comrade ERP Pro`
     } else {
       msg = `${subject ? subject + '\n' : ''}${buildText()}`
     }

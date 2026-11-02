@@ -1,4 +1,4 @@
-# Advanced ERP Pro — SQLite edition
+# Comrade ERP Pro — SQLite edition
 
 A full ERP web app (React + TypeScript) backed by a **local SQLite database**.
 No cloud account, no Supabase project, no service keys — data lives in a file

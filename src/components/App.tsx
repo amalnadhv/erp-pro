@@ -8343,7 +8343,7 @@ const App = () => {
     if (entry.narration) w.document.write(`<p style="background:#f8fafc;padding:10px 14px;border-radius:8px;font-size:13px;border-left:3px solid #8b5cf6"><b>Narration:</b> ${entry.narration}</p>`)
     w.document.write(`<table><thead><tr><th>#</th><th>Account</th><th>Description</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th></tr></thead><tbody>${linesHtml}</tbody></table>`)
     w.document.write(`<div class="totals"><b>Total Debit: ${(entry.total_debit || 0).toLocaleString('en', { minimumFractionDigits: 2 })}</b><b>Total Credit: ${(entry.total_credit || 0).toLocaleString('en', { minimumFractionDigits: 2 })}</b></div>`)
-    w.document.write(`<div class="footer">Advanced ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
+    w.document.write(`<div class="footer">Comrade ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
     w.document.write('</body></html>')
     w.document.close()
     w.print()
@@ -8503,7 +8503,7 @@ const App = () => {
     w.document.write(`<div class="meta"><div><b>Date:</b> ${p.payment_date ? new Date(p.payment_date).toLocaleDateString('en', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</div><div><b>Customer:</b> ${p.customer_name || '—'}</div><div><b>Method:</b> ${p.payment_method}</div><div><b>Reference:</b> ${p.reference || '—'}</div></div>`)
     w.document.write(`<div class="detail"><b>Amount: ${Number(p.amount).toLocaleString('en', { minimumFractionDigits: 2 })} ${p.currency}</b></div>`)
     if (p.notes) w.document.write(`<p style="background:#f0fdf4;padding:10px 14px;border-radius:8px;font-size:13px;border-left:3px solid #22c55e"><b>Notes:</b> ${p.notes}</p>`)
-    w.document.write(`<div class="footer">Advanced ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
+    w.document.write(`<div class="footer">Comrade ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
     w.document.write('</body></html>')
     w.document.close()
     w.print()
@@ -8581,7 +8581,7 @@ const App = () => {
     w.document.write(`<div class="meta"><div><b>Date:</b> ${p.payment_date ? new Date(p.payment_date).toLocaleDateString('en', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</div><div><b>Supplier:</b> ${p.supplier_name || '—'}</div><div><b>Method:</b> ${p.payment_method}</div><div><b>Reference:</b> ${p.reference || '—'}</div></div>`)
     w.document.write(`<div class="detail"><b>Amount: ${Number(p.amount).toLocaleString('en', { minimumFractionDigits: 2 })} ${p.currency}</b></div>`)
     if (p.notes) w.document.write(`<p style="background:#fef2f2;padding:10px 14px;border-radius:8px;font-size:13px;border-left:3px solid #ef4444"><b>Notes:</b> ${p.notes}</p>`)
-    w.document.write(`<div class="footer">Advanced ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
+    w.document.write(`<div class="footer">Comrade ERP Pro — ${region} | Printed: ${new Date().toLocaleString()}</div>`)
     w.document.write('</body></html>')
     w.document.close()
     w.print()
@@ -8718,7 +8718,7 @@ const App = () => {
           <button className="mobile-menu-btn" onClick={() => setSidebarOpen((v) => !v)} style={{ display: 'none', background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', padding: '2px 6px' }} title="Toggle menu">☰</button>
           <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }}>ERP</div>
           <div className="brand-text">
-            <h1>Advanced ERP Pro</h1>
+            <h1>Comrade ERP Pro</h1>
             {authTenant && <span style={{ fontSize: 11, color: '#6b7280' }}>{authTenant.name} — {authTenant.plan_name}</span>}
             <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} title="Select Region">
               <option>GCC — MENA</option>
@@ -9220,7 +9220,7 @@ const App = () => {
       </div>
 
       <footer className="erp-footer">
-        <span><span className="footer-brand">Advanced ERP Pro</span> <span className="footer-sep">|</span> v1.0</span>
+        <span><span className="footer-brand">Comrade ERP Pro</span> <span className="footer-sep">|</span> v1.0</span>
         <span><span className="footer-region" onClick={() => setRegion(region === 'Global' ? 'GCC — MENA' : 'Global')} title="Click to toggle region">{region}</span></span>
         <span>© 2026 <b>{region}</b> — All Rights Reserved</span>
         {authTenant && <span>Credit: <b style={{ color: Number(authTenant.credit_balance) > 20 ? '#22c55e' : '#ef4444' }}>AED {Number(authTenant.credit_balance || 0).toFixed(2)}</b></span>}

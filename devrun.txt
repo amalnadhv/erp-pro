@@ -1,5 +1,5 @@
 
-> advanced-erp-supabase@1.0.0 dev
+> comrade-erp-pro@1.0.0 dev
 > vite
 
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- Advanced ERP Pro - Consolidated Database Schema
+-- Comrade ERP Pro - Consolidated Database Schema
 -- Apply in the Supabase SQL Editor (or supabase db push).
 -- Idempotent: safe to re-run. Order follows FK dependencies.
 -- ============================================================

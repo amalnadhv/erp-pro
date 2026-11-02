@@ -50,7 +50,7 @@ const Login = ({ onLogin }: { onLogin: (user: any, tenant: any) => void }) => {
       <div style={{ width: 420, background: '#fff', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,.12)', overflow: 'hidden' }}>
         <div style={{ background: bg, padding: '32px 32px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', fontFamily: "'Bahnschrift',sans-serif" }}>
-            Advanced ERP Pro<span style={{ fontSize: 12, verticalAlign: 'super' }}>&reg;</span>
+            Comrade ERP Pro<span style={{ fontSize: 12, verticalAlign: 'super' }}>&reg;</span>
           </div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.85)', marginTop: 4 }}>
             {mode === 'login' ? 'Sign in to your account' : 'Start your free trial — $100 credit included'}

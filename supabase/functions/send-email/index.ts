@@ -25,7 +25,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const fromEmail = from || "Advanced ERP Pro <noreply@resend.dev>";
+    const fromEmail = from || "Comrade ERP Pro <noreply@resend.dev>";
     const payload: any = {
       from: fromEmail,
       to: Array.isArray(to) ? to : [to],
