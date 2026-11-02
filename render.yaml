@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: erp-pro
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render's free plan has no persistent disk. Data is re-seeded on each
+      # restart. Add a paid disk + ERP_DATA_DIR=/var/data for persistence.
+      # - key: ERP_DATA_DIR
+      #   value: /var/data

@@ -1,21 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lmyfmpfiaubtxtvuvfhg.supabase.co'
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-
-export const isSupabaseConfigured = Boolean(SUPABASE_ANON_KEY)
-
-export const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY || 'missing-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    },
-  }
-)
-
-export default supabase
+// Local SQLite mode.
+//
+// The app used to talk to Supabase. It now talks to the built-in Node API
+// (server/api.mjs) which stores everything in data/erp.db.
+//
+// This module is the single seam: every component imports `supabase` from here,
+// and `localClient` implements the subset of the Supabase API the app uses.
+export { supabase, isSupabaseConfigured, default } from './localClient'

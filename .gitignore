@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Local SQLite data (database + uploaded files)
+data/
+
 # Build outputs
 dist/
 *.tsbuildinfo
