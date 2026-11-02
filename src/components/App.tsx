@@ -7721,9 +7721,31 @@ const App = () => {
   const [sortDir, setSortDir] = useState('asc')
   const searchWrapRef = useRef(null)
   const searchRef = useRef(null)
+  const hadStoredRegion = useRef(typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('erp-region')))
   const [now, setNow] = useState(new Date())
 
   useEffect(() => { localStorage.setItem('erp-dark', dark ? '1' : '0') }, [dark])
+
+  const saveCountrySetting = async (value: string) => {
+    try { await supabase.from('app_settings').upsert({ key: 'country', value }) } catch (_) {}
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    const loadCountrySetting = async () => {
+      try {
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'country').maybeSingle()
+        if (!cancelled && data?.value && COUNTRY_CURRENCIES[data.value]) { setRegion(data.value); return }
+        if (!cancelled && !hadStoredRegion.current) {
+          const { data: profile } = await supabase.from('company_profile').select('country').maybeSingle()
+          if (profile?.country && COUNTRY_CURRENCIES[profile.country]) setRegion(profile.country)
+        }
+      } catch (_) {}
+    }
+    loadCountrySetting()
+    return () => { cancelled = true }
+  }, [])
+
   useEffect(() => {
     localStorage.setItem('erp-region', region)
     const cfg = setActiveCountry(region)
@@ -7732,6 +7754,7 @@ const App = () => {
 
   const handleRegionChange = async (value: string) => {
     setRegion(value)
+    saveCountrySetting(value)
     const cfg = setActiveCountry(value)
     let fetched: TaxConfig | null = null
     try { fetched = await fetchTaxConfig(value) } catch (_) {}
@@ -8611,7 +8634,6 @@ const App = () => {
         setCompanyProfile({ id: data[0].id, data: data[0], saving: false, error: '' })
         const tc = await fetchTaxConfig(data[0].country)
         setTaxConfig(tc)
-        if (COUNTRY_CURRENCIES[data[0].country]) setRegion(data[0].country)
       }
     } catch (err) { console.error('Profile load error:', err) }
   }
@@ -8628,7 +8650,10 @@ const App = () => {
       // Reload tax config after profile save
       const tc = await fetchTaxConfig(form.data.country)
       setTaxConfig(tc)
-      if (COUNTRY_CURRENCIES[form.data.country]) setRegion(form.data.country)
+      if (COUNTRY_CURRENCIES[form.data.country]) {
+        setRegion(form.data.country)
+        saveCountrySetting(form.data.country)
+      }
     } catch (err) { setFormFn({ ...form, saving: false, error: err.message }) }
   }
 

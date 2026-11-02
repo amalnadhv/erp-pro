@@ -454,6 +454,13 @@ CREATE TRIGGER company_profile_updated
   BEFORE UPDATE ON company_profile
   FOR EACH ROW EXECUTE FUNCTION update_company_profile_timestamp();
 
+-- APP SETTINGS (key/value preferences, e.g. selected country)
+CREATE TABLE IF NOT EXISTS app_settings (
+  key             TEXT PRIMARY KEY,
+  value           TEXT DEFAULT '',
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- USERS
 CREATE TABLE IF NOT EXISTS erp_users (
   id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -202,6 +202,12 @@ CREATE TABLE IF NOT EXISTS company_profile (
   auditor_address TEXT
 );
 
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT DEFAULT '',
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS erp_users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL UNIQUE,
