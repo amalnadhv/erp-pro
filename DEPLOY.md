@@ -94,57 +94,43 @@ On Fly.io: `fly launch`, then `fly volumes create erp_data --size 1`, mount it a
 
 ## Option D — Oracle Cloud Always Free VM (free + persistent, recommended)
 
-This keeps the exact SQLite setup with a real disk.
+This keeps the exact SQLite setup on a real disk, so data survives restarts.
+Budget ~30–45 minutes for the first setup. Most friction is Oracle's two
+firewall layers, not the app.
 
-1. Create an **Always Free** Ubuntu VM (Ampere or AMD).
-2. Open port 80/443 in the VCN security list.
-3. Install Node 24 and Caddy:
+1. **Create the VM**: Compute → Instances → Create instance. Ubuntu 24.04,
+   shape `VM.Standard.A1.Flex` (Ampere, Always Free) or `VM.Standard.E2.1.Micro`
+   (AMD). Add your SSH public key.
+2. **Open the cloud firewall**: VCN → Security Lists → Default Security List →
+   add ingress rules for TCP `80` and `443` from `0.0.0.0/0`.
+3. **Run the installer** (it also opens the OS firewall and configures HTTPS):
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs git caddy
-git clone https://github.com/<you>/erp-pro.git
+ssh ubuntu@<public-ip>
+git clone https://github.com/amalnadhv/erp-pro.git
 cd erp-pro
-npm ci
-npm run build
+sudo env DOMAIN=erp.example.com bash deploy/oracle/install.sh
 ```
 
-4. Run it as a service:
+No domain? Use a free hostname that resolves to your IP:
 
 ```bash
-sudo tee /etc/systemd/system/erp.service >/dev/null <<'EOF'
-[Unit]
-Description=Comrade ERP Pro
-After=network.target
-
-[Service]
-WorkingDirectory=/home/ubuntu/erp-pro
-ExecStart=/usr/bin/node server/start.mjs
-Environment=PORT=4173
-Environment=ERP_DATA_DIR=/home/ubuntu/erp-pro/data
-Restart=always
-User=ubuntu
-
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo systemctl enable --now erp
+sudo env DOMAIN=203-0-113-10.nip.io bash deploy/oracle/install.sh
 ```
 
-5. Put Caddy in front for HTTPS:
-
-```
-# /etc/caddy/Caddyfile
-your-domain.com {
-    reverse_proxy 127.0.0.1:4173
-}
-```
+Or omit `DOMAIN` for HTTP-only on port 80:
 
 ```bash
-sudo systemctl reload caddy
+sudo bash deploy/oracle/install.sh
 ```
 
-No domain yet? Use the VM's public IP on port 4173, or a free `nip.io` hostname.
+The script installs Node 24, builds the UI, creates the `erp` systemd service,
+installs Caddy and proxies it to `127.0.0.1:4173`. It is safe to re-run after a
+`git pull`. Details, verification commands and gotchas:
+[`deploy/oracle/README.md`](deploy/oracle/README.md).
+
+To move existing data: `scp -r data ubuntu@<ip>:/home/ubuntu/erp-pro/`, then
+`sudo systemctl restart erp`.
 
 ---
 

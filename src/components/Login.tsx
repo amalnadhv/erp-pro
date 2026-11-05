@@ -15,9 +15,13 @@ const Login = ({ onLogin }: { onLogin: (user: any, tenant: any) => void }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-      const { data: tu } = await supabase.from('tenant_users').select('*, tenant:tenants(*)').eq('user_id', data.user.id).eq('status', 'Active').single()
-      if (tu && tu.tenant) onLogin(data.user, tu.tenant)
-      else setMsg('No active company found for this user.')
+      if (data?.user && data?.tenant) {
+        onLogin(data.user, data.tenant)
+      } else {
+        const { data: tu } = await supabase.from('tenant_users').select('*, tenant:tenants(*)').eq('user_id', data.user.id).eq('status', 'Active').single()
+        if (tu && tu.tenant) onLogin(data.user, tu.tenant)
+        else setMsg('No active company found for this user.')
+      }
     } catch (e: any) { setMsg(e?.message || 'Login failed') }
     setBusy(false)
   }
@@ -25,18 +29,10 @@ const Login = ({ onLogin }: { onLogin: (user: any, tenant: any) => void }) => {
   const handleSignup = async () => {
     setMsg(''); setBusy(true)
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({ email, password, fullName, company })
       if (error) throw error
-      if (!data.user) { setMsg('Check your email for confirmation link.'); setBusy(false); return }
-      const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-      const { data: tenant, error: tErr } = await supabase.from('tenants').insert({ name: company, slug, plan_name: 'Starter', credit_balance: 100, credit_used: 0, credit_initial: 100, expires_at: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) }).select()
-      if (tErr) throw tErr
-      if (tenant && tenant.length) {
-        await supabase.from('tenant_users').insert({ tenant_id: tenant[0].id, user_id: data.user.id, role: 'Owner', status: 'Active' })
-        await supabase.from('erp_users').insert({ username: email.split('@')[0], full_name: fullName || email, email, role: 'Admin', status: 'Active' })
-        await supabase.from('tenant_credits').insert({ tenant_id: tenant[0].id, amount: 100, balance_after: 100, tx_type: 'Credit', description: 'Welcome bonus — $100 free credit' })
-        onLogin(data.user, tenant[0])
-      }
+      if (!data?.user || !data?.tenant) { setMsg('Signup failed. Please try again.'); setBusy(false); return }
+      onLogin(data.user, data.tenant)
     } catch (e: any) { setMsg(e?.message || 'Signup failed') }
     setBusy(false)
   }

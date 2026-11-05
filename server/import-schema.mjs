@@ -152,6 +152,67 @@ while ((m = alterRe.exec(source))) {
   if (col) addColumn(table, col)
 }
 
+// ---------------------------------------------------------------------------
+// Multi-tenant hardening
+//
+// Every table except the three truly global catalogues below belongs to a
+// tenant. Child tables (orders, inventory, stock movements, ...) need their own
+// tenant_id so the API can scope them without a join.
+// ---------------------------------------------------------------------------
+const GLOBAL_TABLES = new Set(['tenants', 'billing_plans', 'tax_config'])
+
+// These business keys must stay globally unique even after tenant_id is added
+// (login looks users up by email across all tenants).
+const GLOBAL_UNIQUE_COLUMNS = {
+  erp_users: new Set(['email']),
+}
+
+for (const [table, columns] of tables) {
+  if (GLOBAL_TABLES.has(table)) continue
+  if (!columns.has('tenant_id')) columns.set('tenant_id', 'tenant_id TEXT')
+}
+
+// Replace global column UNIQUE constraints with composite (tenant_id, column)
+// indexes. Without this two tenants could not both have customer code CUST-0001.
+const tenantIndexes = []
+
+// app_settings is a key/value table whose business key must be unique per
+// tenant. Its single-column primary key would otherwise stop a second tenant
+// from saving the same setting.
+if (tables.has('app_settings')) {
+  const cols = tables.get('app_settings')
+  const keySql = cols.get('key')
+  if (keySql && /\bPRIMARY KEY\b/i.test(keySql)) {
+    let cleaned = keySql.replace(/\bPRIMARY KEY\b/gi, '').replace(/\s+/g, ' ').trim()
+    if (!/\bNOT NULL\b/i.test(cleaned)) cleaned += ' NOT NULL'
+    cols.set('key', cleaned)
+    tenantIndexes.push(
+      'CREATE UNIQUE INDEX IF NOT EXISTS app_settings_key_tenant_uidx ON app_settings(tenant_id, key);'
+    )
+  }
+}
+
+for (const [table, columns] of tables) {
+  if (GLOBAL_TABLES.has(table)) continue
+  const keepGlobal = GLOBAL_UNIQUE_COLUMNS[table] || new Set()
+  for (const [column, sql] of columns) {
+    if (!/\bUNIQUE\b/i.test(sql)) continue
+    if (keepGlobal.has(column)) continue
+    columns.set(column, sql.replace(/\bUNIQUE\b/gi, '').replace(/\s+/g, ' ').trim())
+    tenantIndexes.push(
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${table}_${column}_tenant_uidx ON ${table}(tenant_id, ${column});`
+    )
+  }
+}
+
+// Login must remain global even though erp_users is tenant-scoped.
+tenantIndexes.push(
+  "CREATE UNIQUE INDEX IF NOT EXISTS erp_users_email_global_uidx ON erp_users(LOWER(email)) WHERE email IS NOT NULL AND email <> '';"
+)
+tenantIndexes.push(
+  'CREATE UNIQUE INDEX IF NOT EXISTS tenant_users_tenant_user_uidx ON tenant_users(tenant_id, user_id);'
+)
+
 const out = []
 out.push('-- Generated from the supabase/*.sql files by server/import-schema.mjs.')
 out.push('-- Do not hand-edit: rerun the converter instead.')
@@ -163,6 +224,9 @@ for (const [table, columns] of tables) {
   out.push(');')
   out.push('')
 }
+out.push('-- Tenant-aware uniqueness ------------------------------------------------')
+out.push(...tenantIndexes)
+out.push('')
 
 const result = out.join('\n')
 const outPath = path.join(here, 'schema.sqlite.sql')

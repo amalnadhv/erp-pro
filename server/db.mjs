@@ -34,8 +34,10 @@ export function getDb() {
   db = new DatabaseSync(dbPath)
   db.exec('PRAGMA journal_mode = WAL;')
   db.exec('PRAGMA foreign_keys = OFF;')
-  db.exec(fs.readFileSync(path.join(here, 'schema.sqlite.sql'), 'utf8'))
+  ensureSchema(db)
+  ensureAuthTables(db)
   seed(db)
+  upgradePasswords(db)
   return db
 }
 
@@ -58,10 +60,13 @@ export function quoteIdent(name) {
 
 function insertRow(database, table, row) {
   const cols = columnsOf(database, table)
-  const keys = Object.keys(row).filter((k) => cols.has(k) && row[k] !== undefined)
+  const data = cols.has('tenant_id') && row.tenant_id === undefined
+    ? { ...row, tenant_id: DEMO_TENANT_ID }
+    : row
+  const keys = Object.keys(data).filter((k) => cols.has(k) && data[k] !== undefined)
   if (!keys.length) return
   const sql = `INSERT INTO ${quoteIdent(table)} (${keys.map(quoteIdent).join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`
-  database.prepare(sql).run(...keys.map((k) => encodeValue(row[k])))
+  database.prepare(sql).run(...keys.map((k) => encodeValue(data[k])))
 }
 
 function encodeValue(value) {
@@ -85,6 +90,217 @@ export function verifyPassword(password, stored) {
   const actual = scryptSync(password, salt, 64)
   const expectedBuf = Buffer.from(expected, 'hex')
   return actual.length === expectedBuf.length && timingSafeEqual(actual, expectedBuf)
+}
+
+// ---------------------------------------------------------------------------
+// Schema bootstrap / migration
+//
+// Version 2 adds tenant_id to every business table and replaces global UNIQUE
+// constraints with (tenant_id, key) indexes. Old databases are rebuilt in
+// place: rows are copied into the new tables and missing tenant_ids are
+// attributed to the demo tenant.
+// ---------------------------------------------------------------------------
+export const SCHEMA_VERSION = 2
+
+function upgradePasswords(database) {
+  const rows = database
+    .prepare("SELECT id, password_hash FROM erp_users WHERE password_hash IS NOT NULL AND password_hash <> '' AND password_hash NOT LIKE 'scrypt$%'")
+    .all()
+  for (const row of rows) {
+    database.prepare('UPDATE erp_users SET password_hash = ? WHERE id = ?').run(hashPassword(row.password_hash), row.id)
+  }
+  if (rows.length) console.log(`[db] hashed ${rows.length} legacy plain-text password(s)`)
+}
+
+function userTables(database) {
+  return database
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+    .all()
+    .map((r) => r.name)
+}
+
+function migrateToV2(database, schemaSql, existingTables) {
+  const prefix = '__legacy_'
+  database.exec('PRAGMA legacy_alter_table = ON;')
+  for (const table of existingTables) {
+    database.exec(`ALTER TABLE ${quoteIdent(table)} RENAME TO ${quoteIdent(prefix + table)}`)
+  }
+
+  // Free the custom index names tied to the renamed tables so the new schema
+  // can recreate them. Auto-indexes disappear with the legacy tables.
+  const indexes = database
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'")
+    .all()
+  for (const { name } of indexes) database.exec(`DROP INDEX IF EXISTS ${quoteIdent(name)}`)
+
+  const indexStatements = schemaSql.match(/CREATE UNIQUE INDEX[\s\S]*?;/gi) || []
+  database.exec(schemaSql.replace(/CREATE UNIQUE INDEX[\s\S]*?;/gi, ''))
+  database.exec('PRAGMA legacy_alter_table = OFF;')
+
+  for (const table of existingTables) {
+    const legacy = prefix + table
+    if (!tableExists(database, table) || !tableExists(database, legacy)) continue
+    const newColumns = new Set(
+      database.prepare(`PRAGMA table_info(${quoteIdent(table)})`).all().map((r) => r.name)
+    )
+    const oldColumns = database
+      .prepare(`PRAGMA table_info(${quoteIdent(legacy)})`)
+      .all()
+      .map((r) => r.name)
+
+    const targets = []
+    const sources = []
+    for (const column of oldColumns) {
+      if (!newColumns.has(column)) continue
+      // Single-tenant v1 rows often have a NULL tenant_id; attribute them to
+      // the demo tenant instead of hiding them after the upgrade.
+      if (column === 'tenant_id') {
+        targets.push(quoteIdent(column))
+        sources.push(`COALESCE(${quoteIdent(column)}, '${DEMO_TENANT_ID}')`)
+        continue
+      }
+      targets.push(quoteIdent(column))
+      sources.push(quoteIdent(column))
+    }
+    if (newColumns.has('tenant_id') && !oldColumns.includes('tenant_id')) {
+      targets.push(quoteIdent('tenant_id'))
+      sources.push(`'${DEMO_TENANT_ID}'`)
+    }
+    if (!targets.length) continue
+    database.exec(
+      `INSERT INTO ${quoteIdent(table)} (${targets.join(', ')}) SELECT ${sources.join(', ')} FROM ${quoteIdent(legacy)}`
+    )
+  }
+
+  for (const statement of indexStatements) {
+    try {
+      database.exec(statement)
+    } catch (e) {
+      console.warn(`[db] could not create index (duplicate legacy values): ${e.message}`)
+    }
+  }
+
+  for (const table of existingTables) {
+    database.exec(`DROP TABLE IF EXISTS ${quoteIdent(prefix + table)}`)
+  }
+  columnCache.clear()
+}
+
+function ensureSchema(database) {
+  const schemaPath = path.join(here, 'schema.sqlite.sql')
+  const schemaSql = fs.readFileSync(schemaPath, 'utf8')
+  const existingTables = userTables(database)
+  if (!existingTables.length) {
+    database.exec(schemaSql)
+    database.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+    return
+  }
+
+  const version = Number(database.prepare('PRAGMA user_version').get().user_version || 0)
+  if (version >= SCHEMA_VERSION) {
+    database.exec(schemaSql)
+    return
+  }
+
+  console.log(`[db] migrating schema v${version} -> v${SCHEMA_VERSION}`)
+  migrateToV2(database, schemaSql, existingTables)
+  database.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+}
+
+function ensureAuthTables(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      token_hash TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      tenant_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      last_seen_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS auth_sessions_user_idx ON auth_sessions(user_id);
+    CREATE INDEX IF NOT EXISTS auth_sessions_expiry_idx ON auth_sessions(expires_at);
+  `)
+}
+
+// ---------------------------------------------------------------------------
+// Default data for a brand-new tenant
+// ---------------------------------------------------------------------------
+const DEFAULT_ACCOUNTS = [
+  ['1000', 'Cash in Hand', 'Asset', 0],
+  ['1010', 'Bank', 'Asset', 0],
+  ['1020', 'Petty Cash', 'Asset', 0],
+  ['1200', 'Accounts Receivable', 'Asset', 0],
+  ['1300', 'Inventory', 'Asset', 0],
+  ['1400', 'VAT Recoverable', 'Asset', 0],
+  ['1500', 'Fixed Assets', 'Asset', 0],
+  ['2000', 'Accounts Payable', 'Liability', 0],
+  ['2100', 'VAT Payable', 'Liability', 0],
+  ['2200', 'Accrued Liabilities', 'Liability', 0],
+  ['3000', 'Owner Capital', 'Equity', 0],
+  ['3100', 'Retained Earnings', 'Equity', 0],
+  ['4000', 'Sales Revenue', 'Income', 0],
+  ['4100', 'Other Income', 'Income', 0],
+  ['5000', 'Cost of Goods Sold', 'Expense', 0],
+  ['5100', 'Salaries & Wages', 'Expense', 0],
+  ['5200', 'Rent Expense', 'Expense', 0],
+  ['5300', 'Utilities Expense', 'Expense', 0],
+  ['5400', 'General & Administrative', 'Expense', 0],
+]
+
+const DEFAULT_DOC_NUMBERING = [
+  ['A/R Invoice', 'INV', 1],
+  ['Purchase Order', 'PO', 1],
+  ['Journal Entry', 'JE', 1],
+  ['Incoming Payment', 'RCV', 1],
+  ['Outgoing Payment', 'PAY', 1],
+  ['Sales Quotation', 'QUO', 1],
+]
+
+const DEFAULT_MODULES = [
+  'Dashboard', 'Company Profile', 'Users & Roles', 'Authorization', 'Document Numbering',
+  'Chart of Accounts', 'Journal Entry', 'Incoming Payments', 'Outgoing Payments',
+  'A/R Invoice', 'Purchase Order', 'Stock Master', 'Customer', 'Supplier',
+  'Trial Balance', 'Profit & Loss', 'Balance Sheet', 'License', 'Audit Log',
+]
+
+export function seedTenantDefaults(database, tenantId, companyName, options = {}) {
+  insertRow(database, 'company_profile', {
+    id: randomUUID(),
+    tenant_id: tenantId,
+    company_name: companyName || 'My Company',
+    country: options.country || 'UAE',
+    base_currency: options.currency || 'AED',
+    vat_rate: options.vatRate ?? 5,
+    fiscal_year_start: '01',
+    email: options.email || '',
+  })
+
+  for (const [code, name, type, balance] of DEFAULT_ACCOUNTS) {
+    insertRow(database, 'accounts', {
+      id: randomUUID(), tenant_id: tenantId, code, name, type,
+      opening_balance: balance, current_balance: balance,
+      currency: options.currency || 'AED', is_group: 0, status: 'Active',
+    })
+  }
+
+  for (const [docType, prefix, next] of DEFAULT_DOC_NUMBERING) {
+    insertRow(database, 'doc_numbering', {
+      id: randomUUID(), tenant_id: tenantId, doc_type: docType, prefix,
+      format: 'PREFIX-00001', next_number: next, pad_length: 5, separator: '-', is_active: 1,
+    })
+  }
+
+  for (const module of DEFAULT_MODULES) {
+    insertRow(database, 'role_permissions', {
+      id: randomUUID(), tenant_id: tenantId, role: 'Admin', module,
+      can_view: 1, can_create: 1, can_edit: 1, can_delete: 1, can_approve: 1, can_print: 1,
+    })
+  }
+
+  insertRow(database, 'tenant_credits', {
+    id: randomUUID(), tenant_id: tenantId, amount: 100, balance_after: 100,
+    tx_type: 'Credit', description: 'Welcome bonus - $100 free credit',
+  })
 }
 
 function dayOffset(days) {

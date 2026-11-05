@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  code TEXT UNIQUE,
+  code TEXT,
   sku TEXT,
   barcode TEXT,
   unit TEXT DEFAULT 'Pcs',
@@ -35,14 +35,14 @@ CREATE TABLE IF NOT EXISTS customers (
   id TEXT PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
+  email TEXT NOT NULL,
   phone TEXT,
   address TEXT,
   city TEXT,
   country TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  code TEXT UNIQUE,
+  code TEXT,
   name TEXT,
   cust_type TEXT DEFAULT 'Company',
   category TEXT,
@@ -77,7 +77,8 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT DEFAULT 'pending',
   shipping_address TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS inventory (
@@ -85,12 +86,13 @@ CREATE TABLE IF NOT EXISTS inventory (
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL,
   reorder_level INTEGER DEFAULT 10,
-  last_updated TEXT DEFAULT CURRENT_TIMESTAMP
+  last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS invoices (
   id TEXT PRIMARY KEY,
-  invoice_no TEXT UNIQUE,
+  invoice_no TEXT,
   customer_name TEXT NOT NULL,
   customer_email TEXT,
   customer_phone TEXT,
@@ -115,7 +117,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 CREATE TABLE IF NOT EXISTS suppliers (
   id TEXT PRIMARY KEY,
-  code TEXT UNIQUE,
+  code TEXT,
   name TEXT,
   cust_type TEXT DEFAULT 'Company',
   category TEXT,
@@ -155,7 +157,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
 
 CREATE TABLE IF NOT EXISTS accounts (
   id TEXT PRIMARY KEY,
-  code TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL,
   name TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('Asset','Liability','Equity','Income','Expense')),
   parent_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
@@ -199,18 +201,20 @@ CREATE TABLE IF NOT EXISTS company_profile (
   auditor_firm TEXT,
   auditor_name TEXT,
   auditor_license TEXT,
-  auditor_address TEXT
+  auditor_address TEXT,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS app_settings (
-  key TEXT PRIMARY KEY,
+  key TEXT NOT NULL,
   value TEXT DEFAULT '',
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS erp_users (
   id TEXT PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
   full_name TEXT NOT NULL DEFAULT '',
   email TEXT DEFAULT '',
   password_hash TEXT DEFAULT '',
@@ -219,12 +223,13 @@ CREATE TABLE IF NOT EXISTS erp_users (
   phone TEXT DEFAULT '',
   last_login TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS doc_numbering (
   id TEXT PRIMARY KEY,
-  doc_type TEXT NOT NULL UNIQUE,
+  doc_type TEXT NOT NULL,
   prefix TEXT NOT NULL DEFAULT '',
   format TEXT NOT NULL DEFAULT 'PREFIX-00001',
   next_number INTEGER NOT NULL DEFAULT 1,
@@ -247,12 +252,13 @@ CREATE TABLE IF NOT EXISTS role_permissions (
   can_delete INTEGER DEFAULT 0,
   can_approve INTEGER DEFAULT 0,
   can_print INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id TEXT PRIMARY KEY,
-  entry_no TEXT NOT NULL UNIQUE,
+  entry_no TEXT NOT NULL,
   entry_date TEXT NOT NULL DEFAULT CURRENT_DATE,
   reference TEXT DEFAULT '',
   narration TEXT DEFAULT '',
@@ -295,7 +301,7 @@ CREATE TABLE IF NOT EXISTS exchange_rates (
 
 CREATE TABLE IF NOT EXISTS incoming_payments (
   id TEXT PRIMARY KEY,
-  payment_no TEXT NOT NULL UNIQUE,
+  payment_no TEXT NOT NULL,
   payment_date TEXT NOT NULL DEFAULT CURRENT_DATE,
   customer_id TEXT REFERENCES customers(id),
   payment_method TEXT DEFAULT 'Bank Transfer' CHECK (payment_method IN ('Cash','Bank Transfer','Cheque','Credit Card','Other')),
@@ -319,7 +325,7 @@ CREATE TABLE IF NOT EXISTS incoming_payments (
 
 CREATE TABLE IF NOT EXISTS outgoing_payments (
   id TEXT PRIMARY KEY,
-  payment_no TEXT NOT NULL UNIQUE,
+  payment_no TEXT NOT NULL,
   payment_date TEXT NOT NULL DEFAULT CURRENT_DATE,
   supplier_id TEXT REFERENCES suppliers(id),
   payment_method TEXT DEFAULT 'Bank Transfer' CHECK (payment_method IN ('Cash','Bank Transfer','Cheque','Credit Card','Other')),
@@ -356,7 +362,8 @@ CREATE TABLE IF NOT EXISTS recurring_journal (
   run_count INTEGER DEFAULT 0,
   created_by TEXT DEFAULT 'Admin',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS recurring_journal_lines (
@@ -366,7 +373,8 @@ CREATE TABLE IF NOT EXISTS recurring_journal_lines (
   account_id TEXT NOT NULL REFERENCES accounts(id),
   debit REAL DEFAULT 0,
   credit REAL DEFAULT 0,
-  description TEXT DEFAULT ''
+  description TEXT DEFAULT '',
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS payment_batches (
@@ -432,7 +440,7 @@ CREATE TABLE IF NOT EXISTS bank_recon_lines (
 
 CREATE TABLE IF NOT EXISTS sales_quotations (
   id TEXT PRIMARY KEY,
-  quote_no TEXT UNIQUE,
+  quote_no TEXT,
   customer_id TEXT REFERENCES customers(id) ON DELETE SET NULL,
   customer_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -453,7 +461,7 @@ CREATE TABLE IF NOT EXISTS sales_quotations (
 
 CREATE TABLE IF NOT EXISTS sales_orders (
   id TEXT PRIMARY KEY,
-  order_no TEXT UNIQUE,
+  order_no TEXT,
   quote_id TEXT REFERENCES sales_quotations(id) ON DELETE SET NULL,
   customer_id TEXT REFERENCES customers(id) ON DELETE SET NULL,
   customer_name TEXT,
@@ -479,12 +487,13 @@ CREATE TABLE IF NOT EXISTS module_records (
   status TEXT DEFAULT 'Active',
   data TEXT DEFAULT '{}',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS delivery_notes (
   id TEXT PRIMARY KEY,
-  delivery_no TEXT UNIQUE,
+  delivery_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -504,7 +513,7 @@ CREATE TABLE IF NOT EXISTS delivery_notes (
 
 CREATE TABLE IF NOT EXISTS ar_credit_memos (
   id TEXT PRIMARY KEY,
-  memo_no TEXT UNIQUE,
+  memo_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -524,7 +533,7 @@ CREATE TABLE IF NOT EXISTS ar_credit_memos (
 
 CREATE TABLE IF NOT EXISTS sales_returns (
   id TEXT PRIMARY KEY,
-  return_no TEXT UNIQUE,
+  return_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -544,7 +553,7 @@ CREATE TABLE IF NOT EXISTS sales_returns (
 
 CREATE TABLE IF NOT EXISTS purchase_requisitions (
   id TEXT PRIMARY KEY,
-  req_no TEXT UNIQUE,
+  req_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -564,7 +573,7 @@ CREATE TABLE IF NOT EXISTS purchase_requisitions (
 
 CREATE TABLE IF NOT EXISTS purchase_orders (
   id TEXT PRIMARY KEY,
-  po_no TEXT UNIQUE,
+  po_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -584,7 +593,7 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
 
 CREATE TABLE IF NOT EXISTS goods_receipts (
   id TEXT PRIMARY KEY,
-  grn_no TEXT UNIQUE,
+  grn_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -604,7 +613,7 @@ CREATE TABLE IF NOT EXISTS goods_receipts (
 
 CREATE TABLE IF NOT EXISTS purchase_invoices (
   id TEXT PRIMARY KEY,
-  pin_no TEXT UNIQUE,
+  pin_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -627,7 +636,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoices (
 
 CREATE TABLE IF NOT EXISTS ap_credit_memos (
   id TEXT PRIMARY KEY,
-  memo_no TEXT UNIQUE,
+  memo_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -647,7 +656,7 @@ CREATE TABLE IF NOT EXISTS ap_credit_memos (
 
 CREATE TABLE IF NOT EXISTS purchase_returns (
   id TEXT PRIMARY KEY,
-  return_no TEXT UNIQUE,
+  return_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -667,7 +676,7 @@ CREATE TABLE IF NOT EXISTS purchase_returns (
 
 CREATE TABLE IF NOT EXISTS landed_costs (
   id TEXT PRIMARY KEY,
-  lc_no TEXT UNIQUE,
+  lc_no TEXT,
   party_id TEXT,
   party_name TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -925,7 +934,7 @@ CREATE TABLE IF NOT EXISTS budgets (
 CREATE TABLE IF NOT EXISTS debit_notes (
   id TEXT PRIMARY KEY,
   tenant_id TEXT REFERENCES tenants(id),
-  note_no TEXT UNIQUE,
+  note_no TEXT,
   party_name TEXT,
   party_type TEXT DEFAULT 'Customer',
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -940,7 +949,7 @@ CREATE TABLE IF NOT EXISTS debit_notes (
 CREATE TABLE IF NOT EXISTS credit_notes (
   id TEXT PRIMARY KEY,
   tenant_id TEXT REFERENCES tenants(id),
-  note_no TEXT UNIQUE,
+  note_no TEXT,
   party_name TEXT,
   party_type TEXT DEFAULT 'Customer',
   doc_date TEXT DEFAULT CURRENT_DATE,
@@ -969,7 +978,7 @@ CREATE TABLE IF NOT EXISTS batch_serials (
 CREATE TABLE IF NOT EXISTS pick_pack (
   id TEXT PRIMARY KEY,
   tenant_id TEXT REFERENCES tenants(id),
-  pick_no TEXT UNIQUE,
+  pick_no TEXT,
   order_ref TEXT,
   customer_name TEXT,
   pick_date TEXT DEFAULT CURRENT_DATE,
@@ -982,7 +991,7 @@ CREATE TABLE IF NOT EXISTS pick_pack (
 CREATE TABLE IF NOT EXISTS barcodes (
   id TEXT PRIMARY KEY,
   tenant_id TEXT REFERENCES tenants(id),
-  barcode TEXT UNIQUE NOT NULL,
+  barcode TEXT NOT NULL,
   product_id TEXT REFERENCES products(id),
   product_name TEXT,
   uom TEXT DEFAULT 'PC',
@@ -993,7 +1002,7 @@ CREATE TABLE IF NOT EXISTS barcodes (
 CREATE TABLE IF NOT EXISTS petty_cash (
   id TEXT PRIMARY KEY,
   tenant_id TEXT REFERENCES tenants(id),
-  voucher_no TEXT UNIQUE,
+  voucher_no TEXT,
   doc_date TEXT DEFAULT CURRENT_DATE,
   payee TEXT,
   description TEXT,
@@ -1010,7 +1019,8 @@ CREATE TABLE IF NOT EXISTS stock_locations (
   id TEXT primary key,
   product_id TEXT references products(id) on delete cascade,
   warehouse_id TEXT references warehouses(id) on delete cascade,
-  qty INTEGER default 0
+  qty INTEGER default 0,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stock_transfers (
@@ -1056,7 +1066,8 @@ CREATE TABLE IF NOT EXISTS bom_template_items (
   template_id TEXT REFERENCES bom_templates(id) ON DELETE CASCADE,
   product_id TEXT REFERENCES products(id),
   qty REAL NOT NULL DEFAULT 0,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS bom_template_costs (
@@ -1065,7 +1076,8 @@ CREATE TABLE IF NOT EXISTS bom_template_costs (
   account_id TEXT REFERENCES accounts(id),
   amount REAL NOT NULL DEFAULT 0,
   description TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS production_orders (
@@ -1178,7 +1190,8 @@ CREATE TABLE IF NOT EXISTS recurring_invoices (
   notes TEXT,
   status TEXT DEFAULT 'Active' CHECK (status IN ('Active','Paused','Completed')),
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cheque_templates (
@@ -1201,12 +1214,13 @@ CREATE TABLE IF NOT EXISTS document_templates (
   header TEXT,
   footer TEXT,
   created_at TEXT not null DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT not null DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT not null DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS bank_deposits (
   id TEXT PRIMARY KEY,
-  deposit_no TEXT UNIQUE,
+  deposit_no TEXT,
   deposit_date TEXT DEFAULT CURRENT_DATE,
   description TEXT,
   amount REAL DEFAULT 0,
@@ -1220,7 +1234,8 @@ CREATE TABLE IF NOT EXISTS bank_deposits (
   reconciled_date TEXT,
   notes TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS batch_serial (
@@ -1292,7 +1307,7 @@ CREATE TABLE IF NOT EXISTS custom_field_values (
 
 CREATE TABLE IF NOT EXISTS stock_adjustments (
   id TEXT PRIMARY KEY,
-  adjustment_no TEXT UNIQUE,
+  adjustment_no TEXT,
   product_id TEXT REFERENCES products(id),
   item_name TEXT,
   adjustment_type TEXT DEFAULT 'Positive' CHECK (adjustment_type IN ('Positive','Negative')),
@@ -1302,12 +1317,13 @@ CREATE TABLE IF NOT EXISTS stock_adjustments (
   warehouse TEXT,
   status TEXT DEFAULT 'Draft',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stock_movements (
   id TEXT PRIMARY KEY,
-  movement_no TEXT UNIQUE,
+  movement_no TEXT,
   product_id TEXT REFERENCES products(id),
   item_name TEXT,
   movement_type TEXT DEFAULT 'In' CHECK (movement_type IN ('In','Out')),
@@ -1317,12 +1333,13 @@ CREATE TABLE IF NOT EXISTS stock_movements (
   movement_date TEXT DEFAULT CURRENT_DATE,
   status TEXT DEFAULT 'Draft',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS physical_stock (
   id TEXT PRIMARY KEY,
-  count_no TEXT UNIQUE,
+  count_no TEXT,
   product_id TEXT REFERENCES products(id),
   item_name TEXT,
   system_qty INTEGER DEFAULT 0,
@@ -1333,7 +1350,8 @@ CREATE TABLE IF NOT EXISTS physical_stock (
   notes TEXT,
   status TEXT DEFAULT 'Open',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stock_alerts (
@@ -1351,5 +1369,43 @@ CREATE TABLE IF NOT EXISTS stock_alerts (
   email_sent INTEGER DEFAULT 0,
   email_sent_at TEXT,
   notes TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  tenant_id TEXT
 );
+
+-- Tenant-aware uniqueness ------------------------------------------------
+CREATE UNIQUE INDEX IF NOT EXISTS app_settings_key_tenant_uidx ON app_settings(tenant_id, key);
+CREATE UNIQUE INDEX IF NOT EXISTS products_code_tenant_uidx ON products(tenant_id, code);
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_tenant_uidx ON customers(tenant_id, email);
+CREATE UNIQUE INDEX IF NOT EXISTS customers_code_tenant_uidx ON customers(tenant_id, code);
+CREATE UNIQUE INDEX IF NOT EXISTS invoices_invoice_no_tenant_uidx ON invoices(tenant_id, invoice_no);
+CREATE UNIQUE INDEX IF NOT EXISTS suppliers_code_tenant_uidx ON suppliers(tenant_id, code);
+CREATE UNIQUE INDEX IF NOT EXISTS accounts_code_tenant_uidx ON accounts(tenant_id, code);
+CREATE UNIQUE INDEX IF NOT EXISTS erp_users_username_tenant_uidx ON erp_users(tenant_id, username);
+CREATE UNIQUE INDEX IF NOT EXISTS doc_numbering_doc_type_tenant_uidx ON doc_numbering(tenant_id, doc_type);
+CREATE UNIQUE INDEX IF NOT EXISTS journal_entries_entry_no_tenant_uidx ON journal_entries(tenant_id, entry_no);
+CREATE UNIQUE INDEX IF NOT EXISTS incoming_payments_payment_no_tenant_uidx ON incoming_payments(tenant_id, payment_no);
+CREATE UNIQUE INDEX IF NOT EXISTS outgoing_payments_payment_no_tenant_uidx ON outgoing_payments(tenant_id, payment_no);
+CREATE UNIQUE INDEX IF NOT EXISTS sales_quotations_quote_no_tenant_uidx ON sales_quotations(tenant_id, quote_no);
+CREATE UNIQUE INDEX IF NOT EXISTS sales_orders_order_no_tenant_uidx ON sales_orders(tenant_id, order_no);
+CREATE UNIQUE INDEX IF NOT EXISTS delivery_notes_delivery_no_tenant_uidx ON delivery_notes(tenant_id, delivery_no);
+CREATE UNIQUE INDEX IF NOT EXISTS ar_credit_memos_memo_no_tenant_uidx ON ar_credit_memos(tenant_id, memo_no);
+CREATE UNIQUE INDEX IF NOT EXISTS sales_returns_return_no_tenant_uidx ON sales_returns(tenant_id, return_no);
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_requisitions_req_no_tenant_uidx ON purchase_requisitions(tenant_id, req_no);
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_orders_po_no_tenant_uidx ON purchase_orders(tenant_id, po_no);
+CREATE UNIQUE INDEX IF NOT EXISTS goods_receipts_grn_no_tenant_uidx ON goods_receipts(tenant_id, grn_no);
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_invoices_pin_no_tenant_uidx ON purchase_invoices(tenant_id, pin_no);
+CREATE UNIQUE INDEX IF NOT EXISTS ap_credit_memos_memo_no_tenant_uidx ON ap_credit_memos(tenant_id, memo_no);
+CREATE UNIQUE INDEX IF NOT EXISTS purchase_returns_return_no_tenant_uidx ON purchase_returns(tenant_id, return_no);
+CREATE UNIQUE INDEX IF NOT EXISTS landed_costs_lc_no_tenant_uidx ON landed_costs(tenant_id, lc_no);
+CREATE UNIQUE INDEX IF NOT EXISTS debit_notes_note_no_tenant_uidx ON debit_notes(tenant_id, note_no);
+CREATE UNIQUE INDEX IF NOT EXISTS credit_notes_note_no_tenant_uidx ON credit_notes(tenant_id, note_no);
+CREATE UNIQUE INDEX IF NOT EXISTS pick_pack_pick_no_tenant_uidx ON pick_pack(tenant_id, pick_no);
+CREATE UNIQUE INDEX IF NOT EXISTS barcodes_barcode_tenant_uidx ON barcodes(tenant_id, barcode);
+CREATE UNIQUE INDEX IF NOT EXISTS petty_cash_voucher_no_tenant_uidx ON petty_cash(tenant_id, voucher_no);
+CREATE UNIQUE INDEX IF NOT EXISTS bank_deposits_deposit_no_tenant_uidx ON bank_deposits(tenant_id, deposit_no);
+CREATE UNIQUE INDEX IF NOT EXISTS stock_adjustments_adjustment_no_tenant_uidx ON stock_adjustments(tenant_id, adjustment_no);
+CREATE UNIQUE INDEX IF NOT EXISTS stock_movements_movement_no_tenant_uidx ON stock_movements(tenant_id, movement_no);
+CREATE UNIQUE INDEX IF NOT EXISTS physical_stock_count_no_tenant_uidx ON physical_stock(tenant_id, count_no);
+CREATE UNIQUE INDEX IF NOT EXISTS erp_users_email_global_uidx ON erp_users(LOWER(email)) WHERE email IS NOT NULL AND email <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS tenant_users_tenant_user_uidx ON tenant_users(tenant_id, user_id);

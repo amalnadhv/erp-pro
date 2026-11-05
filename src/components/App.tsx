@@ -7659,8 +7659,8 @@ const CheckManagementModule = ({ fmtMoney }) => {
 }
 
 const App = () => {
-  const [authUser, setAuthUser] = useState(() => { try { const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.user || null } catch { return null } })
-  const [authTenant, setAuthTenant] = useState(() => { try { const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.tenant || null } catch { return null } })
+  const [authUser, setAuthUser] = useState(() => { try { if (!localStorage.getItem('erp-token')) return null; const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.user || null } catch { return null } })
+  const [authTenant, setAuthTenant] = useState(() => { try { if (!localStorage.getItem('erp-token')) return null; const s = JSON.parse(localStorage.getItem('erp-auth') || 'null'); return s?.tenant || null } catch { return null } })
   const [menuOpen, setMenuOpen] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileSearch, setMobileSearch] = useState('')
@@ -7727,10 +7727,11 @@ const App = () => {
   useEffect(() => { localStorage.setItem('erp-dark', dark ? '1' : '0') }, [dark])
 
   const saveCountrySetting = async (value: string) => {
-    try { await supabase.from('app_settings').upsert({ key: 'country', value }) } catch (_) {}
+    try { await supabase.from('app_settings').upsert({ key: 'country', value }, { onConflict: 'key' }) } catch (_) {}
   }
 
   useEffect(() => {
+    if (!authUser) return
     let cancelled = false
     const loadCountrySetting = async () => {
       try {
@@ -7744,7 +7745,7 @@ const App = () => {
     }
     loadCountrySetting()
     return () => { cancelled = true }
-  }, [])
+  }, [authUser])
 
   useEffect(() => {
     localStorage.setItem('erp-region', region)
@@ -7765,13 +7766,18 @@ const App = () => {
   // Auth: check session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setAuthUser(session.user)
-        supabase.from('erp_users').select('role').eq('email', session.user.email).single().then(({ data }) => { if (data?.role) setCurrentUserRole(data.role) })
-        supabase.from('tenant_users').select('*, tenant:tenants(*)').eq('user_id', session.user.id).eq('status', 'Active').single().then(({ data: tu }) => {
-          if (tu?.tenant) { setAuthTenant(tu.tenant); localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: tu.tenant })) }
-        })
+      if (!session?.user) {
+        setAuthUser(null)
+        setAuthTenant(null)
+        localStorage.removeItem('erp-auth')
+        return
       }
+      setAuthUser(session.user)
+      if (session.tenant) setAuthTenant(session.tenant)
+      supabase.from('erp_users').select('role').eq('email', session.user.email).single().then(({ data }) => { if (data?.role) setCurrentUserRole(data.role) })
+      supabase.from('tenant_users').select('*, tenant:tenants(*)').eq('user_id', session.user.id).eq('status', 'Active').single().then(({ data: tu }) => {
+        if (tu?.tenant) { setAuthTenant(tu.tenant); localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: tu.tenant })) }
+      })
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!session?.user) { setAuthUser(null); setAuthTenant(null); localStorage.removeItem('erp-auth') }

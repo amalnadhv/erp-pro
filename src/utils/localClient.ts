@@ -6,15 +6,31 @@ const LOCAL_API = import.meta.env.VITE_LOCAL_API || '/api'
 const USE_LOCAL = String(import.meta.env.VITE_LOCAL_DB || 'true').toLowerCase() !== 'false'
 
 function post(path, body) {
+  const headers = { 'Content-Type': 'application/json' }
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('erp-token') : null
+  if (token) headers.Authorization = `Bearer ${token}`
   return fetch(`${LOCAL_API}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   }).then((r) => r.json())
 }
 
+function authToken() {
+  return typeof localStorage !== 'undefined' ? localStorage.getItem('erp-token') : null
+}
+
+function clearAuth() {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem('erp-token')
+  localStorage.removeItem('erp-local-auth')
+  localStorage.removeItem('erp-auth')
+}
+
 function getPublicUrl(bucket, path) {
-  return { data: { publicUrl: `${LOCAL_API}/storage/file/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}` } }
+  const token = authToken()
+  const suffix = token ? `?token=${encodeURIComponent(token)}` : ''
+  return { data: { publicUrl: `${LOCAL_API}/storage/file/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}${suffix}` } }
 }
 
 class QueryBuilder {
@@ -26,6 +42,7 @@ class QueryBuilder {
     this._filters = []
     this._orders = []
     this._values = null
+    this._onConflict = undefined
     this._limit = undefined
     this._offset = 0
     this._single = false
@@ -59,9 +76,10 @@ class QueryBuilder {
     return this
   }
 
-  upsert(values) {
+  upsert(values, opts = {}) {
     this._action = 'upsert'
     this._values = values
+    this._onConflict = opts.onConflict
     return this
   }
 
@@ -103,6 +121,7 @@ class QueryBuilder {
       filters: this._filters,
       orders: this._orders,
       values: this._values,
+      onConflict: this._onConflict,
       limit: this._limit,
       offset: this._offset,
       single: this._single,
@@ -125,12 +144,32 @@ class QueryBuilder {
 
 const localAuth = {
   async getSession() {
+    const token = authToken()
+    if (!token) return { data: { session: null }, error: null }
+
+    let cached = null
     try {
-      const raw = localStorage.getItem('erp-local-auth')
-      if (!raw) return { data: { session: null }, error: null }
-      const parsed = JSON.parse(raw)
-      return { data: { session: { user: parsed.user } }, error: null }
+      cached = JSON.parse(localStorage.getItem('erp-local-auth') || 'null')
+    } catch { cached = null }
+
+    try {
+      const res = await post('/auth/session', {})
+      if (res?.error || !res?.data?.user) {
+        clearAuth()
+        return { data: { session: null }, error: null }
+      }
+      const session = {
+        access_token: token,
+        user: res.data.user,
+        tenant: res.data.tenant,
+        expires_at: cached?.expires_at,
+      }
+      localStorage.setItem('erp-local-auth', JSON.stringify(session))
+      localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: session.tenant }))
+      return { data: { session }, error: null }
     } catch {
+      // Offline: keep the cached session so cached data stays usable.
+      if (cached?.user) return { data: { session: cached }, error: null }
       return { data: { session: null }, error: null }
     }
   },
@@ -142,23 +181,34 @@ const localAuth = {
   async signInWithPassword({ email, password }) {
     const res = await post('/auth/login', { email, password })
     if (res.error) return { data: { user: null }, error: res.error }
-    localStorage.setItem('erp-local-auth', JSON.stringify(res.data))
-    localStorage.setItem('erp-auth', JSON.stringify(res.data))
-    return { data: { user: res.data.user }, error: null }
-  },
-  async signUp({ email, password }) {
-    const res = await post('/auth/signup', { email, password })
-    if (res.error) return { data: { user: null }, error: res.error }
-    if (res.data?.user) {
-      localStorage.setItem('erp-local-auth', JSON.stringify(res.data))
-      localStorage.setItem('erp-auth', JSON.stringify(res.data))
+    const session = {
+      access_token: res.data.access_token,
+      user: res.data.user,
+      tenant: res.data.tenant,
+      expires_at: res.data.expires_at,
     }
-    return { data: { user: res.data?.user || null }, error: null }
+    localStorage.setItem('erp-token', res.data.access_token)
+    localStorage.setItem('erp-local-auth', JSON.stringify(session))
+    localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: session.tenant }))
+    return { data: { user: session.user, tenant: session.tenant, session }, error: null }
+  },
+  async signUp({ email, password, fullName, company }) {
+    const res = await post('/auth/signup', { email, password, fullName, company })
+    if (res.error) return { data: { user: null }, error: res.error }
+    const session = {
+      access_token: res.data.access_token,
+      user: res.data.user,
+      tenant: res.data.tenant,
+      expires_at: res.data.expires_at,
+    }
+    localStorage.setItem('erp-token', res.data.access_token)
+    localStorage.setItem('erp-local-auth', JSON.stringify(session))
+    localStorage.setItem('erp-auth', JSON.stringify({ user: session.user, tenant: session.tenant }))
+    return { data: { user: session.user, tenant: session.tenant, session }, error: null }
   },
   async signOut() {
-    localStorage.removeItem('erp-local-auth')
-    localStorage.removeItem('erp-auth')
-    await post('/auth/logout', {})
+    try { await post('/auth/logout', {}) } catch { /* offline */ }
+    clearAuth()
     return { error: null }
   },
 }
@@ -192,7 +242,9 @@ const localStorageApi = {
         return { data: null, error: null }
       },
       async download(path) {
-        const res = await fetch(`${LOCAL_API}/storage/file/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`)
+        const token = authToken()
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch(`${LOCAL_API}/storage/file/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`, { headers })
         if (!res.ok) return { data: null, error: { message: 'Download failed' } }
         return { data: await res.blob(), error: null }
       },
@@ -228,41 +280,6 @@ const localClient = {
       maybeSingle: () => run().then((r) => ({ ...r, data: r.data?.[0] ?? null })),
     }
   },
-}
-
-// Local demo convenience: open the app signed in as the seeded administrator.
-// Signing out sets a flag so the login screen is not skipped again.
-const DEMO_TENANT = {
-  id: '00000000-0000-0000-0000-000000000001',
-  name: 'Demo Company LLC',
-  plan_name: 'Enterprise',
-  credit_balance: 750,
-  credit_used: 250,
-  credit_initial: 1000,
-  currency: 'AED',
-  status: 'Active',
-}
-const DEMO_SESSION = {
-  user: { id: '00000000-0000-0000-0000-000000000002', email: 'admin@local.test', user_metadata: { full_name: 'Demo Admin' } },
-  tenant: DEMO_TENANT,
-}
-if (USE_LOCAL && typeof localStorage !== 'undefined') {
-  if (!localStorage.getItem('erp-auth') && !localStorage.getItem('erp-local-signed-out')) {
-    localStorage.setItem('erp-auth', JSON.stringify(DEMO_SESSION))
-    localStorage.setItem('erp-local-auth', JSON.stringify(DEMO_SESSION))
-  }
-}
-
-const originalSignOut = localAuth.signOut
-localAuth.signOut = async () => {
-  localStorage.setItem('erp-local-signed-out', '1')
-  return originalSignOut()
-}
-const originalSignIn = localAuth.signInWithPassword
-localAuth.signInWithPassword = async (creds) => {
-  const result = await originalSignIn(creds)
-  if (!result.error) localStorage.removeItem('erp-local-signed-out')
-  return result
 }
 
 export const supabase = localClient
