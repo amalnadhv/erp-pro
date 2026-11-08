@@ -111,7 +111,7 @@ export default function StockTransfer() {
       if (locQty(l.product_id, form.from_wh) < Number(l.qty)) { setMsg(`Only ${locQty(l.product_id, form.from_wh)} of ${products.find((p) => p.id === l.product_id)?.name} available at ${whName(form.from_wh)}.`); return }
     }
     const { data: hdr, error } = await supabase.from('stock_transfers').insert({
-      transfer_no: null, from_wh: form.from_wh, to_wh: form.to_wh, product_id: null, product_name: null, qty: null,
+      transfer_no: null, from_wh: form.from_wh, to_wh: form.to_wh, product_id: null, product_name: null, qty: 0,
       status: 'Requested', requested_by: whName(form.from_wh), notes: form.notes,
     }).select()
     if (error) { setMsg('Error: ' + error.message); return }
