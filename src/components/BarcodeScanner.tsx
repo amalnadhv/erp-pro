@@ -104,7 +104,7 @@ export default function BarcodeScanner({ onProductFound, onClose, fmtMoney }: Pr
             <input
               id="manual-barcode"
               placeholder="Enter barcode, SKU, or name..."
-              onKeyDown={(e) => { if (e.key === 'Enter') handleManualLookup((e.target as HTMLInputElement).value) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleManualLookup((e.target as HTMLInputElement).value) } }}
               style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 13 }}
               autoFocus
             />

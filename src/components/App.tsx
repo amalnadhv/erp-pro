@@ -45,6 +45,7 @@ import { downloadPDF } from '../utils/generatePDF'
 import { emailInvoice } from '../utils/emailInvoice'
 import { fetchTaxConfig, TaxConfig } from '../utils/taxConfig'
 import { COUNTRY_CURRENCIES, formatMoney, getActiveCurrency, setActiveCountry } from '../utils/currency'
+import { installEnterKeyNavigation } from '../utils/enterNavigation'
 import './App.css'
 
 const MENUS = [
@@ -653,6 +654,23 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
   const [emailSending, setEmailSending] = useState(false)
   const [emailResult, setEmailResult] = useState('')
 
+  // Enter on the last cell of an item row adds a new line and focuses it (the
+  // other cells use the shared Enter-as-Tab navigation).
+  const onItemRowKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' || e.shiftKey) return
+    const target = e.target as HTMLElement
+    if (!target.classList.contains('col-disc')) return
+    e.preventDefault()
+    const table = (e.currentTarget as HTMLElement).closest('.items-table')
+    addItem()
+    setTimeout(() => {
+      const rows = table?.querySelectorAll('.item-row')
+      const lastRow = rows && rows.length ? rows[rows.length - 1] : null
+      const firstInput = lastRow?.querySelector('input') as HTMLInputElement | null
+      if (firstInput) firstInput.focus()
+    }, 60)
+  }
+
   const saveAi = () => { localStorage.setItem('aiOcr', JSON.stringify(ai)); setShowAi(false) }
 
   const isAP = inv.title.includes('A/P') || inv.title.toLowerCase().includes('purchase')
@@ -815,7 +833,7 @@ const InvoiceWorkspace = ({ inv, products, patch, addItem, updItem, rmItem, look
               <span className="col-del"></span>
             </div>
             {inv.items.map((item, idx) => (
-              <div className="item-row" key={idx}>
+              <div className="item-row" key={idx} onKeyDown={onItemRowKeyDown}>
                 <input className="col-code" value={item.code} onChange={(e) => updItem(idx, { code: e.target.value })} placeholder="ITM-0001" onBlur={(e) => lookup(idx, e.target.value)} />
                 <input className="col-desc" value={item.description} onChange={(e) => updItem(idx, { description: e.target.value })} />
                 <input className="col-price" type="number" min="0" step="0.01" value={item.price} onChange={(e) => updItem(idx, { price: e.target.value })} />
@@ -7725,6 +7743,10 @@ const App = () => {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => { localStorage.setItem('erp-dark', dark ? '1' : '0') }, [dark])
+
+  // Enter behaves like Tab inside forms across every module (fallback for
+  // screens that do not implement their own keyboard handler).
+  useEffect(() => installEnterKeyNavigation(), [])
 
   const saveCountrySetting = async (value: string) => {
     try { await supabase.from('app_settings').upsert({ key: 'country', value }, { onConflict: 'key' }) } catch (_) {}
