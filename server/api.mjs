@@ -553,12 +553,29 @@ function uniqueSlug(db, base) {
   return slug
 }
 
+const PLAN_DEFINITIONS = {
+  Starter:   { credits: 100, currency: 'AED', description: 'Starter plan – 100 free credits', modules: ['Dashboard', 'Company Profile', 'Users & Roles', 'A/R Invoice', 'A/P Invoice'] },
+  Professional: { credits: 500, currency: 'AED', description: 'Professional plan – 500 free credits', modules: null }, // all modules
+  Enterprise:   { credits: 2000, currency: 'AED', description: 'Enterprise plan – 2000 free credits', modules: null }, // all modules
+}
+
+function planCredits(plan) {
+  return PLAN_DEFINITIONS[String(plan) || 'Starter'].credits || 100
+}
+function planCurrency(plan) {
+  return PLAN_DEFINITIONS[String(plan) || 'Starter'].currency || 'AED'
+}
+function planDescription(plan) {
+  return PLAN_DEFINITIONS[String(plan) || 'Starter'].description || ''
+}
+
 function handleSignup(body) {
   const db = getDb()
   const email = normalizeEmail(body.email)
   const password = String(body.password || '')
   const fullName = String(body.fullName || '').trim() || email
   const company = String(body.company || '').trim()
+  const plan = String(body.plan || 'Starter')
 
   if (!email || !password) return { data: null, error: { message: 'Email and password are required' } }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { data: null, error: { message: 'Enter a valid email address' } }
@@ -572,16 +589,19 @@ function handleSignup(body) {
   const userId = randomUUID()
   const now = new Date()
   const expires = new Date(now.getTime() + 30 * 86400000)
+  const credits = planCredits(plan)
+  const currency = planCurrency(plan)
 
   db.exec('BEGIN')
   try {
     db.prepare(
       `INSERT INTO tenants (id, name, slug, plan_name, credit_balance, credit_used, credit_initial,
                             currency, expires_at, status, settings, created_at, updated_at)
-       VALUES (?, ?, ?, 'Starter', 100, 0, 100, 'AED', ?, 'Active', ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?)`
     ).run(
-      tenantId, company, uniqueSlug(db, company), expires.toISOString().slice(0, 10),
-      JSON.stringify({ region: 'UAE', onboarding: 'signup' }), now.toISOString(), now.toISOString()
+      tenantId, company, uniqueSlug(db, company), plan, credits, 0, credits,
+      currency, expires.toISOString().slice(0, 10),
+      JSON.stringify({ region: 'UAE', onboarding: 'signup', plan }), now.toISOString(), now.toISOString()
     )
 
     db.prepare(
@@ -597,7 +617,12 @@ function handleSignup(body) {
        VALUES (?, ?, ?, 'Owner', 'Active', ?)`
     ).run(randomUUID(), tenantId, userId, now.toISOString())
 
-    seedTenantDefaults(db, tenantId, company, { email })
+    seedTenantDefaults(db, tenantId, company, { email, currency })
+
+    // Initialize app_settings row for this tenant
+    db.prepare(
+      `INSERT INTO app_settings (tenant_id, key, value) VALUES (?, 'plan', ?)`
+    ).run(tenantId, plan)
 
     db.exec('COMMIT')
   } catch (e) {

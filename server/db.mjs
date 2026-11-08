@@ -186,12 +186,38 @@ function migrateToV2(database, schemaSql, existingTables) {
   columnCache.clear()
 }
 
+// Additive columns keep old databases working without a full rebuild.
+function ensureDocumentTemplateColumns(database) {
+  if (!tableExists(database, 'document_templates')) return
+  const columns = new Set(
+    database.prepare('PRAGMA table_info(document_templates)').all().map((row) => row.name),
+  )
+  const additions = [
+    ['mode', "TEXT DEFAULT 'visual'"],
+    ['body', 'TEXT'],
+    ['is_default', 'INTEGER DEFAULT 0'],
+    ['status', "TEXT DEFAULT 'published'"],
+    ['version', 'INTEGER DEFAULT 1'],
+    ['page_size', "TEXT DEFAULT 'A4'"],
+    ['orientation', "TEXT DEFAULT 'portrait'"],
+    ['theme', "TEXT DEFAULT '{}'"],
+    ['updated_by', 'TEXT'],
+  ]
+  for (const [name, definition] of additions) {
+    if (columns.has(name)) continue
+    database.exec(`ALTER TABLE document_templates ADD COLUMN ${quoteIdent(name)} ${definition}`)
+  }
+  database.exec('CREATE INDEX IF NOT EXISTS idx_document_templates_tenant_type ON document_templates (tenant_id, doc_type)')
+  columnCache.clear()
+}
+
 function ensureSchema(database) {
   const schemaPath = path.join(here, 'schema.sqlite.sql')
   const schemaSql = fs.readFileSync(schemaPath, 'utf8')
   const existingTables = userTables(database)
   if (!existingTables.length) {
     database.exec(schemaSql)
+    ensureDocumentTemplateColumns(database)
     database.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
     return
   }
@@ -199,11 +225,13 @@ function ensureSchema(database) {
   const version = Number(database.prepare('PRAGMA user_version').get().user_version || 0)
   if (version >= SCHEMA_VERSION) {
     database.exec(schemaSql)
+    ensureDocumentTemplateColumns(database)
     return
   }
 
   console.log(`[db] migrating schema v${version} -> v${SCHEMA_VERSION}`)
   migrateToV2(database, schemaSql, existingTables)
+  ensureDocumentTemplateColumns(database)
   database.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
 }
 
@@ -264,12 +292,13 @@ const DEFAULT_MODULES = [
 ]
 
 export function seedTenantDefaults(database, tenantId, companyName, options = {}) {
+  const currency = options?.currency || 'AED'
   insertRow(database, 'company_profile', {
     id: randomUUID(),
     tenant_id: tenantId,
     company_name: companyName || 'My Company',
     country: options.country || 'UAE',
-    base_currency: options.currency || 'AED',
+    base_currency: currency,
     vat_rate: options.vatRate ?? 5,
     fiscal_year_start: '01',
     email: options.email || '',
@@ -279,7 +308,7 @@ export function seedTenantDefaults(database, tenantId, companyName, options = {}
     insertRow(database, 'accounts', {
       id: randomUUID(), tenant_id: tenantId, code, name, type,
       opening_balance: balance, current_balance: balance,
-      currency: options.currency || 'AED', is_group: 0, status: 'Active',
+      currency, is_group: 0, status: 'Active',
     })
   }
 
@@ -299,7 +328,7 @@ export function seedTenantDefaults(database, tenantId, companyName, options = {}
 
   insertRow(database, 'tenant_credits', {
     id: randomUUID(), tenant_id: tenantId, amount: 100, balance_after: 100,
-    tx_type: 'Credit', description: 'Welcome bonus - $100 free credit',
+    tx_type: 'Credit', description: 'Welcome bonus - ' + currency + ' 100 free credit',
   })
 }
 
