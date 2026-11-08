@@ -12,6 +12,10 @@
  *
  * Existing components that handle Enter themselves call preventDefault(), so
  * this listener only runs as a fallback for the modules that do not.
+ *
+ * Most screens use one of the shared wrapper classes below. A few screens are
+ * styled fully inline with no shared class, so they fall back to Tab-like
+ * movement across the page content instead.
  */
 
 const SCOPE_SELECTOR = [
@@ -65,12 +69,23 @@ const SKIP_INPUT_TYPES = new Set([
   'reset', 'image', 'color', 'range',
 ])
 
+// Combobox widgets manage Enter themselves (open list / choose option).
+const PICKER_SELECTOR = [
+  '.search-select',
+  '[role="combobox"]',
+  '[aria-autocomplete]',
+  '[aria-haspopup="listbox"]',
+].join(',')
+
+// Top bar / sidebar fields are not part of a form and keep native behaviour.
+const HEADER_SELECTOR = 'header, .erp-header, .erp-sidebar, .tab-bar, .erp-footer'
+
 const isSearchField = (el: HTMLElement): boolean => {
   if (el instanceof HTMLInputElement && el.type === 'search') return true
   const cls = el.className || ''
   if (/\b(search|coa-search|list-search|header-search|mobile-menu-search)\b/.test(cls)) return true
   const placeholder = el.getAttribute('placeholder') || ''
-  return placeholder.includes('🔍') || /^\s*search/i.test(placeholder)
+  return placeholder.includes('🔍') || /(^|\s)search/i.test(placeholder)
 }
 
 const isNavigable = (el: HTMLElement): boolean => {
@@ -89,6 +104,18 @@ const focusablesIn = (root: HTMLElement): HTMLElement[] =>
   Array.from(root.querySelectorAll<HTMLElement>('input, select, textarea'))
     .filter(isNavigable)
 
+const findScope = (target: HTMLElement): { scope: HTMLElement; fallback: boolean } | null => {
+  const known = target.closest<HTMLElement>(SCOPE_SELECTOR)
+  if (known) return { scope: known, fallback: false }
+
+  // Inline-styled screens have no shared wrapper class. Fall back to Tab-like
+  // movement across the page content, but never the top bar / sidebar / footer.
+  const main = target.closest<HTMLElement>('main')
+  if (!main) return null
+  if (target.closest(HEADER_SELECTOR)) return null
+  return { scope: main, fallback: true }
+}
+
 const onEnter = (e: KeyboardEvent) => {
   if (e.key !== 'Enter' || e.defaultPrevented) return
   if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return
@@ -101,9 +128,11 @@ const onEnter = (e: KeyboardEvent) => {
   if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || target.isContentEditable) return
   if (target.closest('[data-enter-ignore]')) return
   if (isSearchField(target)) return
+  if (target.closest(PICKER_SELECTOR)) return
 
-  const scope = target.closest<HTMLElement>(SCOPE_SELECTOR)
-  if (!scope) return
+  const found = findScope(target)
+  if (!found) return
+  const { scope, fallback } = found
 
   const fields = focusablesIn(scope)
   const idx = fields.indexOf(target)
@@ -116,7 +145,9 @@ const onEnter = (e: KeyboardEvent) => {
     return
   }
 
-  // Last field: submit only from an actual form area, never from a list header.
+  // Last field: submit only from an actual form area, never from a list header
+  // or an inline-styled screen where we cannot safely identify the action.
+  if (fallback) return
   if (!target.closest(FORM_FIELD_SELECTOR)) return
   const submit = scope.querySelector<HTMLButtonElement>('button.btn-primary:not([disabled])')
   if (submit) submit.click()
