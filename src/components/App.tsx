@@ -1171,7 +1171,7 @@ const ChartOfAccounts = ({ accounts, expanded, toggleExpand, onEdit, onAddChild,
   const firstRef = useRef(null)
   const wrapRef = useRef(null)
 
-  useEffect(() => { if (firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (firstRef.current) firstRef.current.focus() }, [!form])
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1358,7 +1358,7 @@ const JournalEntry = ({ entries, accounts, form, setForm, onSave, onPost, onDele
   const firstRef = useRef(null)
   const wrapRef = useRef(null)
 
-  useEffect(() => { if (firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (firstRef.current) firstRef.current.focus() }, [!form])
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1693,7 +1693,7 @@ const JournalEntry = ({ entries, accounts, form, setForm, onSave, onPost, onDele
 const IncomingPayments = ({ payments, accounts, custList, form, setForm, onSave, onApprove, onCancel, onDelete, onPrint, search, setSearch, statusFilter, setStatusFilter }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
-  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [!form])
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       const tag = e.target.tagName
@@ -1851,7 +1851,7 @@ const IncomingPayments = ({ payments, accounts, custList, form, setForm, onSave,
 const OutgoingPayments = ({ payments, accounts, supList, form, setForm, onSave, onApprove, onCancel, onDelete, onPrint, search, setSearch, statusFilter, setStatusFilter, companyProfile }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
-  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [!form])
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       const tag = e.target.tagName
@@ -2156,7 +2156,7 @@ const CompanyProfile = ({ profile, setProfile, onSave, taxConfig: taxCfg }) => {
 const UsersRoles = ({ users, form, setForm, onSave, onDelete, onToggleStatus, search, setSearch }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
-  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [!form])
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       const tag = e.target.tagName
@@ -2263,7 +2263,7 @@ const DocNumbering = ({ docs, setDocs, onSave, search, setSearch }) => {
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
   const [editDoc, setEditDoc] = useState(null)
-  useEffect(() => { if (editDoc && firstRef.current) firstRef.current.focus() }, [editDoc])
+  useEffect(() => { if (editDoc && firstRef.current) firstRef.current.focus() }, [!editDoc])
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       const tag = e.target.tagName
@@ -3562,7 +3562,7 @@ const ExchangeRates = ({ fmtMoney }) => {
   const [search, setSearch] = useState('')
   const wrapRef = useRef(null)
   const firstRef = useRef(null)
-  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [form])
+  useEffect(() => { if (form && firstRef.current) firstRef.current.focus() }, [!form])
 
   const loadRates = async () => {
     setLoading(true)
