@@ -12,6 +12,8 @@ const ENTITIES: Entity[] = [
   { key: 'products', label: 'Stock Items', source: 'asicm', note: 'Item master with cost, price, VAT and stock' },
   { key: 'invoices', label: 'A/R Invoices', source: 'asinv', note: 'Sales invoices (headers only)' },
   { key: 'purchase_invoices', label: 'A/P Invoices', source: 'aspinv', note: 'Purchase invoices (headers only)' },
+  { key: 'journal_entries', label: 'Journal Entries (GL)', source: 'astran', note: 'Posted double-entry vouchers. Max rows = number of vouchers' },
+  { key: 'stock_movements', label: 'Stock Movements', source: 'asict', note: 'Item in/out movements from sales, purchases and returns' },
 ]
 
 const DEFAULT_FORM = {

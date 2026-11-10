@@ -21,6 +21,8 @@ export const ENTITIES = [
   { key: 'products', label: 'Stock Items', source: 'asicm', note: 'Item master with cost, price, VAT and stock' },
   { key: 'invoices', label: 'A/R Invoices', source: 'asinv', note: 'Sales invoices (headers only)' },
   { key: 'purchase_invoices', label: 'A/P Invoices', source: 'aspinv', note: 'Purchase invoices (headers only)' },
+  { key: 'journal_entries', label: 'Journal Entries (GL)', source: 'astran', note: 'Posted double-entry vouchers; limit counts vouchers' },
+  { key: 'stock_movements', label: 'Stock Movements', source: 'asict', note: 'Item in/out movements from sales, purchases and returns' },
 ]
 
 const ENTITY_KEYS = new Set(ENTITIES.map((e) => e.key))
@@ -443,6 +445,214 @@ async function importInvoices({ pool, db, tenantId, limit, kind, nameByAccount }
   return { source: table, imported, skipped, errors }
 }
 
+const sqlLiteral = (value) => `N'${String(value ?? '').replace(/'/g, "''")}'`
+
+async function importJournalEntries({ pool, db, tenantId, limit }) {
+  const cols = await sourceColumns(pool, 'astran')
+  for (const required of ['account', 'jvtype', 'type_no', 'type', 'amount']) {
+    if (!cols.has(required)) throw new Error(`Source table "astran" is missing the "${required}" column.`)
+  }
+  const maxVouchers = limit > 0 ? Math.min(limit, 20000) : 20000
+  const keyResult = await pool
+    .request()
+    .query(`SELECT DISTINCT TOP (${Math.max(1, Math.floor(maxVouchers))}) type_no, jvtype FROM astran`)
+  const keys = []
+  const seenKeys = new Set()
+  for (const row of keyResult.recordset) {
+    const jvtype = str(row.jvtype)
+    const typeNo = str(row.type_no)
+    const marker = `${jvtype}\u0000${typeNo}`
+    if (!typeNo || seenKeys.has(marker)) continue
+    seenKeys.add(marker)
+    keys.push({ jvtype, typeNo })
+  }
+  if (!keys.length) return { source: 'astran', imported: 0, skipped: 0, errors: [] }
+
+  const lineCols = ['account', 'jvtype', 'type_no', 'type', 'amount', 'jvdate', 'ref', 'entry_ref', 'curno', 'account_desc']
+    .filter((c) => cols.has(c))
+  const masterCols = await sourceColumns(pool, 'ASVOUCHMAST')
+  const hasMaster = masterCols.has('JVTYPE') && masterCols.has('TYPE_NO')
+  const masterText = ['DESCRIPT', 'COMMENTS'].filter((c) => masterCols.has(c))
+
+  const lines = []
+  const narrationByKey = new Map()
+  for (let i = 0; i < keys.length; i += 1000) {
+    const chunk = keys.slice(i, i + 1000)
+    const values = chunk.map((k) => `(${sqlLiteral(k.typeNo)},${sqlLiteral(k.jvtype)})`).join(',')
+    const statements = [
+      'CREATE TABLE #k (type_no nvarchar(200) COLLATE DATABASE_DEFAULT, jvtype nvarchar(50) COLLATE DATABASE_DEFAULT, PRIMARY KEY (type_no, jvtype));',
+      `INSERT INTO #k (type_no, jvtype) VALUES ${values};`,
+      `SELECT ${lineCols.map((c) => `a.[${c}]`).join(', ')} FROM astran a JOIN #k k ON a.type_no = k.type_no AND a.jvtype = k.jvtype;`,
+    ]
+    if (hasMaster && masterText.length) {
+      statements.push(
+        `SELECT k.type_no, k.jvtype, ${masterText.map((c) => `v.[${c}]`).join(', ')} FROM #k k LEFT JOIN ASVOUCHMAST v ON v.TYPE_NO = k.type_no AND v.JVTYPE = k.jvtype;`
+      )
+    }
+    const result = await pool.request().query(statements.join('\n'))
+    lines.push(...(result.recordsets[0] || []))
+    if (result.recordsets[1]) {
+      for (const row of result.recordsets[1]) {
+        const marker = `${str(row.jvtype)}\u0000${str(row.type_no)}`
+        if (!narrationByKey.has(marker)) narrationByKey.set(marker, row)
+      }
+    }
+  }
+
+  const groups = new Map()
+  for (const row of lines) {
+    const marker = `${str(row.jvtype)}\u0000${str(row.type_no)}`
+    let group = groups.get(marker)
+    if (!group) {
+      group = { jvtype: str(row.jvtype), typeNo: str(row.type_no), lines: [] }
+      groups.set(marker, group)
+    }
+    group.lines.push(row)
+  }
+
+  const accountIds = new Map()
+  for (const row of db.prepare('SELECT id, code FROM accounts WHERE tenant_id = ?').all(tenantId)) {
+    if (row.code) accountIds.set(String(row.code), row.id)
+  }
+  let stubCount = 0
+  const resolveAccount = (code, name) => {
+    if (accountIds.has(code)) return accountIds.get(code)
+    const id = randomUUID()
+    db.prepare(
+      'INSERT INTO accounts (id, code, name, type, opening_balance, current_balance, currency, is_group, status, notes, tenant_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    ).run(id, code, name || code, accountType(code), 0, 0, 'AED', 0, 'Active', 'Auto-created from legacy journal line', tenantId)
+    accountIds.set(code, id)
+    stubCount += 1
+    return id
+  }
+
+  const existing = new Set(
+    db.prepare('SELECT entry_no FROM journal_entries WHERE tenant_id = ?').all(tenantId).map((row) => String(row.entry_no))
+  )
+  const entrySql = db.prepare(
+    'INSERT INTO journal_entries (id, entry_no, entry_date, reference, narration, status, total_debit, total_credit, currency, created_by, created_at, tenant_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+  )
+  const lineSql = db.prepare(
+    'INSERT INTO journal_lines (id, entry_id, line_no, account_id, debit, credit, description, created_at, tenant_id) VALUES (?,?,?,?,?,?,?,?,?)'
+  )
+
+  let imported = 0
+  let skipped = 0
+  const errors = []
+  for (const group of groups.values()) {
+    const entryNo = `${group.jvtype}-${group.typeNo}`
+    if (existing.has(entryNo)) { skipped += 1; continue }
+    const postings = []
+    let totalDebit = 0
+    let totalCredit = 0
+    let entryDate = null
+    let reference = ''
+    let currency = 'AED'
+    let description = ''
+    for (const row of group.lines) {
+      const code = str(row.account)
+      if (!code) continue
+      const amount = num(row.amount)
+      const isDebit = str(row.type).toUpperCase() === 'D'
+      if (isDebit) totalDebit += amount
+      else totalCredit += amount
+      const date = isoDate(row.jvdate)
+      if (date && (!entryDate || date < entryDate)) entryDate = date
+      if (!reference) reference = str(row.ref) || group.typeNo
+      if (!currency) currency = str(row.curno) || 'AED'
+      if (!description) {
+        const entryRef = str(row.entry_ref).replace(/^:/, '')
+        description = entryRef || str(row.account_desc)
+      }
+      postings.push({ code, name: str(row.account_desc), debit: isDebit ? amount : 0, credit: isDebit ? 0 : amount, text: str(row.entry_ref).replace(/^:/, '') })
+    }
+    if (!postings.length) { skipped += 1; continue }
+    const master = narrationByKey.get(`${group.jvtype}\u0000${group.typeNo}`) || {}
+    const narration = [str(master.DESCRIPT), str(master.COMMENTS)].filter(Boolean).join(' - ') || description || `Imported ${group.jvtype} ${group.typeNo}`
+    const date = entryDate || new Date().toISOString().slice(0, 10)
+    try {
+      const entryId = randomUUID()
+      entrySql.run(
+        entryId, entryNo, date, reference, narration, 'Posted',
+        Math.round(totalDebit * 100) / 100, Math.round(totalCredit * 100) / 100,
+        currency || 'AED', 'Migration', `${date}T00:00:00.000Z`, tenantId
+      )
+      postings.forEach((posting, index) => {
+        lineSql.run(
+          randomUUID(), entryId, index + 1,
+          resolveAccount(posting.code, posting.name),
+          Math.round(posting.debit * 100) / 100,
+          Math.round(posting.credit * 100) / 100,
+          posting.text || narration,
+          `${date}T00:00:00.000Z`, tenantId
+        )
+      })
+      existing.add(entryNo)
+      imported += 1
+    } catch (e) {
+      if (errors.length < 10) errors.push(`${entryNo}: ${e.message}`)
+    }
+  }
+  const result = { source: 'astran', imported, skipped, errors, note: stubCount ? `${stubCount} missing accounts auto-created` : '' }
+  return result
+}
+
+async function importStockMovements({ pool, db, tenantId, limit }) {
+  const cols = await sourceColumns(pool, 'asict')
+  for (const required of ['code', 'tr_type', 'tr_qty', 'tr_date']) {
+    if (!cols.has(required)) throw new Error(`Source table "asict" is missing the "${required}" column.`)
+  }
+  const rows = await selectRows(pool, 'asict', [
+    'tr_refno', 'tr_desc', 'tr_date', 'code', 'tr_type', 'tr_qty', 'unit_cost', 'unit', 'inv_no',
+    'unit_price', 'idesc', 'type', 'locn', 'line_total', 'id',
+  ], limit, 'id DESC')
+
+  const productIds = new Map()
+  for (const row of db.prepare('SELECT id, code FROM products WHERE tenant_id = ?').all(tenantId)) {
+    if (row.code) productIds.set(String(row.code), row.id)
+  }
+  const existing = new Set()
+  for (const row of db.prepare(
+    'SELECT movement_no, product_id, movement_date, movement_type, quantity FROM stock_movements WHERE tenant_id = ?'
+  ).all(tenantId)) {
+    existing.add(`${row.movement_no}|${row.product_id || ''}|${row.movement_date}|${row.movement_type}|${row.quantity}`)
+  }
+
+  const insertSql = db.prepare(
+    'INSERT INTO stock_movements (id, movement_no, product_id, item_name, movement_type, quantity, warehouse, reference, movement_date, status, created_at, tenant_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+  )
+
+  let imported = 0
+  let skipped = 0
+  const errors = []
+  for (const row of rows) {
+    const code = str(row.code)
+    const date = isoDate(row.tr_date) || new Date().toISOString().slice(0, 10)
+    const trType = str(row.tr_type).toUpperCase()
+    const typeName = str(row.type).toUpperCase()
+    const movementType = trType === 'R' || typeName === 'STOCKIN' ? 'In' : 'Out'
+    const quantity = Math.abs(int(row.tr_qty))
+    const movementNo = str(row.tr_refno) || String(row.id ?? '')
+    const productId = productIds.get(code) || null
+    const marker = `${movementNo}|${productId || ''}|${date}|${movementType}|${quantity}`
+    if (!movementNo || existing.has(marker)) { skipped += 1; continue }
+    try {
+      const reference = str(row.inv_no) || movementNo
+      insertSql.run(
+        randomUUID(), movementNo, productId, str(row.idesc) || code,
+        movementType, quantity, str(row.locn) || 'MAIN',
+        `${str(row.type)} ${reference}`.trim(), date, 'Posted',
+        `${date}T00:00:00.000Z`, tenantId
+      )
+      existing.add(marker)
+      imported += 1
+    } catch (e) {
+      if (errors.length < 10) errors.push(`${movementNo}: ${e.message}`)
+    }
+  }
+  return { source: 'asict', imported, skipped, errors }
+}
+
 const IMPORTERS = {
   accounts: (ctx) => importAccounts(ctx),
   customers: (ctx) => importParties({ ...ctx, kind: 'customer' }),
@@ -450,12 +660,15 @@ const IMPORTERS = {
   products: (ctx) => importProducts(ctx),
   invoices: (ctx) => importInvoices({ ...ctx, kind: 'ar' }),
   purchase_invoices: (ctx) => importInvoices({ ...ctx, kind: 'ap' }),
+  journal_entries: (ctx) => importJournalEntries(ctx),
+  stock_movements: (ctx) => importStockMovements(ctx),
 }
 
 export async function runImport({ connection, tenantId, entities, limit, db }) {
   const list = (Array.isArray(entities) ? entities : []).filter((key) => ENTITY_KEYS.has(key))
   if (!list.length) throw new Error('Select at least one entity to import.')
-  const maxRows = Math.min(Math.max(Number(limit) || 2000, 0), 200000)
+  const requested = Number(limit)
+  const maxRows = Number.isFinite(requested) && requested > 0 ? Math.min(Math.floor(requested), 200000) : 200000
 
   return withPool(connection, async (pool) => {
     const nameByAccount = await loadAccountNameMap(pool)
