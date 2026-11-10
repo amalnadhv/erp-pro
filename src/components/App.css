@@ -4391,5 +4391,6 @@ body:has(.dark) {
 
 .mig-progress { height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
 .mig-progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #38bdf8); border-radius: 999px; position: relative; overflow: hidden; transition: width .35s ease; }
-.mig-progress-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.5) 50%, transparent 80%); transform: translateX(-100%); animation: mig-shimmer 1.2s linear infinite; }
+.mig-progress-fill::after { content: ''; position: absolute; inset: 0; display: none; background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.5) 50%, transparent 80%); transform: translateX(-100%); animation: mig-shimmer 1.2s linear infinite; }
+.mig-progress-fill.mig-progress-active::after { display: block; }
 @keyframes mig-shimmer { to { transform: translateX(100%); } }

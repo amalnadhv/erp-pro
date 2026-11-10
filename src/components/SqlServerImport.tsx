@@ -103,7 +103,6 @@ const SqlServerImport = () => {
       setError(e?.message || 'Import failed')
     }
     setImporting(false)
-    setProgress(null)
   }
 
   const toggle = (key: string) => {
@@ -201,17 +200,22 @@ const SqlServerImport = () => {
             {importing ? 'Importing… keep this tab open' : '⬇️ Start import'}
           </button>
         </div>
-        {importing && progress && (() => {
-          const pct = Math.round((progress.done / Math.max(progress.total, 1)) * 100)
-          const seconds = Math.max(0, Math.round((Date.now() - progress.startedAt) / 1000))
+        {(() => {
+          const pct = progress ? Math.round((progress.done / Math.max(progress.total, 1)) * 100) : 0
+          const seconds = progress ? Math.max(0, Math.round((Date.now() - progress.startedAt) / 1000)) : 0
+          const label = importing && progress
+            ? `Importing ${labelOf(progress.current)}… (${progress.done}/${progress.total})`
+            : progress
+              ? `Last import finished (${progress.done}/${progress.total})`
+              : 'Import progress — not started yet'
           return (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', marginBottom: 5 }}>
-                <span>{`Importing ${labelOf(progress.current)}… (${progress.done}/${progress.total})`}</span>
-                <span>{pct}% · {seconds}s</span>
+                <span>{label}</span>
+                <span>{pct}%{progress ? ` · ${seconds}s` : ''}</span>
               </div>
               <div className="mig-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-                <div className="mig-progress-fill" style={{ width: `${Math.max(pct, 3)}%` }} />
+                <div className={`mig-progress-fill${importing ? ' mig-progress-active' : ''}`} style={{ width: `${pct}%` }} />
               </div>
             </div>
           )
