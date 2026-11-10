@@ -612,10 +612,15 @@ async function importStockMovements({ pool, db, tenantId, limit }) {
     if (row.code) productIds.set(String(row.code), row.id)
   }
   const existing = new Set()
+  const legacyExisting = new Set()
   for (const row of db.prepare(
-    'SELECT movement_no, product_id, movement_date, movement_type, quantity FROM stock_movements WHERE tenant_id = ?'
+    'SELECT movement_no, product_id, movement_date, movement_type, quantity, warehouse FROM stock_movements WHERE tenant_id = ?'
   ).all(tenantId)) {
     existing.add(`${row.movement_no}|${row.product_id || ''}|${row.movement_date}|${row.movement_type}|${row.quantity}`)
+    // Rows written before movement_no gained the line id suffix: allow re-imports to skip them.
+    if (!String(row.movement_no || '').includes('-')) {
+      legacyExisting.add(`${row.movement_no}|${row.product_id || ''}|${row.movement_date}|${row.movement_type}|${row.quantity}|${row.warehouse || ''}`)
+    }
   }
 
   const insertSql = db.prepare(
@@ -636,9 +641,10 @@ async function importStockMovements({ pool, db, tenantId, limit }) {
     const movementNo = `${baseRef}-${str(row.id)}`
     const productId = productIds.get(code) || null
     const marker = `${movementNo}|${productId || ''}|${date}|${movementType}|${quantity}`
-    if (!movementNo || existing.has(marker)) { skipped += 1; continue }
+    const legacyMarker = `${baseRef}|${productId || ''}|${date}|${movementType}|${quantity}|${str(row.locn) || 'MAIN'}`
+    if (!movementNo || existing.has(marker) || legacyExisting.has(legacyMarker)) { skipped += 1; continue }
     try {
-      const reference = str(row.inv_no) || movementNo
+      const reference = str(row.inv_no) || baseRef
       insertSql.run(
         randomUUID(), movementNo, productId, str(row.idesc) || code,
         movementType, quantity, str(row.locn) || 'MAIN',

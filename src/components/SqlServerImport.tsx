@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const LOCAL_API = (import.meta as any).env?.VITE_LOCAL_API || '/api'
 
@@ -51,8 +51,17 @@ const SqlServerImport = () => {
   const [report, setReport] = useState<ReportRow[] | null>(null)
   const [selected, setSelected] = useState<string[]>(ENTITIES.map((e) => e.key))
   const [limit, setLimit] = useState('2000')
+  const [progress, setProgress] = useState<{ done: number; total: number; current: string; startedAt: number } | null>(null)
+  const [, setTick] = useState(0)
+
+  useEffect(() => {
+    if (!importing) return
+    const id = setInterval(() => setTick((t) => t + 1), 500)
+    return () => clearInterval(id)
+  }, [importing])
 
   const set = (key: string, value: any) => setForm((f: any) => ({ ...f, [key]: value }))
+  const labelOf = (key: string) => ENTITIES.find((e) => e.key === key)?.label || key
 
   const connection = () => ({
     ...form,
@@ -73,18 +82,28 @@ const SqlServerImport = () => {
 
   const run = async () => {
     if (!selected.length) { setError('Select at least one entity.'); return }
-    setImporting(true); setError(''); setReport(null)
+    setImporting(true); setError(''); setReport([])
+    const startedAt = Date.now()
+    const rows: ReportRow[] = []
+    setProgress({ done: 0, total: selected.length, current: selected[0], startedAt })
     try {
-      const result = await call('/mssql/import', {
-        connection: connection(),
-        entities: selected,
-        limit: Number(limit) || 0,
-      })
-      setReport(result.report || [])
+      for (let i = 0; i < selected.length; i++) {
+        const key = selected[i]
+        setProgress({ done: i, total: selected.length, current: key, startedAt })
+        const result = await call('/mssql/import', {
+          connection: connection(),
+          entities: [key],
+          limit: Number(limit) || 0,
+        })
+        rows.push(...(result.report || []))
+        setReport([...rows])
+        setProgress({ done: i + 1, total: selected.length, current: key, startedAt })
+      }
     } catch (e: any) {
       setError(e?.message || 'Import failed')
     }
     setImporting(false)
+    setProgress(null)
   }
 
   const toggle = (key: string) => {
@@ -182,6 +201,21 @@ const SqlServerImport = () => {
             {importing ? 'Importing… keep this tab open' : '⬇️ Start import'}
           </button>
         </div>
+        {importing && progress && (() => {
+          const pct = Math.round((progress.done / Math.max(progress.total, 1)) * 100)
+          const seconds = Math.max(0, Math.round((Date.now() - progress.startedAt) / 1000))
+          return (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', marginBottom: 5 }}>
+                <span>{`Importing ${labelOf(progress.current)}… (${progress.done}/${progress.total})`}</span>
+                <span>{pct}% · {seconds}s</span>
+              </div>
+              <div className="mig-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+                <div className="mig-progress-fill" style={{ width: `${Math.max(pct, 3)}%` }} />
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {report && (
@@ -208,7 +242,8 @@ const SqlServerImport = () => {
             </pre>
           )}
           <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
-            Open <b>Chart of Accounts</b>, <b>Customer</b>, <b>Supplier</b>, <b>Stock Master</b>, <b>A/R Invoice</b> or <b>A/P Invoice</b> to see the imported rows.
+            Open <b>Chart of Accounts</b>, <b>Customer</b>, <b>Supplier</b>, <b>Stock Master</b>, <b>A/R Invoice</b>, <b>A/P Invoice</b>,
+            <b> Journal Entries</b> or <b>Stock In / Out</b> to see the imported rows.
           </p>
         </div>
       )}
