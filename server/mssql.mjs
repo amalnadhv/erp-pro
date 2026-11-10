@@ -632,7 +632,8 @@ async function importStockMovements({ pool, db, tenantId, limit }) {
     const typeName = str(row.type).toUpperCase()
     const movementType = trType === 'R' || typeName === 'STOCKIN' ? 'In' : 'Out'
     const quantity = Math.abs(int(row.tr_qty))
-    const movementNo = str(row.tr_refno) || String(row.id ?? '')
+    const baseRef = str(row.tr_refno) || str(row.inv_no) || String(row.id ?? '')
+    const movementNo = `${baseRef}-${str(row.id)}`
     const productId = productIds.get(code) || null
     const marker = `${movementNo}|${productId || ''}|${date}|${movementType}|${quantity}`
     if (!movementNo || existing.has(marker)) { skipped += 1; continue }
