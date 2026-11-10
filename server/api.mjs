@@ -9,6 +9,7 @@ import {
   storageDir, dataDir, hashPassword, verifyPassword,
   seedTenantDefaults, DEMO_TENANT_ID,
 } from './db.mjs'
+import { testConnection as mssqlTest, runImport as mssqlImport } from './mssql.mjs'
 
 const MAX_BODY = 30 * 1024 * 1024
 
@@ -808,6 +809,28 @@ export function createApiHandler() {
 
       if (route === '/db' && req.method === 'POST') {
         return send(res, 200, handleQuery(body, auth))
+      }
+      if (route === '/mssql/test' && req.method === 'POST') {
+        try {
+          const result = await mssqlTest(body.connection || body)
+          return send(res, 200, { data: result, error: null })
+        } catch (e) {
+          return send(res, 200, { data: null, error: { message: e?.message || 'Connection failed' } })
+        }
+      }
+      if (route === '/mssql/import' && req.method === 'POST') {
+        try {
+          const result = await mssqlImport({
+            connection: body.connection || body,
+            tenantId: auth.tenantId,
+            entities: body.entities,
+            limit: body.limit,
+            db,
+          })
+          return send(res, 200, { data: result, error: null })
+        } catch (e) {
+          return send(res, 200, { data: null, error: { message: e?.message || 'Import failed' } })
+        }
       }
       if (route === '/storage/upload' && req.method === 'POST') {
         return send(res, 200, handleUpload(body, auth.tenantId))
