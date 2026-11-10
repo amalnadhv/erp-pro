@@ -4386,3 +4386,5 @@ body:has(.dark) {
 
   .modal-content { padding: 8px !important; }
 }
+
+.doc-workspace { flex: 1; min-height: 0; overflow-y: auto; }

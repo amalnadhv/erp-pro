@@ -111,7 +111,7 @@ const SqlServerImport = () => {
         <h4 style={{ margin: '0 0 10px' }}>1. Connection</h4>
         <div className="inv-grid coa-form-grid">
           <label>Server / host
-            <input value={form.server} onChange={(e) => set('server', e.target.value)} placeholder="192.168.1.10 or sql.company.com" />
+            <input value={form.server} onChange={(e) => set('server', e.target.value)} placeholder="sreeji, sreeji\SQ2022 or sreeji,1475" />
           </label>
           <label>Port
             <input value={form.port} onChange={(e) => set('port', e.target.value)} placeholder="1433" />

@@ -26,7 +26,7 @@ export const ENTITIES = [
 const ENTITY_KEYS = new Set(ENTITIES.map((e) => e.key))
 
 export function normalizeConnection(input = {}) {
-  const server = String(input.server || '').trim()
+  let server = String(input.server || '').trim().replace(/^tcp:/i, '')
   if (!server) throw new Error('SQL Server host is required')
   const database = String(input.database || '').trim()
   if (!database) throw new Error('Database name is required')
@@ -34,9 +34,29 @@ export function normalizeConnection(input = {}) {
   const password = String(input.password || '')
   if (!user) throw new Error('SQL login is required')
 
+  // Accept the usual SQL Server forms: "host", "host,1433", "host\INSTANCE".
+  let port = Number(input.port) || 0
+  let instanceName = String(input.instanceName || '').trim()
+  const comma = server.lastIndexOf(',')
+  if (comma > 0) {
+    const maybePort = Number(server.slice(comma + 1).trim())
+    if (Number.isInteger(maybePort) && maybePort > 0) {
+      port = maybePort
+      server = server.slice(0, comma).trim()
+    }
+  }
+  const backslash = server.indexOf('\\')
+  if (backslash > 0) {
+    if (!instanceName) instanceName = server.slice(backslash + 1).trim()
+    server = server.slice(0, backslash).trim()
+  }
+  if (!server) throw new Error('SQL Server host is required')
+  // A named instance is resolved through SQL Browser; a typed default 1433 must not override it.
+  const explicitPort = port > 0 && !(instanceName && port === 1433)
+
   return {
     server,
-    port: Number(input.port) || 1433,
+    ...(explicitPort ? { port } : instanceName ? {} : { port: 1433 }),
     database,
     user,
     password,
@@ -44,7 +64,7 @@ export function normalizeConnection(input = {}) {
       encrypt: Boolean(input.encrypt),
       trustServerCertificate: input.trustServerCertificate !== false,
       enableArithAbort: true,
-      ...(String(input.instanceName || '').trim() ? { instanceName: String(input.instanceName).trim() } : {}),
+      ...(instanceName ? { instanceName } : {}),
     },
     connectionTimeout: 15000,
     requestTimeout: 10 * 60 * 1000,
