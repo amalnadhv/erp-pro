@@ -932,43 +932,6 @@ async function importJournalEntries(ctx) {
   const hasMaster = masterCols.has('jvtype') && masterCols.has('type_no')
   const masterColumns = pickColumns(masterCols, ['type_no', 'jvtype', 'descript', 'comments'])
 
-  const lines = []
-  const narrationByKey = new Map()
-  for (let i = 0; i < keys.length; i += 1000) {
-    const chunk = keys.slice(i, i + 1000)
-    const values = chunk.map((k) => `(${sqlLiteral(k.typeNo)},${sqlLiteral(k.jvtype)})`).join(',')
-    const statements = [
-      "IF OBJECT_ID('tempdb..#k') IS NOT NULL DROP TABLE #k;",
-      'CREATE TABLE #k (type_no nvarchar(200) COLLATE DATABASE_DEFAULT, jvtype nvarchar(50) COLLATE DATABASE_DEFAULT, PRIMARY KEY (type_no, jvtype));',
-      `INSERT INTO #k (type_no, jvtype) VALUES ${values};`,
-      `SELECT ${lineColumns.map((c) => columnExpression(c, 'a.')).join(', ')} FROM astran a JOIN #k k ON CONVERT(nvarchar(200), a.type_no) = k.type_no AND CONVERT(nvarchar(50), a.jvtype) = k.jvtype;`,
-    ]
-    if (hasMaster && masterColumns.length) {
-      statements.push(
-        `SELECT ${masterColumns.map((c) => columnExpression(c, 'v.')).join(', ')} FROM #k k LEFT JOIN ASVOUCHMAST v ON CONVERT(nvarchar(200), v.TYPE_NO) = k.type_no AND CONVERT(nvarchar(50), v.JVTYPE) = k.jvtype;`
-      )
-    }
-    const result = await pool.request().query(statements.join('\n'))
-    lines.push(...(result.recordsets[0] || []))
-    if (result.recordsets[1]) {
-      for (const row of result.recordsets[1]) {
-        const marker = `${str(ci(row, 'jvtype'))}\u0000${str(ci(row, 'type_no'))}`
-        if (!narrationByKey.has(marker)) narrationByKey.set(marker, row)
-      }
-    }
-  }
-
-  const groups = new Map()
-  for (const row of lines) {
-    const marker = `${str(row.jvtype)}\u0000${str(row.type_no)}`
-    let group = groups.get(marker)
-    if (!group) {
-      group = { jvtype: str(row.jvtype), typeNo: str(row.type_no), lines: [] }
-      groups.set(marker, group)
-    }
-    group.lines.push(row)
-  }
-
   const accountIds = new Map()
   for (const row of db.prepare('SELECT id, code FROM accounts WHERE tenant_id = ?').all(tenantId)) {
     if (row.code) accountIds.set(String(row.code), row.id)
@@ -1000,71 +963,110 @@ async function importJournalEntries(ctx) {
   let imported = 0
   let skipped = 0
   const errors = []
-  for (const group of groups.values()) {
-    const entryNo = `${group.jvtype}-${group.typeNo}`
-    if (existing.has(entryNo)) { skipped += 1; continue }
-    const postings = []
-    let totalDebit = 0
-    let totalCredit = 0
-    let entryDate = null
-    let reference = ''
-    let currency = ''
-    let description = ''
-    for (const row of group.lines) {
-      const code = str(row.account)
-      if (!code) continue
-      const amount = round2(row.amount)
-      const isDebit = isDebitType(row.type)
-      if (isDebit) totalDebit += amount
-      else totalCredit += amount
-      const date = isoDate(row.jvdate)
-      if (date && (!entryDate || date < entryDate)) entryDate = date
-      if (!reference) reference = str(row.ref) || group.typeNo
-      if (!currency) currency = str(row.curno) || str(ctx.currency) || 'AED'
-      if (!description) {
-        const entryRef = str(row.entry_ref).replace(/^:/, '')
-        description = entryRef || str(row.account_desc)
-      }
-      postings.push({
-        code,
-        name: str(row.account_desc),
-        debit: isDebit ? amount : 0,
-        credit: isDebit ? 0 : amount,
-        text: str(row.entry_ref).replace(/^:/, ''),
-      })
-    }
-    if (!postings.length) { skipped += 1; continue }
-    const master = narrationByKey.get(`${group.jvtype}\u0000${group.typeNo}`) || {}
-    const narration = [str(ci(master, 'descript')), str(ci(master, 'comments'))].filter(Boolean).join(' - ') || description || `Imported ${group.jvtype} ${group.typeNo}`
-    const date = entryDate || new Date().toISOString().slice(0, 10)
-    let entryId = null
-    try {
-      entryId = randomUUID()
-      entrySql.run(
-        entryId, entryNo, date, reference, narration, 'Posted',
-        round2(totalDebit), round2(totalCredit),
-        currency || 'AED', 'Migration', `${date}T00:00:00.000Z`, tenantId
+
+  // Read and insert one batch of vouchers at a time. This keeps a large legacy
+  // ledger from having to fit in memory all at once.
+  for (let i = 0; i < keys.length; i += 1000) {
+    const chunk = keys.slice(i, i + 1000)
+    const values = chunk.map((k) => `(${sqlLiteral(k.typeNo)},${sqlLiteral(k.jvtype)})`).join(',')
+    const statements = [
+      "IF OBJECT_ID('tempdb..#k') IS NOT NULL DROP TABLE #k;",
+      'CREATE TABLE #k (type_no nvarchar(200) COLLATE DATABASE_DEFAULT, jvtype nvarchar(50) COLLATE DATABASE_DEFAULT, PRIMARY KEY (type_no, jvtype));',
+      `INSERT INTO #k (type_no, jvtype) VALUES ${values};`,
+      `SELECT ${lineColumns.map((c) => columnExpression(c, 'a.')).join(', ')} FROM astran a JOIN #k k ON CONVERT(nvarchar(200), a.type_no) = k.type_no AND CONVERT(nvarchar(50), a.jvtype) = k.jvtype;`,
+    ]
+    if (hasMaster && masterColumns.length) {
+      statements.push(
+        `SELECT ${masterColumns.map((c) => columnExpression(c, 'v.')).join(', ')} FROM #k k LEFT JOIN ASVOUCHMAST v ON CONVERT(nvarchar(200), v.TYPE_NO) = k.type_no AND CONVERT(nvarchar(50), v.JVTYPE) = k.jvtype;`
       )
-      postings.forEach((posting, index) => {
-        lineSql.run(
-          randomUUID(), entryId, index + 1,
-          resolveAccount(posting.code, posting.name),
-          round2(posting.debit), round2(posting.credit),
-          posting.text || narration,
-          `${date}T00:00:00.000Z`, tenantId
-        )
-      })
-      existing.add(entryNo)
-      imported += 1
-    } catch (e) {
-      // No transaction here; remove the half-written voucher so a re-run works.
-      if (entryId) {
-        try {
-          db.prepare('DELETE FROM journal_lines WHERE entry_id = ? AND tenant_id = ?').run(entryId, tenantId)
-          db.prepare('DELETE FROM journal_entries WHERE id = ? AND tenant_id = ?').run(entryId, tenantId)
-        } catch { /* ignore */ }
+    }
+    const result = await pool.request().query(statements.join('\n'))
+
+    const narrationByKey = new Map()
+    if (result.recordsets[1]) {
+      for (const row of result.recordsets[1]) {
+        const marker = `${str(ci(row, 'jvtype'))}\u0000${str(ci(row, 'type_no'))}`
+        if (!narrationByKey.has(marker)) narrationByKey.set(marker, row)
       }
-      if (errors.length < 10) errors.push(`${entryNo}: ${e.message}`)
+    }
+
+    const groups = new Map()
+    for (const row of result.recordsets[0] || []) {
+      const marker = `${str(row.jvtype)}\u0000${str(row.type_no)}`
+      let group = groups.get(marker)
+      if (!group) {
+        group = { jvtype: str(row.jvtype), typeNo: str(row.type_no), lines: [] }
+        groups.set(marker, group)
+      }
+      group.lines.push(row)
+    }
+
+    for (const group of groups.values()) {
+      const entryNo = `${group.jvtype}-${group.typeNo}`
+      if (existing.has(entryNo)) { skipped += 1; continue }
+      const postings = []
+      let totalDebit = 0
+      let totalCredit = 0
+      let entryDate = null
+      let reference = ''
+      let currency = ''
+      let description = ''
+      for (const row of group.lines) {
+        const code = str(row.account)
+        if (!code) continue
+        const amount = round2(row.amount)
+        const isDebit = isDebitType(row.type)
+        if (isDebit) totalDebit += amount
+        else totalCredit += amount
+        const date = isoDate(row.jvdate)
+        if (date && (!entryDate || date < entryDate)) entryDate = date
+        if (!reference) reference = str(row.ref) || group.typeNo
+        if (!currency) currency = str(row.curno) || str(ctx.currency) || 'AED'
+        if (!description) {
+          const entryRef = str(row.entry_ref).replace(/^:/, '')
+          description = entryRef || str(row.account_desc)
+        }
+        postings.push({
+          code,
+          name: str(row.account_desc),
+          debit: isDebit ? amount : 0,
+          credit: isDebit ? 0 : amount,
+          text: str(row.entry_ref).replace(/^:/, ''),
+        })
+      }
+      if (!postings.length) { skipped += 1; continue }
+      const master = narrationByKey.get(`${group.jvtype}\u0000${group.typeNo}`) || {}
+      const narration = [str(ci(master, 'descript')), str(ci(master, 'comments'))].filter(Boolean).join(' - ') || description || `Imported ${group.jvtype} ${group.typeNo}`
+      const date = entryDate || new Date().toISOString().slice(0, 10)
+      let entryId = null
+      try {
+        entryId = randomUUID()
+        entrySql.run(
+          entryId, entryNo, date, reference, narration, 'Posted',
+          round2(totalDebit), round2(totalCredit),
+          currency || 'AED', 'Migration', `${date}T00:00:00.000Z`, tenantId
+        )
+        postings.forEach((posting, index) => {
+          lineSql.run(
+            randomUUID(), entryId, index + 1,
+            resolveAccount(posting.code, posting.name),
+            round2(posting.debit), round2(posting.credit),
+            posting.text || narration,
+            `${date}T00:00:00.000Z`, tenantId
+          )
+        })
+        existing.add(entryNo)
+        imported += 1
+      } catch (e) {
+        // No transaction here; remove the half-written voucher so a re-run works.
+        if (entryId) {
+          try {
+            db.prepare('DELETE FROM journal_lines WHERE entry_id = ? AND tenant_id = ?').run(entryId, tenantId)
+            db.prepare('DELETE FROM journal_entries WHERE id = ? AND tenant_id = ?').run(entryId, tenantId)
+          } catch { /* ignore */ }
+        }
+        if (errors.length < 10) errors.push(`${entryNo}: ${e.message}`)
+      }
     }
   }
 
