@@ -1,0 +1,18 @@
+{
+  "name": "@erp/migration-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Customer-side Microsoft SQL Server reader that prepares legacy ERP data for the SaaS importer.",
+  "bin": {
+    "erp-migrate": "src/index.mjs"
+  },
+  "scripts": {
+    "discover": "node src/index.mjs discover",
+    "databases": "node src/index.mjs databases",
+    "dump": "node src/index.mjs dump"
+  },
+  "dependencies": {
+    "mssql": "^12.7.14"
+  }
+}

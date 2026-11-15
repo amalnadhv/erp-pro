@@ -161,6 +161,17 @@ const MENUS = [
   ]},
 ]
 
+// The SaaS build hides the in-app legacy import; the customer-side migration
+// agent owns that flow. Self-hosted installs can opt in at build time.
+const LEGACY_IMPORT_ENABLED =
+  String((import.meta as any).env?.VITE_ENABLE_LEGACY_IMPORT || '').toLowerCase() === 'true' ||
+  Boolean((import.meta as any).env?.DEV)
+if (!LEGACY_IMPORT_ENABLED) {
+  for (const menu of MENUS as any[]) {
+    if (Array.isArray(menu.items)) menu.items = menu.items.filter((item: any) => item.label !== 'SQL Server Migration')
+  }
+}
+
 const DEFAULT_COLUMNS = [
   { key: 'created_at', label: 'DATE', type: 'date' },
   { key: 'name', label: 'NAME' },
@@ -9133,7 +9144,7 @@ const App = () => {
       {!activeCust && !activeInv && !activeStock && activePage === 'Import / Export' && (
         <DataImport />
       )}
-      {!activeCust && !activeInv && !activeStock && activePage === 'SQL Server Migration' && (
+      {LEGACY_IMPORT_ENABLED && !activeCust && !activeInv && !activeStock && activePage === 'SQL Server Migration' && (
         <SqlServerImport />
       )}
 
