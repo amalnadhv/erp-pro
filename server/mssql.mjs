@@ -61,18 +61,39 @@ const PAGE_ROWS = envInt('MSSQL_PAGE_ROWS', 20000, 100)
 // Connection handling
 // ---------------------------------------------------------------------------
 
+const envText = (name) => String(process.env[name] || '').trim()
+
+// Connection details can be configured once on the host (MSSQL_* env vars) so
+// any browser can run an import without typing them. The password is never
+// returned to the browser; blank form fields fall back to these values.
+export function connectionDefaults() {
+  const server = envText('MSSQL_HOST') || envText('MSSQL_SERVER')
+  if (!server) return null
+  const trust = envText('MSSQL_TRUST_CERT')
+  return {
+    server,
+    port: Number(envText('MSSQL_PORT')) || 1433,
+    instanceName: envText('MSSQL_INSTANCE'),
+    database: envText('MSSQL_DATABASE'),
+    user: envText('MSSQL_USER'),
+    hasPassword: Boolean(process.env.MSSQL_PASSWORD),
+    encrypt: isTrueFlag(envText('MSSQL_ENCRYPT')),
+    trustServerCertificate: trust ? isTrueFlag(trust) : true,
+  }
+}
+
 export function normalizeConnection(input = {}) {
-  let server = String(input.server || '').trim().replace(/^tcp:/i, '')
+  let server = String(input.server || envText('MSSQL_HOST') || envText('MSSQL_SERVER') || '').trim().replace(/^tcp:/i, '')
   if (!server) throw new Error('SQL Server host is required')
-  const database = String(input.database || '').trim()
+  const database = String(input.database || envText('MSSQL_DATABASE') || '').trim()
   if (!database) throw new Error('Database name is required')
-  const user = String(input.user || '').trim()
-  const password = String(input.password || '')
+  const user = String(input.user || envText('MSSQL_USER') || '').trim()
+  const password = String(input.password || process.env.MSSQL_PASSWORD || '')
   if (!user) throw new Error('SQL login is required')
 
   // Accept the usual SQL Server forms: "host", "host,1433", "host\INSTANCE".
-  let port = Number(input.port) || 0
-  let instanceName = String(input.instanceName || '').trim()
+  let port = Number(input.port) || Number(envText('MSSQL_PORT')) || 0
+  let instanceName = String(input.instanceName || envText('MSSQL_INSTANCE') || '').trim()
   const comma = server.lastIndexOf(',')
   if (comma > 0) {
     const maybePort = Number(server.slice(comma + 1).trim())
@@ -97,8 +118,8 @@ export function normalizeConnection(input = {}) {
     user,
     password,
     options: {
-      encrypt: Boolean(input.encrypt),
-      trustServerCertificate: input.trustServerCertificate !== false,
+      encrypt: input.encrypt === undefined ? isTrueFlag(envText('MSSQL_ENCRYPT')) : Boolean(input.encrypt),
+      trustServerCertificate: input.trustServerCertificate === undefined ? connectionDefaults()?.trustServerCertificate !== false : input.trustServerCertificate !== false,
       enableArithAbort: true,
       ...(instanceName ? { instanceName } : {}),
     },

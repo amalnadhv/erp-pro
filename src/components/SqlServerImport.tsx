@@ -44,6 +44,7 @@ async function call(path: string, body: any) {
 
 const SqlServerImport = () => {
   const [form, setForm] = useState<any>({ ...DEFAULT_FORM })
+  const [defaults, setDefaults] = useState<any>(null)
   const [testing, setTesting] = useState(false)
   const [importing, setImporting] = useState(false)
   const [info, setInfo] = useState<any>(null)
@@ -59,6 +60,27 @@ const SqlServerImport = () => {
     const id = setInterval(() => setTick((t) => t + 1), 500)
     return () => clearInterval(id)
   }, [importing])
+
+  useEffect(() => {
+    let cancelled = false
+    call('/mssql/defaults', {})
+      .then((d) => {
+        if (cancelled || !d) return
+        setDefaults(d)
+        setForm((f: any) => ({
+          ...f,
+          server: f.server || d.server || '',
+          port: f.port && f.port !== DEFAULT_FORM.port ? f.port : String(d.port || DEFAULT_FORM.port),
+          instanceName: f.instanceName || d.instanceName || '',
+          database: f.database || d.database || '',
+          user: f.user || d.user || '',
+          encrypt: d.encrypt === undefined ? f.encrypt : Boolean(d.encrypt),
+          trustServerCertificate: d.trustServerCertificate === undefined ? f.trustServerCertificate : d.trustServerCertificate !== false,
+        }))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const set = (key: string, value: any) => setForm((f: any) => ({ ...f, [key]: value }))
   const labelOf = (key: string) => ENTITIES.find((e) => e.key === key)?.label || key
@@ -124,9 +146,9 @@ const SqlServerImport = () => {
       <div className="coa-head"><h3>🗄️ SQL Server Migration — import legacy ERP data</h3></div>
 
       <p style={{ fontSize: 12, color: '#64748b', margin: '6px 0 0' }}>
-        Connects to your Microsoft SQL Server with the credentials below, reads the legacy tables and writes the rows into
-        <b> this company</b>. Credentials are used for this request only and are not stored. Re-running is safe: rows whose
-        key already exists are skipped.
+        Connects to your Microsoft SQL Server, reads the legacy tables and writes the rows into <b>this company</b>.
+        {defaults ? ' The server settings (MSSQL_* env vars) are loaded below; leave a field as-is to use them.' : ''}
+        {' '}Re-running is safe: rows whose key already exists are skipped.
       </p>
 
       {isVercel && (
@@ -158,7 +180,13 @@ const SqlServerImport = () => {
             <input value={form.user} onChange={(e) => set('user', e.target.value)} placeholder="readonly_user" autoComplete="off" />
           </label>
           <label>Password
-            <input type="password" value={form.password} onChange={(e) => set('password', e.target.value)} autoComplete="new-password" />
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) => set('password', e.target.value)}
+              autoComplete="new-password"
+              placeholder={defaults?.hasPassword ? 'Saved on the server — leave blank to use it' : ''}
+            />
           </label>
         </div>
         <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap', fontSize: 13 }}>

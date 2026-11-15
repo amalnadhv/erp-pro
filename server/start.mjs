@@ -132,6 +132,12 @@ server.listen(PORT, HOST, () => {
   console.log(`[erp] listening on http://${HOST}:${PORT} (API at /api)`)
 })
 
+// A legacy import can run for many minutes per entity; the Node default cut-off
+// is 5 minutes, which would abort the browser request mid-import.
+server.requestTimeout = 0
+server.headersTimeout = 60_000
+server.keepAliveTimeout = 65_000
+
 function shutdown() {
   server.close(() => process.exit(0))
   setTimeout(() => process.exit(0), 5000).unref()

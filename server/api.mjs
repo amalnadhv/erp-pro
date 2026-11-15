@@ -9,7 +9,7 @@ import {
   storageDir, dataDir, hashPassword, verifyPassword,
   seedTenantDefaults, DEMO_TENANT_ID,
 } from './db.mjs'
-import { testConnection as mssqlTest, runImport as mssqlImport } from './mssql.mjs'
+import { testConnection as mssqlTest, runImport as mssqlImport, connectionDefaults } from './mssql.mjs'
 
 const MAX_BODY = 30 * 1024 * 1024
 
@@ -809,6 +809,9 @@ export function createApiHandler() {
 
       if (route === '/db' && req.method === 'POST') {
         return send(res, 200, handleQuery(body, auth))
+      }
+      if (route === '/mssql/defaults' && req.method === 'POST') {
+        return send(res, 200, { data: connectionDefaults(), error: null })
       }
       if (route === '/mssql/test' && req.method === 'POST') {
         try {
