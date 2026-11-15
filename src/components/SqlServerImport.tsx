@@ -3,16 +3,16 @@ import { useEffect, useState } from 'react'
 const LOCAL_API = (import.meta as any).env?.VITE_LOCAL_API || '/api'
 
 type Entity = { key: string; label: string; source: string; note: string }
-type ReportRow = { entity: string; source?: string; imported: number; skipped: number; errors: string[]; ms?: number }
+type ReportRow = { entity: string; source?: string; imported: number; skipped: number; errors: string[]; ms?: number; note?: string }
 
 const ENTITIES: Entity[] = [
   { key: 'accounts', label: 'Chart of Accounts', source: 'asmast', note: 'Legacy GL accounts with opening balances' },
-  { key: 'customers', label: 'Customers', source: 'asmast + ASADR', note: 'Accounts with type 1205/1210 plus address book' },
-  { key: 'suppliers', label: 'Suppliers', source: 'asmast + ASADR', note: 'Accounts with type 2205/2210 plus address book' },
+  { key: 'customers', label: 'Customers', source: 'asmast + ASADR', note: 'Accounts used by A/R invoices plus address book' },
+  { key: 'suppliers', label: 'Suppliers', source: 'asmast + ASADR', note: 'Accounts used by A/P invoices plus address book' },
   { key: 'products', label: 'Stock Items', source: 'asicm', note: 'Item master with cost, price, VAT and stock' },
-  { key: 'invoices', label: 'A/R Invoices', source: 'asinv', note: 'Sales invoices (headers only)' },
-  { key: 'purchase_invoices', label: 'A/P Invoices', source: 'aspinv', note: 'Purchase invoices (headers only)' },
-  { key: 'journal_entries', label: 'Journal Entries (GL)', source: 'astran', note: 'Posted double-entry vouchers. Max rows = number of vouchers' },
+  { key: 'invoices', label: 'A/R Invoices', source: 'asinv', note: 'Sales invoices with paid and balance' },
+  { key: 'purchase_invoices', label: 'A/P Invoices', source: 'aspinv', note: 'Purchase invoices with paid and balance' },
+  { key: 'journal_entries', label: 'Journal Entries (GL)', source: 'astran', note: 'Posted double-entry vouchers; limit counts vouchers' },
   { key: 'stock_movements', label: 'Stock Movements', source: 'asict', note: 'Item in/out movements from sales, purchases and returns' },
 ]
 
@@ -50,7 +50,7 @@ const SqlServerImport = () => {
   const [error, setError] = useState('')
   const [report, setReport] = useState<ReportRow[] | null>(null)
   const [selected, setSelected] = useState<string[]>(ENTITIES.map((e) => e.key))
-  const [limit, setLimit] = useState('2000')
+  const [limit, setLimit] = useState('0')
   const [progress, setProgress] = useState<{ done: number; total: number; current: string; startedAt: number } | null>(null)
   const [, setTick] = useState(0)
 
@@ -82,14 +82,16 @@ const SqlServerImport = () => {
 
   const run = async () => {
     if (!selected.length) { setError('Select at least one entity.'); return }
+    const order = ENTITIES.map((e) => e.key)
+    const queue = [...selected].sort((a, b) => order.indexOf(a) - order.indexOf(b))
     setImporting(true); setError(''); setReport([])
     const startedAt = Date.now()
     const rows: ReportRow[] = []
-    setProgress({ done: 0, total: selected.length, current: selected[0], startedAt })
+    setProgress({ done: 0, total: queue.length, current: queue[0], startedAt })
     try {
-      for (let i = 0; i < selected.length; i++) {
-        const key = selected[i]
-        setProgress({ done: i, total: selected.length, current: key, startedAt })
+      for (let i = 0; i < queue.length; i++) {
+        const key = queue[i]
+        setProgress({ done: i, total: queue.length, current: key, startedAt })
         const result = await call('/mssql/import', {
           connection: connection(),
           entities: [key],
@@ -97,7 +99,7 @@ const SqlServerImport = () => {
         })
         rows.push(...(result.report || []))
         setReport([...rows])
-        setProgress({ done: i + 1, total: selected.length, current: key, startedAt })
+        setProgress({ done: i + 1, total: queue.length, current: key, startedAt })
       }
     } catch (e: any) {
       setError(e?.message || 'Import failed')
@@ -115,6 +117,8 @@ const SqlServerImport = () => {
     return stats[table]
   }
 
+  const isVercel = typeof window !== 'undefined' && /\.vercel\.app$/i.test(window.location.hostname)
+
   return (
     <div className="doc-workspace">
       <div className="coa-head"><h3>🗄️ SQL Server Migration — import legacy ERP data</h3></div>
@@ -124,6 +128,14 @@ const SqlServerImport = () => {
         <b> this company</b>. Credentials are used for this request only and are not stored. Re-running is safe: rows whose
         key already exists are skipped.
       </p>
+
+      {isVercel && (
+        <div style={{ marginTop: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, fontSize: 12, color: '#92400e' }}>
+          ⚠️ This build is running on Vercel. Its SQLite file lives in <code>/tmp</code>, which is wiped when the function
+          restarts, so imported data will not survive. For real use deploy the same app to a host with a persistent disk
+          (Render/Railway/Fly/Docker, <code>ERP_DATA_DIR</code>) and make sure the SQL Server is reachable from that host.
+        </div>
+      )}
 
       {error && <div className="inv-error" style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>⚠️ {error}</div>}
 
@@ -195,7 +207,7 @@ const SqlServerImport = () => {
           <label style={{ fontSize: 13 }}>Max rows per entity
             <input style={{ width: 110, marginLeft: 6 }} value={limit} onChange={(e) => setLimit(e.target.value)} />
           </label>
-          <span style={{ fontSize: 12, color: '#64748b' }}>0 = everything (may take a while)</span>
+          <span style={{ fontSize: 12, color: '#64748b' }}>0 = everything (recommended; each entity finishes in its own request)</span>
           <button className="btn-primary" disabled={importing || testing || !info} onClick={run}>
             {importing ? 'Importing… keep this tab open' : '⬇️ Start import'}
           </button>
@@ -226,7 +238,7 @@ const SqlServerImport = () => {
         <div className="report-section" style={{ marginTop: 14 }}>
           <h4 style={{ margin: '0 0 10px' }}>3. Result</h4>
           <table className="data-grid report-table">
-            <thead><tr><th>Entity</th><th>Source</th><th>Imported</th><th>Skipped</th><th>Errors</th><th>Time</th></tr></thead>
+            <thead><tr><th>Entity</th><th>Source</th><th>Imported</th><th>Skipped</th><th>Errors</th><th>Note</th><th>Time</th></tr></thead>
             <tbody>
               {report.map((r) => (
                 <tr key={r.entity}>
@@ -235,6 +247,7 @@ const SqlServerImport = () => {
                   <td style={{ color: r.imported ? '#047857' : undefined }}><b>{r.imported}</b></td>
                   <td>{r.skipped}</td>
                   <td style={{ color: r.errors.length ? '#dc2626' : undefined }}>{r.errors.length}</td>
+                  <td style={{ color: '#64748b', fontSize: 12 }}>{r.note || ''}</td>
                   <td>{r.ms ? `${(r.ms / 1000).toFixed(1)}s` : '—'}</td>
                 </tr>
               ))}

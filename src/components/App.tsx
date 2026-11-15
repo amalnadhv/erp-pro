@@ -3003,7 +3003,7 @@ const SupplierBalanceReport = ({ fmtMoney }) => {
   }, [])
   const supData = suppliers.map((s) => {
     const name = s.name || `${s.first_name || ''} ${s.last_name || ''}`.trim()
-    const invs = invoices.filter((inv) => (inv.supplier_name === name || inv.supplier_id === s.id) && (!asOfDate || inv.created_at?.split('T')[0] <= asOfDate))
+    const invs = invoices.filter((inv) => (inv.supplier_name === name || inv.supplier_id === s.id || inv.party_name === name || inv.party_id === s.id) && (!asOfDate || inv.created_at?.split('T')[0] <= asOfDate))
     const pays = payments.filter((p) => (p.supplier_name === name || p.supplier_id === s.id) && (!asOfDate || p.created_at?.split('T')[0] <= asOfDate))
     const totalPurchases = invs.reduce((s, inv) => s + Number(inv.grand_total || 0), 0)
     const totalPaid = pays.reduce((s, p) => s + Number(p.amount || 0), 0)
