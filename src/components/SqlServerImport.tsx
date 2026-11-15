@@ -207,7 +207,7 @@ const SqlServerImport = () => {
           <label style={{ fontSize: 13 }}>Max rows per entity
             <input style={{ width: 110, marginLeft: 6 }} value={limit} onChange={(e) => setLimit(e.target.value)} />
           </label>
-          <span style={{ fontSize: 12, color: '#64748b' }}>0 = everything (recommended; each entity finishes in its own request)</span>
+          <span style={{ fontSize: 12, color: '#64748b' }}>0 = everything up to the server ceiling (MSSQL_MAX_ROWS, default 1,000,000)</span>
           <button className="btn-primary" disabled={importing || testing || !info} onClick={run}>
             {importing ? 'Importing… keep this tab open' : '⬇️ Start import'}
           </button>

@@ -46,6 +46,17 @@ export const ENTITIES = [
 
 const ENTITY_KEYS = new Set(ENTITIES.map((e) => e.key))
 
+// Import ceilings. Large legacy tables are read page by page so the process
+// memory stays bounded; the ceilings only guard against an accidental
+// full-table import of an unexpectedly huge database. Override with env vars.
+function envInt(name, fallback, min = 1) {
+  const value = Number(process.env[name])
+  return Number.isFinite(value) && value >= min ? Math.floor(value) : fallback
+}
+const MAX_ROWS = envInt('MSSQL_MAX_ROWS', 1000000)
+const MAX_VOUCHERS = envInt('MSSQL_MAX_VOUCHERS', 200000)
+const PAGE_ROWS = envInt('MSSQL_PAGE_ROWS', 20000, 100)
+
 // ---------------------------------------------------------------------------
 // Connection handling
 // ---------------------------------------------------------------------------
@@ -271,6 +282,25 @@ async function selectRows(pool, table, wanted, limit = 0, orderBy = '') {
   }
   const top = limit > 0 ? `TOP (${Math.max(1, Math.floor(limit))}) ` : ''
   const sqlText = `SELECT ${top}${columns.map((c) => columnExpression(c)).join(', ')} FROM [${table}]${orderBy ? ` ORDER BY ${orderBy}` : ''}`
+  const result = await pool.request().query(sqlText)
+  return result.recordset
+}
+
+// Reads the next page with TOP plus a keyset filter (`after`). This avoids
+// OFFSET/FETCH so it also runs on older SQL Server versions, and keeps memory
+// bounded when the legacy table is larger than one import run.
+async function selectRowsPage(pool, table, wanted, { take, orderBy, after = '' }) {
+  const available = await sourceColumns(pool, table)
+  if (!available.size) throw new Error(`Source table "${table}" was not found in this database.`)
+  const columns = pickColumns(available, wanted)
+  if (!columns.length) {
+    const names = [...available.values()].map((c) => c.name)
+    throw new Error(`Source table "${table}" has none of the expected columns. Found: ${names.slice(0, 25).join(', ')}`)
+  }
+  if (!orderBy) throw new Error(`An ORDER BY column is required to page table "${table}".`)
+  const size = Math.max(1, Math.floor(take))
+  const where = after ? ` WHERE ${after}` : ''
+  const sqlText = `SELECT TOP (${size}) ${columns.map((c) => columnExpression(c)).join(', ')} FROM [${table}]${where} ORDER BY ${orderBy}`
   const result = await pool.request().query(sqlText)
   return result.recordset
 }
@@ -625,7 +655,13 @@ async function importProducts(ctx) {
       if (errors.length < 10) errors.push(`${code}: ${e.message}`)
     }
   }
-  return { source: 'asicm', imported, skipped, errors }
+  return {
+    source: 'asicm',
+    imported,
+    skipped,
+    errors,
+    note: limit > 0 && rows.length >= limit ? `stopped at ${limit} items; raise MSSQL_MAX_ROWS to import the rest` : '',
+  }
 }
 
 const sqlLiteral = (value) => `N'${String(value ?? '').replace(/'/g, "''")}'`
@@ -699,8 +735,6 @@ async function importInvoices(ctx, kind) {
       'disc_amt', 'inv_date', 'due_date', 'comments', 'status', 'tran_type']
     : ['inv_no', 'account', 'accdesc', 'amount', 'vatamt', 'paid_amount', 'total_paid_amt',
       'Balance_amt', 'date', 'duedate', 'remarks', 'status', 'tran_type']
-  const order = isAr ? 'inv_date DESC, inv_no DESC' : 'date DESC, inv_no DESC'
-  const rows = await selectRows(pool, table, wanted, limit, order)
   const inserter = createInserter(db, target, tenantId, key)
 
   const partyIdByCode = new Map()
@@ -719,99 +753,124 @@ async function importInvoices(ctx, kind) {
     if (row.code) productIdByCode.set(String(row.code), row.id)
   }
 
-  const pending = []
   const seen = new Set()
-  for (const row of rows) {
-    const docNo = str(row.inv_no)
-    if (!docNo) continue
-    if (seen.has(docNo) || inserter.hasKey(docNo)) continue
-    seen.add(docNo)
-    pending.push(row)
-  }
-  const linesByNumber = await loadInvoiceLines(pool, pending.map((row) => str(row.inv_no)))
-
   let imported = 0
-  let skipped = rows.length - pending.length
+  let skipped = 0
+  let fetched = 0
+  let last = null
+  let hitLimit = false
   const errors = []
 
-  for (const row of pending) {
-    const docNo = str(row.inv_no)
-    try {
-      const vat = round2(row.vatamt)
-      const paid = round2(firstValue(row, isAr ? ['paid_amt', 'total_paid_amt'] : ['paid_amount', 'total_paid_amt']))
-      const legacyBalance = firstValue(row, isAr ? ['balance_amt'] : ['Balance_amt'])
-      let total
-      if (isAr) {
-        total = round2(row.inv_total)
-      } else {
-        // A/P "amount" is usually the net value and VAT is separate, but some
-        // databases store it gross. Use the legacy balance + paid (independent
-        // fields) to decide which interpretation fits.
-        const amount = round2(row.amount)
-        const netPlusVat = round2(amount + vat)
-        const grossAmount = amount
-        if (legacyBalance !== null && (paid > 0 || num(legacyBalance) > 0)) {
-          const implied = round2(num(legacyBalance) + paid)
-          total = Math.abs(implied - netPlusVat) <= Math.abs(implied - grossAmount) ? netPlusVat : grossAmount
-        } else {
-          total = netPlusVat
-        }
-      }
-      const subtotal = round2(Math.max(total - vat, 0)) || total
-      const balance = legacyBalance !== null ? round2(legacyBalance) : round2(Math.max(total - paid, 0))
-      const partyCode = str(isAr ? row.cust_acc : row.account)
-      const partyName = isAr
-        ? (nameByAccount.get(partyCode) || partyCode || 'Unknown customer')
-        : (str(row.accdesc) || nameByAccount.get(partyCode) || partyCode || 'Unknown supplier')
-      const docDate = isoDate(isAr ? row.inv_date : row.date)
-      const dueDate = isoDate(isAr ? row.due_date : row.duedate)
-      // Sales reports/dashboard in the app read lowercase paid/pending.
-      const status = balance <= 0.005 ? 'paid' : 'pending'
-      const vatPercent = subtotal > 0 ? Math.round((vat / subtotal) * 10000) / 100 : 0
+  const importRows = async (rows) => {
+    const pending = []
+    for (const row of rows) {
+      const docNo = str(row.inv_no)
+      if (!docNo) { skipped += 1; continue }
+      if (seen.has(docNo) || inserter.hasKey(docNo)) { skipped += 1; continue }
+      seen.add(docNo)
+      pending.push(row)
+    }
+    const linesByNumber = await loadInvoiceLines(pool, pending.map((row) => str(row.inv_no)))
 
-      if (isAr) {
-        inserter.insert({
-          invoice_no: docNo,
-          customer_id: partyIdByCode.get(partyCode) || null,
-          customer_name: partyName,
-          customer_vat: '',
-          items: JSON.stringify(invoiceItems(linesByNumber.get(docNo), productIdByCode)),
-          subtotal,
-          vat_percent: vatPercent,
-          vat_amount: vat,
-          grand_total: total,
-          amount_paid: paid,
-          balance,
-          status,
-          invoice_date: docDate,
-          due_date: dueDate,
-          created_at: docDate ? `${docDate}T00:00:00.000Z` : undefined,
-          notes: str(row.comments) || 'Imported from legacy A/R invoice',
-        })
-      } else {
-        inserter.insert({
-          pin_no: docNo,
-          party_id: partyIdByCode.get(partyCode) || null,
-          party_name: partyName,
-          doc_date: docDate,
-          due_date: dueDate,
-          currency,
-          items: JSON.stringify(invoiceItems(linesByNumber.get(docNo), productIdByCode)),
-          subtotal,
-          vat_percent: vatPercent,
-          vat_amount: vat,
-          grand_total: total,
-          status: 'Approved',
-          created_at: docDate ? `${docDate}T00:00:00.000Z` : undefined,
-          notes: str(row.remarks) || 'Imported from legacy A/P invoice',
-        })
+    for (const row of pending) {
+      const docNo = str(row.inv_no)
+      try {
+        const vat = round2(row.vatamt)
+        const paid = round2(firstValue(row, isAr ? ['paid_amt', 'total_paid_amt'] : ['paid_amount', 'total_paid_amt']))
+        const legacyBalance = firstValue(row, isAr ? ['balance_amt'] : ['Balance_amt'])
+        let total
+        if (isAr) {
+          total = round2(row.inv_total)
+        } else {
+          // A/P "amount" is usually the net value and VAT is separate, but some
+          // databases store it gross. Use the legacy balance + paid (independent
+          // fields) to decide which interpretation fits.
+          const amount = round2(row.amount)
+          const netPlusVat = round2(amount + vat)
+          const grossAmount = amount
+          if (legacyBalance !== null && (paid > 0 || num(legacyBalance) > 0)) {
+            const implied = round2(num(legacyBalance) + paid)
+            total = Math.abs(implied - netPlusVat) <= Math.abs(implied - grossAmount) ? netPlusVat : grossAmount
+          } else {
+            total = netPlusVat
+          }
+        }
+        const subtotal = round2(Math.max(total - vat, 0)) || total
+        const balance = legacyBalance !== null ? round2(legacyBalance) : round2(Math.max(total - paid, 0))
+        const partyCode = str(isAr ? row.cust_acc : row.account)
+        const partyName = isAr
+          ? (nameByAccount.get(partyCode) || partyCode || 'Unknown customer')
+          : (str(row.accdesc) || nameByAccount.get(partyCode) || partyCode || 'Unknown supplier')
+        const docDate = isoDate(isAr ? row.inv_date : row.date)
+        const dueDate = isoDate(isAr ? row.due_date : row.duedate)
+        // Sales reports/dashboard in the app read lowercase paid/pending.
+        const status = balance <= 0.005 ? 'paid' : 'pending'
+        const vatPercent = subtotal > 0 ? Math.round((vat / subtotal) * 10000) / 100 : 0
+
+        if (isAr) {
+          inserter.insert({
+            invoice_no: docNo,
+            customer_id: partyIdByCode.get(partyCode) || null,
+            customer_name: partyName,
+            customer_vat: '',
+            items: JSON.stringify(invoiceItems(linesByNumber.get(docNo), productIdByCode)),
+            subtotal,
+            vat_percent: vatPercent,
+            vat_amount: vat,
+            grand_total: total,
+            amount_paid: paid,
+            balance,
+            status,
+            invoice_date: docDate,
+            due_date: dueDate,
+            created_at: docDate ? `${docDate}T00:00:00.000Z` : undefined,
+            notes: str(row.comments) || 'Imported from legacy A/R invoice',
+          })
+        } else {
+          inserter.insert({
+            pin_no: docNo,
+            party_id: partyIdByCode.get(partyCode) || null,
+            party_name: partyName,
+            doc_date: docDate,
+            due_date: dueDate,
+            currency,
+            items: JSON.stringify(invoiceItems(linesByNumber.get(docNo), productIdByCode)),
+            subtotal,
+            vat_percent: vatPercent,
+            vat_amount: vat,
+            grand_total: total,
+            status: 'Approved',
+            created_at: docDate ? `${docDate}T00:00:00.000Z` : undefined,
+            notes: str(row.remarks) || 'Imported from legacy A/P invoice',
+          })
+        }
+        imported += 1
+      } catch (e) {
+        if (errors.length < 10) errors.push(`${docNo}: ${e.message}`)
       }
-      imported += 1
-    } catch (e) {
-      if (errors.length < 10) errors.push(`${docNo}: ${e.message}`)
     }
   }
-  return { source: table, imported, skipped, errors }
+
+  while (fetched < limit) {
+    const take = Math.min(PAGE_ROWS, limit - fetched)
+    const after = last === null ? '' : `[inv_no] < ${sqlLiteral(last)}`
+    const rows = await selectRowsPage(pool, table, wanted, { take, orderBy: 'inv_no DESC', after })
+    if (!rows.length) break
+    fetched += rows.length
+    await importRows(rows)
+    last = str(rows[rows.length - 1].inv_no)
+    if (!last) break
+    if (rows.length < take) break
+    if (fetched >= limit) hitLimit = true
+  }
+
+  return {
+    source: table,
+    imported,
+    skipped,
+    errors,
+    note: hitLimit ? `stopped at ${limit} invoices; raise MSSQL_MAX_ROWS to import the rest` : '',
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -844,7 +903,7 @@ async function importJournalEntries(ctx) {
     if (!cols.has(required)) throw new Error(`Source table "astran" is missing the "${required}" column.`)
   }
 
-  const maxVouchers = limit > 0 ? Math.min(limit, 200000) : 200000
+  const maxVouchers = limit > 0 ? Math.min(limit, MAX_VOUCHERS) : MAX_VOUCHERS
   const keyResult = await pool.request().query(`
     SELECT TOP (${Math.max(1, Math.floor(maxVouchers))}) type_no, jvtype
     FROM (
@@ -1013,7 +1072,7 @@ async function importJournalEntries(ctx) {
 
   const notes = []
   if (stubCount) notes.push(`${stubCount} missing accounts auto-created`)
-  if (keys.length >= maxVouchers) notes.push(`imported the earliest ${maxVouchers} vouchers; increase the limit to reach older ones`)
+  if (keys.length >= maxVouchers) notes.push(`imported the earliest ${maxVouchers} vouchers; raise MSSQL_MAX_VOUCHERS to import later ones`)
   return {
     source: 'astran',
     imported,
@@ -1055,10 +1114,10 @@ async function importStockMovements(ctx) {
   for (const required of ['code', 'tr_type', 'tr_qty', 'tr_date']) {
     if (!cols.has(required)) throw new Error(`Source table "asict" is missing the "${required}" column.`)
   }
-  const rows = await selectRows(pool, 'asict', [
+  const wanted = [
     'tr_refno', 'tr_desc', 'tr_date', 'code', 'tr_type', 'tr_qty', 'unit_cost', 'unit', 'inv_no',
     'unit_price', 'idesc', 'type', 'locn', 'line_total', 'id',
-  ], limit, 'id ASC')
+  ]
 
   const productIds = new Map()
   for (const row of db.prepare('SELECT id, code FROM products WHERE tenant_id = ?').all(tenantId)) {
@@ -1082,34 +1141,56 @@ async function importStockMovements(ctx) {
 
   let imported = 0
   let skipped = 0
+  let fetched = 0
+  let lastId = null
+  let hitLimit = false
   const errors = []
-  for (const row of rows) {
-    const code = str(row.code)
-    const date = isoDate(row.tr_date) || new Date().toISOString().slice(0, 10)
-    const movementType = movementDirection(row.tr_type, row.type, row.tr_qty)
-    const quantity = round2(Math.abs(num(row.tr_qty)))
-    const baseRef = str(row.tr_refno) || str(row.inv_no) || 'MOV'
-    const movementNo = `${baseRef}-${str(row.id)}`
-    const productId = productIds.get(code) || null
-    const warehouse = str(row.locn) || 'MAIN'
-    const marker = `${movementNo}|${productId || ''}|${date}|${movementType}|${quantity}`
-    const legacyMarker = `${baseRef}|${productId || ''}|${date}|${movementType}|${quantity}|${warehouse}`
-    if (existing.has(marker) || legacyExisting.has(legacyMarker)) { skipped += 1; continue }
-    try {
-      const reference = str(row.inv_no) || baseRef
-      insertSql.run(
-        randomUUID(), movementNo, productId, str(row.idesc) || code,
-        movementType, quantity, warehouse,
-        `${str(row.type)} ${reference}`.trim(), date, 'Posted',
-        `${date}T00:00:00.000Z`, tenantId
-      )
-      existing.add(marker)
-      imported += 1
-    } catch (e) {
-      if (errors.length < 10) errors.push(`${movementNo}: ${e.message}`)
+
+  while (fetched < limit) {
+    const take = Math.min(PAGE_ROWS, limit - fetched)
+    const after = lastId === null ? '' : `[id] > ${sqlLiteral(lastId)}`
+    const rows = await selectRowsPage(pool, 'asict', wanted, { take, orderBy: 'id ASC', after })
+    if (!rows.length) break
+    fetched += rows.length
+    for (const row of rows) {
+      const code = str(row.code)
+      const date = isoDate(row.tr_date) || new Date().toISOString().slice(0, 10)
+      const movementType = movementDirection(row.tr_type, row.type, row.tr_qty)
+      const quantity = round2(Math.abs(num(row.tr_qty)))
+      const baseRef = str(row.tr_refno) || str(row.inv_no) || 'MOV'
+      const movementNo = `${baseRef}-${str(row.id)}`
+      const productId = productIds.get(code) || null
+      const warehouse = str(row.locn) || 'MAIN'
+      const marker = `${movementNo}|${productId || ''}|${date}|${movementType}|${quantity}`
+      const legacyMarker = `${baseRef}|${productId || ''}|${date}|${movementType}|${quantity}|${warehouse}`
+      if (existing.has(marker) || legacyExisting.has(legacyMarker)) { skipped += 1; continue }
+      try {
+        const reference = str(row.inv_no) || baseRef
+        insertSql.run(
+          randomUUID(), movementNo, productId, str(row.idesc) || code,
+          movementType, quantity, warehouse,
+          `${str(row.type)} ${reference}`.trim(), date, 'Posted',
+          `${date}T00:00:00.000Z`, tenantId
+        )
+        existing.add(marker)
+        imported += 1
+      } catch (e) {
+        if (errors.length < 10) errors.push(`${movementNo}: ${e.message}`)
+      }
     }
+    lastId = rows[rows.length - 1].id
+    if (lastId === null || lastId === undefined) break
+    if (rows.length < take) break
+    if (fetched >= limit) hitLimit = true
   }
-  return { source: 'asict', imported, skipped, errors }
+
+  return {
+    source: 'asict',
+    imported,
+    skipped,
+    errors,
+    note: hitLimit ? `stopped at ${limit} movements; raise MSSQL_MAX_ROWS to import the rest` : '',
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1154,7 +1235,7 @@ export async function runImport({ connection, tenantId, entities, limit, db }) {
   const list = (Array.isArray(entities) ? entities : []).filter((key) => ENTITY_KEYS.has(key))
   if (!list.length) throw new Error('Select at least one entity to import.')
   const requested = Number(limit)
-  const maxRows = Number.isFinite(requested) && requested > 0 ? Math.min(Math.floor(requested), 200000) : 200000
+  const maxRows = Number.isFinite(requested) && requested > 0 ? Math.min(Math.floor(requested), MAX_ROWS) : MAX_ROWS
 
   return withPool(connection, async (pool) => {
     const ctx = await loadContext(pool, db, tenantId, maxRows)
