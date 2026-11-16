@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 interface Props { fmtMoney: (n: number) => string }
 
@@ -13,26 +14,26 @@ export default function InventoryMovementReport({ fmtMoney }: Props) {
   const [warehouse, setWarehouse] = useState('')
   const [warehouses, setWarehouses] = useState<string[]>([])
 
-  useEffect(() => {
-    Promise.all([
-      supabase.from('products').select('id, code, name, stock_quantity, warehouse').order('name'),
-      supabase.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(500),
-    ]).then(([pRes, mRes]) => {
+  const load = async () => {
+    setLoading(true)
+    try {
+      const [pRes, mRes] = await Promise.all([
+        supabase.from('products').select('id, code, name, stock_quantity, warehouse').order('name'),
+        selectedProduct
+          ? supabase.from('stock_movements').select('*').eq('product_id', selectedProduct).order('created_at', { ascending: false }).limit(200)
+          : supabase.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(500),
+      ])
       setProducts(pRes.data || [])
       setMovements(mRes.data || [])
-      const whs = [...new Set((mRes.data || []).map((m: any) => m.warehouse).filter(Boolean))]
-      setWarehouses(whs)
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [])
+      if (!selectedProduct) {
+        const whs = [...new Set((mRes.data || []).map((m: any) => m.warehouse).filter(Boolean))]
+        setWarehouses(whs as string[])
+      }
+    } finally { setLoading(false) }
+  }
 
-  useEffect(() => {
-    if (!selectedProduct) { setMovements([]); return }
-    setLoading(true)
-    supabase.from('stock_movements').select('*').eq('product_id', selectedProduct).order('created_at', { ascending: false }).limit(200)
-      .then(({ data }) => { setMovements(data || []); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [selectedProduct])
+  useEffect(() => { load() }, [selectedProduct])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filtered = movements.filter((m) => {
     if (dateFrom && (m.movement_date || m.created_at || '').slice(0, 10) < dateFrom) return false
@@ -48,6 +49,10 @@ export default function InventoryMovementReport({ fmtMoney }: Props) {
   return (
     <div>
       <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>📦 Inventory Movement Report</h2>
+
+      <div style={{ marginBottom: 12 }}>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
+      </div>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <label style={{ flex: '2 1 250px', fontSize: 12, fontWeight: 600 }}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 const num = (v: any) => Number(v || 0)
 const money = (v: number) => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -11,7 +12,8 @@ export default function InventoryValuation() {
   const [sales, setSales] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { (async () => {
+  const load = async () => {
+    setLoading(true)
     const [p, pi, si] = await Promise.all([
       supabase.from('products').select('*'),
       supabase.from('purchase_invoices').select('id, date, items'),
@@ -21,7 +23,10 @@ export default function InventoryValuation() {
     setPurchases(pi.data || [])
     setSales(si.data || [])
     setLoading(false)
-  })() }, [])
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const purchaseLayers: any = {}
   for (const inv of purchases) for (const it of (inv.items || [])) {
@@ -74,6 +79,7 @@ export default function InventoryValuation() {
       <div className="report-head">
         <h3>📦 Inventory Valuation</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <ShareBar title="Inventory Valuation" columns={cols} rows={rows} meta={{ 'Total Stock Value': money(totalValue), 'Total COGS': money(totalCogs) }} />
         </div>
       </div>

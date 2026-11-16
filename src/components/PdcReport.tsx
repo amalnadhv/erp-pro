@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 import { numberToWords } from '../utils/numwords'
 import { logActivity } from '../utils/audit'
 
@@ -68,6 +69,8 @@ export default function PdcReport({ accounts }: any) {
     setParties([...(cs || []).map((x: any) => ({ id: x.id, name: x.name, type: 'customer' })), ...(ss || []).map((x: any) => ({ id: x.id, name: x.name, type: 'supplier' }))])
     setLoading(false)
   }
+
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filtered = cheques.filter((c) => (dir === 'all' || c.direction === dir) && c.cheque_date >= from && c.cheque_date <= to)
   const rec = filtered.filter((c) => c.direction === 'Received')
@@ -175,6 +178,7 @@ export default function PdcReport({ accounts }: any) {
       <div className="report-head">
         <h3>🏦 PDC Report (Received / Issued)</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <select value={dir} onChange={(e) => setDir(e.target.value as any)}>
             <option value="all">All</option><option value="Received">Received (On Hand)</option><option value="Issued">Issued</option>
           </select>

@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 const num = (v: any) => Number(v || 0)
 const money = (v: number) => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export default function FxRevaluation({ accounts, baseCurrency }: any) {
+export default function FxRevaluation({ accounts, baseCurrency, onRetrieve }: any) {
   const [rates, setRates] = useState<any[]>([])
   const [asOf, setAsOf] = useState(new Date().toISOString().slice(0, 10))
   const [rows, setRows] = useState<any[]>([])
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { (async () => { const { data } = await supabase.from('exchange_rates').select('*').order('rate_date', { ascending: false }); setRates(data || []) })() }, [])
+  const loadRates = async () => {
+    const { data } = await supabase.from('exchange_rates').select('*').order('rate_date', { ascending: false })
+    setRates(data || [])
+  }
+
+  useEffect(() => { loadRates() }, [])
   useEffect(() => { build() }, [asOf, rates, accounts, baseCurrency])
+  const { retrieving, retrieve } = useRetrieve(async () => { await onRetrieve?.(); await loadRates() })
 
   const rateFor = (cur: string) => {
     const direct = rates.filter((r: any) => r.from_currency === cur && r.to_currency === baseCurrency && r.rate_date <= asOf)
@@ -101,6 +108,7 @@ export default function FxRevaluation({ accounts, baseCurrency }: any) {
           <span><b>FX Accounts:</b> {rows.length}</span>
         </div>
         <div className="fa-tools">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <label className="fa-month">As of<input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></label>
           <button className="doc-btn primary" onClick={postAll} disabled={saving || !rows.length}>Post Revaluation</button>
           <ShareBar title="FX Revaluation" columns={cols} rows={exportRows} meta={{ 'Total Gain/(Loss)': money(rows.reduce((s, r) => s + r.diff, 0)) }} />

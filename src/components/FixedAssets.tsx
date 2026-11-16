@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 import { logActivity } from '../utils/audit'
 
 const num = (v: any) => Number(v || 0)
@@ -36,22 +37,24 @@ export default function FixedAssets() {
   })
   const [depMonth, setDepMonth] = useState(new Date().toISOString().slice(0, 7))
 
-  useEffect(() => {
-    (async () => {
-      let p: any = null
-      try { const { data } = await supabase.from('company_profile').select('*').single(); p = data } catch { /* */ }
-      setProfile(p)
-      const [a, ac] = await Promise.all([
-        supabase.from('fixed_assets').select('*').order('purchase_date', { ascending: false }),
-        supabase.from('accounts').select('id, code, name, type, current_balance').order('code'),
-      ])
-      setAssets(a.data || [])
-      setAccounts(ac.data || [])
-      const bank = (ac.data || []).find((x: any) => /bank|cash/i.test(x.name || ''))
-      setForm((f) => ({ ...f, credit_account_id: bank ? bank.id : (ac.data && ac.data[0] ? ac.data[0].id : '') }))
-      setLoading(false)
-    })()
-  }, [])
+  const load = async () => {
+    setLoading(true)
+    let p: any = null
+    try { const { data } = await supabase.from('company_profile').select('*').single(); p = data } catch { /* */ }
+    setProfile(p)
+    const [a, ac] = await Promise.all([
+      supabase.from('fixed_assets').select('*').order('purchase_date', { ascending: false }),
+      supabase.from('accounts').select('id, code, name, type, current_balance').order('code'),
+    ])
+    setAssets(a.data || [])
+    setAccounts(ac.data || [])
+    const bank = (ac.data || []).find((x: any) => /bank|cash/i.test(x.name || ''))
+    setForm((f) => ({ ...f, credit_account_id: bank ? bank.id : (ac.data && ac.data[0] ? ac.data[0].id : '') }))
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const ensureAccount = async (name: string, type: string, prefix: string) => {
     const existing = accounts.find((x) => x.name === name && x.type === type)
@@ -223,6 +226,7 @@ export default function FixedAssets() {
           <span><b>NBV:</b> {money(totalNbv)}</span>
         </div>
         <div className="fa-tools">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <button className="doc-btn primary" onClick={() => setShowForm((s) => !s)}>{showForm ? 'Cancel' : '+ Asset Purchase'}</button>
            <button className="doc-btn" onClick={postAll} disabled={saving || !assets.length}>Post All Depreciation</button>
            <span className="fa-sep" />

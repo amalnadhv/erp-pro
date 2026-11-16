@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 import { logActivity } from '../utils/audit'
 
 const num = (v: any) => Number(v || 0)
@@ -67,6 +68,8 @@ export default function Statements() {
     setPayments(ip.data || []); setPays(op.data || [])
     setLoading(false)
   }
+
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const list = tab === 'customer' ? cust : supp
   const cols = tab === 'customer' ? inv : pinv
@@ -190,6 +193,7 @@ export default function Statements() {
       <div className="report-head">
         <h3>📑 Statements & Aging</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <select value={tab} onChange={(e) => { setTab(e.target.value as any); setSel('') }}>
             <option value="customer">Receivables (Customers)</option>
             <option value="supplier">Payables (Suppliers)</option>

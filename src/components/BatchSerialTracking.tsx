@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 interface Props { fmtMoney: (n: number) => string }
 
@@ -20,6 +21,7 @@ export default function BatchSerialTracking({ fmtMoney }: Props) {
     ]).then(([bRes, pRes]) => { setItems(bRes.data || []); setProducts(pRes.data || []); setLoading(false) })
   }
   useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filtered = items.filter((i) => {
     if (filter !== 'All' && i.status !== filter) return false
@@ -63,7 +65,10 @@ export default function BatchSerialTracking({ fmtMoney }: Props) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>🔢 Batch / Serial Tracking</h2>
-        <button onClick={() => setShowForm(true)} style={{ padding: '8px 18px', borderRadius: 8, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Batch/Serial</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
+          <button onClick={() => setShowForm(true)} style={{ padding: '8px 18px', borderRadius: 8, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Batch/Serial</button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>

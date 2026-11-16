@@ -47,6 +47,7 @@ import { emailInvoice } from '../utils/emailInvoice'
 import { fetchTaxConfig, TaxConfig } from '../utils/taxConfig'
 import { COUNTRY_CURRENCIES, formatMoney, getActiveCurrency, setActiveCountry } from '../utils/currency'
 import { installEnterKeyNavigation } from '../utils/enterNavigation'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 import './App.css'
 
 const MENUS = [
@@ -2366,10 +2367,14 @@ const SalesReport = ({ fmtMoney }) => {
   const [loading, setLoading] = useState(true)
   const [fromDate, setFromDate] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0] })
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    supabase.from('invoices').select('*').then(({ data }) => { setInvoices(data || []); setLoading(false) })
-  }, [])
+    const { data } = await supabase.from('invoices').select('*')
+    setInvoices(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
   const filtered = invoices.filter((inv) => {
     const d = inv.created_at?.split('T')[0]
     return (!fromDate || d >= fromDate) && (!toDate || d <= toDate)
@@ -2402,6 +2407,7 @@ const SalesReport = ({ fmtMoney }) => {
          <div className="report-controls">
            <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
            <label>To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Sales Report" onPrint={printReport} onPdf={printReport} text={"Sales Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -2466,10 +2472,14 @@ const PurchaseReport = ({ fmtMoney }) => {
   const [loading, setLoading] = useState(true)
   const [fromDate, setFromDate] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0] })
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    supabase.from('purchase_orders').select('*, suppliers(name)').then(({ data }) => { setOrders(data || []); setLoading(false) })
-  }, [])
+    const { data } = await supabase.from('purchase_orders').select('*, suppliers(name)')
+    setOrders(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
   const filtered = orders.filter((o) => {
     const d = o.created_at?.split('T')[0]
     return (!fromDate || d >= fromDate) && (!toDate || d <= toDate)
@@ -2499,6 +2509,7 @@ const PurchaseReport = ({ fmtMoney }) => {
          <div className="report-controls">
            <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
            <label>To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Purchase Report" onPrint={printReport} onPdf={printReport} text={"Purchase Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -2546,10 +2557,14 @@ const StockReport = ({ fmtMoney }) => {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    supabase.from('products').select('*').then(({ data }) => { setProducts(data || []); setLoading(false) })
-  }, [])
+    const { data } = await supabase.from('products').select('*')
+    setProducts(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
   const activeProducts = products.filter((p) => p.status !== 'Discontinued')
   const filtered = filter === 'all' ? activeProducts : filter === 'low' ? activeProducts.filter((p) => Number(p.stock_quantity || 0) <= Number(p.reorder_level || 0) && Number(p.stock_quantity || 0) > 0) : filter === 'out' ? activeProducts.filter((p) => Number(p.stock_quantity || 0) === 0) : filter === 'over' ? activeProducts.filter((p) => Number(p.max_stock || 0) > 0 && Number(p.stock_quantity || 0) > Number(p.max_stock || 0)) : activeProducts
   const totalItems = activeProducts.length
@@ -2576,6 +2591,7 @@ const StockReport = ({ fmtMoney }) => {
          <h3>📦 Stock Report</h3>
          <div className="report-controls">
            <label>As of Date <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Stock Report" onPrint={printReport} onPdf={printReport} text={"Stock Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -2636,23 +2652,25 @@ const CustomerLedger = ({ fmtMoney }) => {
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
 
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    Promise.all([
+    const [c, inv, pay, cm, ret] = await Promise.all([
       supabase.from('customers').select('*'),
       supabase.from('invoices').select('*'),
       supabase.from('incoming_payments').select('*'),
       supabase.from('ar_credit_memos').select('*').catch(() => ({ data: [] })),
       supabase.from('sales_returns').select('*').catch(() => ({ data: [] })),
-    ]).then(([c, inv, pay, cm, ret]) => {
-      setCustomers(c.data || [])
-      setInvoices(inv.data || [])
-      setPayments(pay.data || [])
-      setCreditMemos(cm.data || [])
-      setReturns(ret.data || [])
-      setLoading(false)
-    })
-  }, [])
+    ])
+    setCustomers(c.data || [])
+    setInvoices(inv.data || [])
+    setPayments(pay.data || [])
+    setCreditMemos(cm.data || [])
+    setReturns(ret.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const selected = customers.find((c) => c.id === selectedCustomer)
   const custName = selected ? (selected.name || `${selected.first_name || ''} ${selected.last_name || ''}`.trim()) : ''
@@ -2710,6 +2728,7 @@ const CustomerLedger = ({ fmtMoney }) => {
       <div className="report-head">
         <h3>📒 Customer Ledger</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <label>Customer
             <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)}>
               <option value="">Select Customer</option>
@@ -2786,23 +2805,25 @@ const SupplierLedger = ({ fmtMoney }) => {
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
 
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    Promise.all([
+    const [s, pi, pay, cm, ret] = await Promise.all([
       supabase.from('suppliers').select('*'),
       supabase.from('purchase_invoices').select('*'),
       supabase.from('outgoing_payments').select('*'),
       supabase.from('ap_credit_memos').select('*').catch(() => ({ data: [] })),
       supabase.from('purchase_returns').select('*').catch(() => ({ data: [] })),
-    ]).then(([s, pi, pay, cm, ret]) => {
-      setSuppliers(s.data || [])
-      setPurchaseInvoices(pi.data || [])
-      setPayments(pay.data || [])
-      setCreditMemos(cm.data || [])
-      setReturns(ret.data || [])
-      setLoading(false)
-    })
-  }, [])
+    ])
+    setSuppliers(s.data || [])
+    setPurchaseInvoices(pi.data || [])
+    setPayments(pay.data || [])
+    setCreditMemos(cm.data || [])
+    setReturns(ret.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const selected = suppliers.find((s) => s.id === selectedSupplier)
   const suppName = selected ? (selected.name || '') : ''
@@ -2860,6 +2881,7 @@ const SupplierLedger = ({ fmtMoney }) => {
       <div className="report-head">
         <h3>📒 Supplier Ledger</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <label>Supplier
             <select value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}>
               <option value="">Select Supplier</option>
@@ -2930,11 +2952,13 @@ const CustomerBalanceReport = ({ fmtMoney }) => {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    Promise.all([supabase.from('customers').select('*'), supabase.from('invoices').select('*')])
-      .then(([c, i]) => { setCustomers(c.data || []); setInvoices(i.data || []); setLoading(false) })
-  }, [])
+    const [c, i] = await Promise.all([supabase.from('customers').select('*'), supabase.from('invoices').select('*')])
+    setCustomers(c.data || []); setInvoices(i.data || []); setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
   const custData = customers.map((c) => {
     const name = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim()
     const invs = invoices.filter((inv) => (inv.customer_name === name || inv.customer_email === c.email) && (!asOfDate || inv.created_at?.split('T')[0] <= asOfDate))
@@ -2964,6 +2988,7 @@ const CustomerBalanceReport = ({ fmtMoney }) => {
          <h3>👥 Customer Balance Report</h3>
          <div className="report-controls">
            <label>As of Date <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Customer Balance Report" onPrint={printReport} onPdf={printReport} text={"Customer Balance Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3004,14 +3029,17 @@ const SupplierBalanceReport = ({ fmtMoney }) => {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    Promise.all([
+    const [s, i, p] = await Promise.all([
       supabase.from('suppliers').select('*'),
       supabase.from('purchase_invoices').select('*'),
       supabase.from('outgoing_payments').select('*')
-    ]).then(([s, i, p]) => { setSuppliers(s.data || []); setInvoices(i.data || []); setPayments(p.data || []); setLoading(false) })
-  }, [])
+    ])
+    setSuppliers(s.data || []); setInvoices(i.data || []); setPayments(p.data || []); setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
   const supData = suppliers.map((s) => {
     const name = s.name || `${s.first_name || ''} ${s.last_name || ''}`.trim()
     const invs = invoices.filter((inv) => (inv.supplier_name === name || inv.supplier_id === s.id || inv.party_name === name || inv.party_id === s.id) && (!asOfDate || inv.created_at?.split('T')[0] <= asOfDate))
@@ -3043,6 +3071,7 @@ const SupplierBalanceReport = ({ fmtMoney }) => {
          <h3>🏭 Supplier Balance Report</h3>
          <div className="report-controls">
            <label>As of Date <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Supplier Balance Report" onPrint={printReport} onPdf={printReport} text={"Supplier Balance Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3094,26 +3123,27 @@ const TaxReport = ({ fmtMoney, taxConfig: taxCfg }) => {
   const [taxConfigList, setTaxConfigList] = useState<any[]>([])
   const [selectedCountry, setSelectedCountry] = useState(taxCfg?.country || 'UAE')
 
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    Promise.all([
+    const [p, inv, acc, pi, tc] = await Promise.all([
       supabase.from('company_profile').select('*').limit(1),
       supabase.from('invoices').select('*'),
       supabase.from('accounts').select('*'),
       supabase.from('purchase_invoices').select('*').catch(() => ({ data: [] })),
       supabase.from('tax_config').select('*').eq('is_active', true).order('country'),
-    ]).then(([p, inv, acc, pi, tc]) => {
-      if (p.data?.length) {
-        setProfile(p.data[0])
-        setSelectedCountry(p.data[0].country || 'UAE')
-      }
-      setInvoices(inv.data || [])
-      setAccounts(acc.data || [])
-      setPurchaseInvoices(pi.data || [])
-      setTaxConfigList(tc.data || [])
-      setLoading(false)
-    })
-  }, [])
+    ])
+    if (p.data?.length) {
+      setProfile(p.data[0])
+      setSelectedCountry(p.data[0].country || 'UAE')
+    }
+    setInvoices(inv.data || [])
+    setAccounts(acc.data || [])
+    setPurchaseInvoices(pi.data || [])
+    setTaxConfigList(tc.data || [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filteredInvoices = invoices.filter((inv) => {
     const d = (inv.doc_date || inv.created_at || '').split('T')[0]
@@ -3218,6 +3248,7 @@ const TaxReport = ({ fmtMoney, taxConfig: taxCfg }) => {
                <option value="quarterly">Quarterly</option>
              </select>
            </label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Tax Report" onPrint={printReport} onPdf={printReport} text={"Tax Report generated on " + new Date().toLocaleDateString()} />
          </div>
       </div>
@@ -3332,10 +3363,14 @@ const StockAgingReport = ({ fmtMoney }) => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().split('T')[0])
-  useEffect(() => {
+  const load = async () => {
     setLoading(true)
-    supabase.from('products').select('*').then(({ data }) => { setProducts(data || []); setLoading(false) })
-  }, [])
+    const { data } = await supabase.from('products').select('*')
+    setProducts(data || [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const ageBuckets = ['0-30 days', '31-60 days', '61-90 days', '91-180 days', '180+ days']
   const bucketColors = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444']
@@ -3380,6 +3415,7 @@ const StockAgingReport = ({ fmtMoney }) => {
          <h3>⏳ Stock Aging Report</h3>
          <div className="report-controls">
            <label>As of Date <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Stock Aging Report" onPrint={printReport} onPdf={printReport} text={"Stock Aging Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3426,7 +3462,7 @@ const StockAgingReport = ({ fmtMoney }) => {
   )
 }
 
-const CashFlowReport = ({ accounts, fmtMoney }) => {
+const CashFlowReport = ({ accounts, fmtMoney, onRetrieve }: any) => {
   const [fromDate, setFromDate] = useState(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().split('T')[0] })
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
 
@@ -3453,15 +3489,16 @@ const CashFlowReport = ({ accounts, fmtMoney }) => {
 
   const [lines, setLines] = useState([])
   const [loaded, setLoaded] = useState(false)
-  useEffect(() => {
-    (async () => {
-      const { data: jes } = await supabase.from('journal_entries').select('id, entry_date').gte('entry_date', fromDate).lte('entry_date', toDate)
-      const ids = (jes || []).map((j) => j.id)
-      let ld: any[] = []
-      if (ids.length) { const { data } = await supabase.from('journal_lines').select('entry_id, account_id, debit, credit').in('entry_id', ids); ld = data || [] }
-      setLines(ld); setLoaded(true)
-    })()
-  }, [fromDate, toDate])
+  const load = async () => {
+    await onRetrieve?.()
+    const { data: jes } = await supabase.from('journal_entries').select('id, entry_date').gte('entry_date', fromDate).lte('entry_date', toDate)
+    const ids = (jes || []).map((j) => j.id)
+    let ld: any[] = []
+    if (ids.length) { const { data } = await supabase.from('journal_lines').select('entry_id, account_id, debit, credit').in('entry_id', ids); ld = data || [] }
+    setLines(ld); setLoaded(true)
+  }
+  useEffect(() => { load() }, [fromDate, toDate])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   let opIn = 0, opOut = 0, invIn = 0, invOut = 0, finIn = 0, finOut = 0
   const entryMap: any = {}
@@ -3511,6 +3548,7 @@ const CashFlowReport = ({ accounts, fmtMoney }) => {
          <div className="report-controls">
            <label>From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
            <label>To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Cash Flow Statement" onPrint={printReport} onPdf={printReport} text={"Cash Flow Statement generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3731,8 +3769,9 @@ const ExchangeRates = ({ fmtMoney }) => {
   )
 }
 
-const TrialBalanceReport = ({ accounts, fmtMoney }) => {
+const TrialBalanceReport = ({ accounts, fmtMoney, onRetrieve }: any) => {
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear())
+  const { retrieving, retrieve } = useRetrieve(() => onRetrieve?.())
   const isDebitNormal = (t) => t === 'Asset' || t === 'Expense'
   const rows = accounts.map((a) => {
     const bal = Number(a.current_balance || 0)
@@ -3770,6 +3809,7 @@ const TrialBalanceReport = ({ accounts, fmtMoney }) => {
                {[0, 1, 2].map((off) => <option key={off} value={new Date().getFullYear() - off}>{new Date().getFullYear() - off}</option>)}
              </select>
            </label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Trial Balance Report" onPrint={printReport} onPdf={printReport} text={"Trial Balance Report generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3823,9 +3863,10 @@ const TrialBalanceReport = ({ accounts, fmtMoney }) => {
   )
 }
 
-const ProfitLossReport = ({ accounts, fmtMoney }) => {
+const ProfitLossReport = ({ accounts, fmtMoney, onRetrieve }: any) => {
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear())
   const [period, setPeriod] = useState('year')
+  const { retrieving, retrieve } = useRetrieve(() => onRetrieve?.())
   const revenueAccounts = accounts.filter((a) => a.type === 'Income' && Number(a.current_balance || 0) !== 0).sort((a, b) => a.code.localeCompare(b.code))
   const expenseAccounts = accounts.filter((a) => a.type === 'Expense' && Number(a.current_balance || 0) !== 0).sort((a, b) => a.code.localeCompare(b.code))
   const totalRevenue = revenueAccounts.reduce((s, a) => s + Math.abs(Number(a.current_balance || 0)), 0)
@@ -3868,6 +3909,7 @@ const ProfitLossReport = ({ accounts, fmtMoney }) => {
                <option value="q4">Q4</option>
              </select>
            </label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Profit & Loss Statement" onPrint={printReport} onPdf={printReport} text={"Profit & Loss Statement generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -3915,8 +3957,9 @@ const ProfitLossReport = ({ accounts, fmtMoney }) => {
   )
 }
 
-const BalanceSheetReport = ({ accounts, fmtMoney }) => {
+const BalanceSheetReport = ({ accounts, fmtMoney, onRetrieve }: any) => {
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
+  const { retrieving, retrieve } = useRetrieve(() => onRetrieve?.())
   const assetAccounts = accounts.filter((a) => a.type === 'Asset' && Number(a.current_balance || 0) !== 0).sort((a, b) => a.code.localeCompare(b.code))
   const liabilityAccounts = accounts.filter((a) => a.type === 'Liability' && Number(a.current_balance || 0) !== 0).sort((a, b) => a.code.localeCompare(b.code))
   const equityAccounts = accounts.filter((a) => a.type === 'Equity' && Number(a.current_balance || 0) !== 0).sort((a, b) => a.code.localeCompare(b.code))
@@ -3958,6 +4001,7 @@ const BalanceSheetReport = ({ accounts, fmtMoney }) => {
            <label>As of Date
              <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} />
            </label>
+           <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
            <ShareBar title="Balance Sheet" onPrint={printReport} onPdf={printReport} text={"Balance Sheet generated on " + new Date().toLocaleDateString()} />
          </div>
        </div>
@@ -6053,18 +6097,22 @@ const CashBook = ({ fmtMoney }) => {
   const [dateTo, setDateTo] = useState('')
   const [selectedAccount, setSelectedAccount] = useState('all')
 
-  useEffect(() => {
-    Promise.all([
-      supabase.from('accounts').select('id, code, name, type').ilike('name', '%cash%'),
-      supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
-    ]).then(([acctRes, lineRes]) => {
+  const load = async () => {
+    setLoading(true)
+    try {
+      const [acctRes, lineRes] = await Promise.all([
+        supabase.from('accounts').select('id, code, name, type').ilike('name', '%cash%'),
+        supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
+      ])
       setAccounts(acctRes.data || [])
       const cashIds = (acctRes.data || []).map((a) => a.id)
       const lines = (lineRes.data || []).filter((l) => cashIds.includes(l.account_id))
       setEntries(lines)
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [])
+    } finally { setLoading(false) }
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filtered = entries.filter((l) => {
     const je = l.journal_entries
@@ -6092,6 +6140,7 @@ const CashBook = ({ fmtMoney }) => {
         </div>
       </div>
       <div className="report-controls" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
         <label style={{ fontSize: 12 }}>From<input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ marginLeft: 4 }} /></label>
         <label style={{ fontSize: 12 }}>To<input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ marginLeft: 4 }} /></label>
         <label style={{ fontSize: 12 }}>Account
@@ -6146,18 +6195,22 @@ const BankBook = ({ fmtMoney }) => {
   const [dateTo, setDateTo] = useState('')
   const [selectedAccount, setSelectedAccount] = useState('all')
 
-  useEffect(() => {
-    Promise.all([
-      supabase.from('accounts').select('id, code, name, type').ilike('name', '%bank%'),
-      supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
-    ]).then(([acctRes, lineRes]) => {
+  const load = async () => {
+    setLoading(true)
+    try {
+      const [acctRes, lineRes] = await Promise.all([
+        supabase.from('accounts').select('id, code, name, type').ilike('name', '%bank%'),
+        supabase.from('journal_lines').select('*, journal_entries(entry_date, reference, narration, currency)').order('created_at', { ascending: false }).limit(500)
+      ])
       setAccounts(acctRes.data || [])
       const bankIds = (acctRes.data || []).map((a) => a.id)
       const lines = (lineRes.data || []).filter((l) => bankIds.includes(l.account_id))
       setEntries(lines)
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [])
+    } finally { setLoading(false) }
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const filtered = entries.filter((l) => {
     const je = l.journal_entries
@@ -6185,6 +6238,7 @@ const BankBook = ({ fmtMoney }) => {
         </div>
       </div>
       <div className="report-controls" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
         <label style={{ fontSize: 12 }}>From<input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ marginLeft: 4 }} /></label>
         <label style={{ fontSize: 12 }}>To<input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ marginLeft: 4 }} /></label>
         <label style={{ fontSize: 12 }}>Account
@@ -7950,7 +8004,7 @@ const App = () => {
     setHistory(newStack)
     setHIndex(newStack.length - 1)
     if (!page) { setActivePage(null); setActivePageTab(null); return }
-    if (page === 'Chart of Accounts') loadCoa()
+    if (['Chart of Accounts', 'Trial Balance Report', 'Trial Balance', 'Balance Sheet Report', 'Balance Sheet', 'Profit & Loss Statement', 'P&L Statement', 'Cash Flow Statement'].includes(page)) loadCoa()
     if (page === 'Journal Entry') loadJeEntries()
     if (page === 'Incoming Payments') { loadIncoming(); loadPartners() }
     if (page === 'Outgoing Payments') { loadOutgoing(); loadPartners() }
@@ -8262,6 +8316,7 @@ const App = () => {
       setCoaExpanded(new Set(tops.map((a) => a.id)))
     } catch (err) { console.error('COA load error:', err) }
   }
+  useEffect(() => { loadCoa() }, [])
 
   const toggleCoaExpand = (id) => { setCoaExpanded((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next }) }
 
@@ -8996,15 +9051,15 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Trial Balance Report' || activePage === 'Trial Balance') && (
-          <TrialBalanceReport accounts={coaAccounts} fmtMoney={fmtMoney} />
+          <TrialBalanceReport accounts={coaAccounts} fmtMoney={fmtMoney} onRetrieve={loadCoa} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Balance Sheet Report' || activePage === 'Balance Sheet') && (
-          <BalanceSheetReport accounts={coaAccounts} fmtMoney={fmtMoney} />
+          <BalanceSheetReport accounts={coaAccounts} fmtMoney={fmtMoney} onRetrieve={loadCoa} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && (activePage === 'Profit & Loss Statement' || activePage === 'P&L Statement') && (
-          <ProfitLossReport accounts={coaAccounts} fmtMoney={fmtMoney} />
+          <ProfitLossReport accounts={coaAccounts} fmtMoney={fmtMoney} onRetrieve={loadCoa} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Corporate Tax' && (
@@ -9036,7 +9091,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Cash Flow Statement' && (
-          <CashFlowReport accounts={coaAccounts} fmtMoney={fmtMoney} />
+          <CashFlowReport accounts={coaAccounts} fmtMoney={fmtMoney} onRetrieve={loadCoa} />
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Tax Report' && (
@@ -9052,7 +9107,7 @@ const App = () => {
         )}
 
         {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Fx Revaluation' && (
-          <FxRevaluation accounts={coaAccounts} baseCurrency={companyProfile?.base_currency || getActiveCurrency()} />
+          <FxRevaluation accounts={coaAccounts} baseCurrency={companyProfile?.base_currency || getActiveCurrency()} onRetrieve={loadCoa} />
         )}
 
       {!activeCust && !activeInv && !activeStock && activePage && activePage === 'Inventory Valuation' && (

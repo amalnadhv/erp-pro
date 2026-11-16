@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 export default function CorporateTax({ country: initialCountry }: { country?: string }) {
   const [accounts, setAccounts] = useState<any[]>([])
@@ -11,16 +12,19 @@ export default function CorporateTax({ country: initialCountry }: { country?: st
   const [to, setTo] = useState('')
   const [countryList, setCountryList] = useState<any[]>([])
 
-  useEffect(() => {
-    Promise.all([
+  const load = async () => {
+    setLoading(true)
+    const [accRes, tcRes] = await Promise.all([
       supabase.from('accounts').select('id, code, name, type, current_balance').order('code'),
       supabase.from('tax_config').select('country, tax_name, standard_rate').eq('is_active', true).order('country'),
-    ]).then(([accRes, tcRes]) => {
-      setAccounts(accRes.data || [])
-      setCountryList(tcRes.data || [])
-      setLoading(false)
-    })
-  }, [])
+    ])
+    setAccounts(accRes.data || [])
+    setCountryList(tcRes.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const onCountry = (c: string) => {
     setCountry(c)
@@ -52,6 +56,7 @@ export default function CorporateTax({ country: initialCountry }: { country?: st
       </div>
 
       <div className="tax-controls">
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
         <label>Country / Regime
           <select value={country} onChange={(e) => onCountry(e.target.value)}>
             {countryList.map((tc) => <option key={tc.country} value={tc.country}>{tc.country} ({tc.tax_name}, CIT {tc.standard_rate}%)</option>)}

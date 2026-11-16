@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 interface StockAlert {
   id: string
@@ -34,6 +35,7 @@ export default function StockAlerts() {
   }
 
   useEffect(() => { loadAlerts() }, [])
+  const { retrieving, retrieve } = useRetrieve(loadAlerts)
 
   const scanStock = async () => {
     setScanning(true); setScanResult('')
@@ -163,6 +165,7 @@ export default function StockAlerts() {
       <div className="report-head">
         <h3>⚠️ Stock Alerts</h3>
         <div className="report-controls">
+          <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
           <button onClick={scanStock} disabled={scanning} style={{ padding: '6px 14px', borderRadius: 8, background: '#8b5cf6', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {scanning ? '⏳ Scanning...' : '🔍 Scan Stock Levels'}
           </button>

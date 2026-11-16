@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 interface Props { fmtMoney: (n: number) => string }
 
@@ -10,12 +11,19 @@ export default function StockRotation({ fmtMoney }: Props) {
   const [selectedProduct, setSelectedProduct] = useState('')
   const [method, setMethod] = useState('FIFO')
 
-  useEffect(() => {
-    Promise.all([
+  const load = async () => {
+    setLoading(true)
+    const [pRes, mRes] = await Promise.all([
       supabase.from('products').select('id, code, name, stock_quantity, cost_price, cost_method').order('name'),
       supabase.from('stock_movements').select('*').order('created_at', { ascending: false }).limit(500),
-    ]).then(([pRes, mRes]) => { setProducts(pRes.data || []); setMovements(mRes.data || []); setLoading(false) })
-  }, [])
+    ])
+    setProducts(pRes.data || [])
+    setMovements(mRes.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
 
   const productMovements = movements.filter((m) => !selectedProduct || m.product_id === selectedProduct)
 
@@ -63,6 +71,10 @@ export default function StockRotation({ fmtMoney }: Props) {
   return (
     <div>
       <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>📊 Stock Rotation</h2>
+
+      <div style={{ marginBottom: 12 }}>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
+      </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <label style={{ fontSize: 12, fontWeight: 600 }}>Costing Method

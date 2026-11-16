@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 interface Props { fmtMoney: (n: number) => string }
 
@@ -45,6 +46,8 @@ export default function AgedReceivables({ fmtMoney }: Props) {
     } catch (err) { console.error(err) }
     setLoading(false)
   }
+
+  const { retrieving, retrieve } = useRetrieve(loadData)
 
   const filtered = data.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()))
 
@@ -115,6 +118,10 @@ export default function AgedReceivables({ fmtMoney }: Props) {
   return (
     <div>
       <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>📊 Aged Receivables</h2>
+
+      <div style={{ marginBottom: 12 }}>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
+      </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         {[

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import ShareBar from './ShareBar'
+import { ReportRetrieveButton, useRetrieve } from './ReportRetrieveButton'
 
 const FRAMEWORK_BY_COUNTRY = (country?: string): string => {
   if (!country) return 'IFRS'
@@ -45,28 +46,31 @@ const [auditorLicense, setAuditorLicense] = useState('')
     'The directors are responsible for the other information. The other information comprises the directors’ report and the corporate governance statement, which is published with the financial statements. Our opinion on the financial statements does not cover the other information and we do not express any form of assurance conclusion thereon.'
   )
 
-  useEffect(() => {
-    (async () => {
-      let profileData: any = null
-      try {
-        const { data } = await supabase.from('company_profile').select('*').single()
-        profileData = data
-      } catch { /* no profile row yet */ }
-      let accData: any[] = []
-      try {
-        const { data } = await supabase.from('accounts').select('id, code, name, type, current_balance').order('code')
-        accData = data || []
-      } catch { /* no accounts */ }
-      setProfile(profileData)
-      setAcc(accData)
-      setFramework(FRAMEWORK_BY_COUNTRY(profileData?.country))
-      setAuditorFirm(profileData?.auditor_firm || (profileData?.name ? `${profileData.name} Audit LLP` : ''))
-      if (profileData?.auditor_name) setAuditorName(profileData?.auditor_name)
-      if (profileData?.auditor_address) setAuditorLocation(profileData.auditor_address)
-      if (profileData?.auditor_license) setAuditorLicense(profileData.auditor_license)
-      setLoading(false)
-    })()
-  }, [])
+  const load = async () => {
+    setLoading(true)
+    let profileData: any = null
+    try {
+      const { data } = await supabase.from('company_profile').select('*').single()
+      profileData = data
+    } catch { /* no profile row yet */ }
+    let accData: any[] = []
+    try {
+      const { data } = await supabase.from('accounts').select('id, code, name, type, current_balance').order('code')
+      accData = data || []
+    } catch { /* no accounts */ }
+    setProfile(profileData)
+    setAcc(accData)
+    setFramework(FRAMEWORK_BY_COUNTRY(profileData?.country))
+    setAuditorFirm(profileData?.auditor_firm || (profileData?.name ? `${profileData.name} Audit LLP` : ''))
+    if (profileData?.auditor_name) setAuditorName(profileData.auditor_name)
+    if (profileData?.auditor_address) setAuditorLocation(profileData.auditor_address)
+    if (profileData?.auditor_license) setAuditorLicense(profileData.auditor_license)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+  const { retrieving, retrieve } = useRetrieve(load)
+
 
   const byType = (t: string) => acc.filter((a) => a.type === t)
   const sum = (t: string) => byType(t).reduce((s, a) => s + Number(a.current_balance || 0), 0)
@@ -113,6 +117,7 @@ const [auditorLicense, setAuditorLicense] = useState('')
     <div className="audit-wrap">
       <div className="audit-controls">
         <h4>Report Settings</h4>
+        <ReportRetrieveButton onClick={retrieve} busy={retrieving} />
         <label>Addressee<input value={addressee} onChange={(e) => setAddressee(e.target.value)} /></label>
         <label>Reporting Framework
           <select value={framework} onChange={(e) => setFramework(e.target.value)}>
